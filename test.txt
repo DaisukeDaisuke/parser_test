@@ -1,0 +1,100 @@
+I:\Owner\Desktop\php_vscode\bin\php\php.exe I:\Owner\Desktop\php\parser\main_old.php
+array(
+    0: Stmt_InlineHTML(
+        value:
+
+    )
+    1: Stmt_Expression(
+        expr: Expr_Assign(
+            var: Expr_Variable(
+                name: a
+            )
+            expr: Scalar_LNumber(
+                value: 100
+            )
+        )
+    )
+    2: Stmt_Echo(
+        exprs: array(
+            0: Expr_BinaryOp_Plus(
+                left: Scalar_LNumber(
+                    value: 1
+                )
+                right: Expr_BinaryOp_Mul(
+                    left: Scalar_LNumber(
+                        value: 2
+                    )
+                    right: Expr_BinaryOp_Div(
+                        left: Scalar_LNumber(
+                            value: 3
+                        )
+                        right: Expr_Variable(
+                            name: a
+                        )
+                    )
+                )
+            )
+        )
+    )
+)I:\Owner\Desktop\php\parser\main_old.php:30:
+array(3) {
+  [0] =>
+  class PhpParser\Node\Stmt\InlineHTML#1142 (2) {
+    public $value =>
+    string(1) "
+"
+    protected $attributes =>
+    array(3) {
+      'startLine' =>
+      int(1)
+      'hasLeadingNewline' =>
+      bool(true)
+      'endLine' =>
+      int(2)
+    }
+  }
+  [1] =>
+  class PhpParser\Node\Stmt\Expression#1146 (2) {
+    public $expr =>
+    class PhpParser\Node\Expr\Assign#1145 (3) {
+      public $var =>
+      class PhpParser\Node\Expr\Variable#1143 (2) {
+        ...
+      }
+      public $expr =>
+      class PhpParser\Node\Scalar\LNumber#1144 (2) {
+        ...
+      }
+      protected $attributes =>
+      array(2) {
+        ...
+      }
+    }
+    protected $attributes =>
+    array(2) {
+      'startLine' =>
+      int(3)
+      'endLine' =>
+      int(3)
+    }
+  }
+  [2] =>
+  class PhpParser\Node\Stmt\Echo_#1154 (2) {
+    public $exprs =>
+    array(1) {
+      [0] =>
+      class PhpParser\Node\Expr\BinaryOp\Plus#1153 (3) {
+        ...
+      }
+    }
+    protected $attributes =>
+    array(2) {
+      'startLine' =>
+      int(4)
+      'endLine' =>
+      int(4)
+    }
+  }
+}
+
+Process finished with exit code 0
