@@ -103,80 +103,42 @@ class main_old{
         var_dump($this->count);
         switch(get_class($node)){
             case Plus::class:
-                //++$this->count;
-                $left = $this->execScalar_var($node->left);
-                $right = $this->execScalar_var($node->right);
-
-                $return = [];
-                if(is_array($left)&&is_array($right)){
-                    $return = [...$left,...$right];
-                    $return[] = ["add",++$this->count, ++$this->count];//$left,$right
-                }else if(is_array($left)){
-                    $return = $left;
-                    $return[] = ["add",++$this->count, $right];
-                }else if(is_array($right)){
-                    $return = $right;
-                    $return[] = ["add",$left, ++$this->count];
-                }else{
-                    $return[] = ["add", $left, $right];
-
-                }
-                //var_dump($return);
-                return $return;
+                return $this->execbinaryplus($node,"plus");;
                 break;
             case Mul::class:
-                //$left = $this->execScalar_var($node->left);
-                //$right = $this->execScalar_var($node->right);
-                //return code::MUL.$left.$right;
-                //++$this->count;
-                $left = $this->execScalar_var($node->left);
-                $right = $this->execScalar_var($node->right);
-
-                $return = [];
-                if(is_array($left)&&is_array($right)){
-                    $return = [...$left,...$right];
-                    $return[] = ["mul",++$this->count, ++$this->count];//$left,$right
-                }else if(is_array($left)){
-                    $return = $left;
-                    $return[] = ["mul",++$this->count, $right];
-                }else if(is_array($right)){
-                    $return = $right;
-                    $return[] = ["mul",$left, ++$this->count];
-                }else{
-                    $return[] = ["mul", $left, $right];
-
-                }
-                //var_dump($return);
-                return $return;
+                return $this->execbinaryplus($node,"mul");;
                 break;
             case Div::class:
                 //$left = $this->execScalar_var($node->left);
                 //$right = $this->execScalar_var($node->right);
                 //return code::DIV.$left.$right;
                 //++$this->count;
-                $left = $this->execScalar_var($node->left);
-                $right = $this->execScalar_var($node->right);
-
-                $return = [];
-                if(is_array($left)&&is_array($right)){
-                    $return = [...$left,...$right];
-                    $return[] = ["div",++$this->count, ++$this->count];//$left,$right
-                }else if(is_array($left)){
-                    $return = $left;
-                    $return[] = ["div",++$this->count, $right];
-                }else if(is_array($right)){
-                    $return = $right;
-                    $return[] = ["div",$left, ++$this->count];
-                }else{
-                    $return[] = ["div", $left, $right];
-
-                }
-                //var_dump($return);
-                return $return;
+                return $this->execbinaryplus($node,"div");
                 break;
 
         }
 
+    }
+
+    function execbinaryplus($node, $id){
+        $left = $this->execScalar_var($node->left);
+        $right = $this->execScalar_var($node->right);
+
+        $return = [];
+        if(is_array($left)&&is_array($right)){
+            $return = [...$left,...$right];
+            $return[] = [$id,++$this->count, ++$this->count, $this->count+1];//$left,$right
+        }else if(is_array($left)){
+            $return = $left;
+            $return[] = [$id,++$this->count, $right, $this->count+1];
+        }else if(is_array($right)){
+            $return = $right;
+            $return[] = [$id,$left, ++$this->count, $this->count+1];
+        }else{
+            $return[] = [$id, $left, $right, $this->count+1];
+        }
+        //var_dump($return);
+        return $return;
     }
 
     function execScalar_var($value){//array...?
