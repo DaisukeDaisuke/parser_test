@@ -10,9 +10,25 @@ use PhpParser\Node\Expr\BinaryOp\BooleanOr;
 use PhpParser\Node\Expr\BinaryOp\Coalesce;
 use PhpParser\Node\Expr\BinaryOp\Concat;
 use PhpParser\Node\Expr\BinaryOp\Div;
+use PhpParser\Node\Expr\BinaryOp\Equal;
+use PhpParser\Node\Expr\BinaryOp\Greater;
+use PhpParser\Node\Expr\BinaryOp\GreaterOrEqual;
+use PhpParser\Node\Expr\BinaryOp\Identical;
+use PhpParser\Node\Expr\BinaryOp\LogicalAnd;
+use PhpParser\Node\Expr\BinaryOp\LogicalOr;
+use PhpParser\Node\Expr\BinaryOp\LogicalXor;
 use PhpParser\Node\Expr\BinaryOp\Minus;
+use PhpParser\Node\Expr\BinaryOp\Mod;
 use PhpParser\Node\Expr\BinaryOp\Mul;
+use PhpParser\Node\Expr\BinaryOp\NotEqual;
+use PhpParser\Node\Expr\BinaryOp\NotIdentical;
 use PhpParser\Node\Expr\BinaryOp\Plus;
+use PhpParser\Node\Expr\BinaryOp\Pow;
+use PhpParser\Node\Expr\BinaryOp\ShiftLeft;
+use PhpParser\Node\Expr\BinaryOp\ShiftRight;
+use PhpParser\Node\Expr\BinaryOp\Smaller;
+use PhpParser\Node\Expr\BinaryOp\SmallerOrEqual;
+use PhpParser\Node\Expr\BinaryOp\Spaceship;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Scalar;
 use PhpParser\Node\Scalar\LNumber;
@@ -22,11 +38,32 @@ use PhpParser\NodeDumper;
 use PhpParser\ParserFactory;
 use pocketmine\utils\Binary;
 
+use PhpParser\Node\Stmt\if_;
+use PhpParser\Node\Stmt\Else_;
+use PhpParser\Node\Stmt\ElseIf_;
+
+
 $code = '
 <?php
 $a = 100;
 //echo 1+2*(3/$a*1);
 echo ((2*1+1)+(2/1+3)-(2/(5*6+20)*(5*(6/2)))) & 1;//3+5+50
+if(true===true){
+	echo "test print";
+}
+
+if(1+2===3){
+
+}else{
+	echo "else";
+}
+
+
+if(1+5===true){
+	echo "if";
+}else if($a === 100){
+	echo "else";
+}
 ';
 
 //$code = file_get_contents("/sdcard/www/public/php-parser/vendor/unphar.php");
@@ -55,8 +92,27 @@ class code{
 	const B_XOR = "\x08";
 	const BOOL_AND = "\x09";
 	const BOOL_OR = "\x0A";
-	const COALESCE = "\x0B":
-	const CONCAT = "\x0C"
+	const COALESCE = "\x0B";
+	const CONCAT = "\x0C";
+
+	const EQUAL = "\x0D";
+	const GREATER = "\x0E";
+	const GREATEROREQUAL = "\x0F";
+
+	const IDENTICAL = "\x10";
+	const L_AND = "\x11";
+	const L_OR = "\x12";
+	const L_XOR = "\x13";
+	const MOD = "\x14";
+	const NOTIDENTICAL = "\x15";
+	const SHIFTLEFT = "\x16";
+	const POW = "\x17";
+	const SHIFTRIGHT = "\x18";
+	const SMALLER = "\x19";
+	const SMALLEROREQUAL = "\x1A";
+	const SPACESHIP = "\x1B";
+	const NOTEQUAL = "\x1C";
+	const ABC = "\x1";
 
 
 	const PRINT = "\xff";
@@ -89,6 +145,19 @@ class main_old{
 				var_dump("echo");
 				return code::PRINT.$this->execStmts($node->exprs);
 				break;
+			case if_::class:
+				$return = $this->execExpr($node->cond);
+				$stmts = $this->execStmts($node->stmts);
+				$elseifs = $this->execStmts($node->elseifs);
+				$else = $this->execStmts($node->else);
+
+				//elseifs
+				//else
+				break;
+			case Else_::class:
+				break;
+			case ElseIf_::class:
+				break;
 		}
 	}
 
@@ -110,8 +179,9 @@ class main_old{
 
 	function execExpr(Expr $expr){
 		if($expr instanceof BinaryOp){
-			$return = $this->execBinaryOp($expr);
-			var_dump($return);
+			$return = $this->execBinaryOp($expr);//array
+			return $return[0];
+			/*var_dump($return);
 			$values = [];
 			foreach($return as $value){
 				var_dump($value);
@@ -120,9 +190,10 @@ class main_old{
 				$var1 = $this->test($value[1], $values);
 				$var2 = $this->test($value[2], $values);
 				$output = $value[3];
+*/
+				/** @var mixed $return1 */
+				/*$return1 = 0;
 
-
-				$return1 = 0;
 				switch($var){
 					case code::ADD:
 						$return1 = $var1 + $var2;
@@ -146,47 +217,71 @@ class main_old{
 						$return1 = $var1 ^ $var2;
 						break;
 					case code::BOOL_AND:
-						$return1 = (int) $var1 && $var2;
+						$return1 = (int) $var1&&$var2;
 						break;
 					case code::BOOL_OR:
-						$return1 = (int) $var1 || $var2;
+						$return1 = (int) $var1||$var2;
 						break;
 					case code::COALESCE:
 						//$return1 = $var1 ?? $var2;
 						break;
 					case code::CONCAT:
-						$return1 = (int) $var1 . $var2;
+						$return1 = $var1.$var2;
 						break;
-					case code::BOOL_OR:
-						$return1 = (int) $var1 || $var2;
+					case code::EQUAL:
+						$return1 = (int) $var1 == $var2;
 						break;
-					case code::BOOL_OR:
-						$return1 = (int) $var1 || $var2;
+					case code::GREATER:
+						$return1 = (int) $var1 > $var2;
 						break;
-					case code::BOOL_OR:
-						$return1 = (int) $var1 || $var2;
+					case code::GREATEROREQUAL:
+						$return1 = (int) $var1 >= $var2;
 						break;
-					case code::BOOL_OR:
-						$return1 = (int) $var1 || $var2;
+					case code::IDENTICAL:
+						$return1 = (int) $var1 === $var2;
 						break;
-					case code::BOOL_OR:
-						$return1 = (int) $var1 || $var2;
+					case code::L_AND:
+						$return1 = (int) $var1 and $var2;
 						break;
-					case code::BOOL_OR:
-						$return1 = (int) $var1 || $var2;
+					case code::L_OR:
+						$return1 = (int) $var1 or $var2;
 						break;
-					case code::BOOL_OR:
-						$return1 = (int) $var1 || $var2;
+					case code::L_XOR:
+						$return1 = $var1 xor $var2;
 						break;
-					case code::BOOL_OR:
-						$return1 = (int) $var1 || $var2;
+					case code::MOD:
+						$return1 = $var1 % $var2;
+						break;
+					case code::NOTEQUAL:
+						$return = (int) $var1 != $var2;
+						break;
+					case code::NOTIDENTICAL:
+						$return1 = (int) $var1 !== $var2;
+						break;
+					case code::SHIFTLEFT:
+						$return1 = $var1 << $var2;
+						break;
+					case code::POW:
+						$return1 = $var1 ** $var2;
+						break;
+					case code::SHIFTRIGHT:
+						$return1 = $var1 >> $var2;
+						break;
+					case code::SMALLER:
+						$return1 = (int) $var1 < $var2;
+						break;
+					case code::SMALLEROREQUAL:
+						$return1 = (int) $var1 <= $var2;
+						break;
+					case code::SPACESHIP:
+						$return1 = (int) $var1 <=> $var2;
 						break;
 				}
 				var_dump($output." => ".$return1);
 				$values[$output] = $return1;
 				//var_dump($values);
-			}
-			var_dump($return1);
+			}*/
+			//var_dump($return1);
 			//return var_dump($this->execBinaryOp($expr));
 		}
 	}
@@ -216,9 +311,7 @@ class main_old{
 				return $this->execbinaryplus($node, code::B_AND, $count);
 			case BitwiseOr::class:
 				return $this->execbinaryplus($node, code::B_OR, $count);
-
-
-				case BooleanAnd::class:
+			case BooleanAnd::class:
 				return $this->execbinaryplus($node, code::BOOL_AND, $count);
 			case BooleanOr::class:
 				return $this->execbinaryplus($node, code::BOOL_OR, $count);
@@ -226,37 +319,38 @@ class main_old{
 				return $this->execbinaryplus($node, code::COALESCE, $count);
 			case Concat::class:
 				return $this->execbinaryplus($node, code::CONCAT, $count);
-			case BitwiseOr::class:
-				return $this->execbinaryplus($node, code::B_OR, $count);
-			case BitwiseOr::class:
-				return $this->execbinaryplus($node, code::B_OR, $count);
-			case BitwiseOr::class:
-				return $this->execbinaryplus($node, code::B_OR, $count);
-			case BitwiseOr::class:
-				return $this->execbinaryplus($node, code::B_OR, $count);
-			case BitwiseOr::class:
-				return $this->execbinaryplus($node, code::B_OR, $count);
-			case BitwiseOr::class:
-				return $this->execbinaryplus($node, code::B_OR, $count);
-			case BitwiseOr::class:
-				return $this->execbinaryplus($node, code::B_OR, $count);
-			case BitwiseOr::class:
-				return $this->execbinaryplus($node, code::B_OR, $count);
-			case BitwiseOr::class:
-				return $this->execbinaryplus($node, code::B_OR, $count);
-			case BitwiseOr::class:
-				return $this->execbinaryplus($node, code::B_OR, $count);
-			case BitwiseOr::class:
-				return $this->execbinaryplus($node, code::B_OR, $count);
-			case BitwiseOr::class:
-				return $this->execbinaryplus($node, code::B_OR, $count);
-			case BitwiseOr::class:
-				return $this->execbinaryplus($node, code::B_OR, $count);
-			case BitwiseOr::class:
-				return $this->execbinaryplus($node, code::B_OR, $count);
-			case BitwiseOr::class:
-				return $this->execbinaryplus($node, code::B_OR, $count);
-
+			case Equal::class:
+				return $this->execbinaryplus($node, code::EQUAL, $count);
+			case Greater::class:
+				return $this->execbinaryplus($node, code::GREATER, $count);
+			case GreaterOrEqual::class:
+				return $this->execbinaryplus($node, code::GREATEROREQUAL, $count);
+			case Identical::class:
+				return $this->execbinaryplus($node, code::IDENTICAL, $count);
+			case LogicalAnd::class:
+				return $this->execbinaryplus($node, code::L_AND, $count);
+			case LogicalOr::class:
+				return $this->execbinaryplus($node, code::L_OR, $count);
+			case LogicalXor::class:
+				return $this->execbinaryplus($node, code::L_XOR, $count);
+			case Mod::class:
+				return $this->execbinaryplus($node, code::MOD, $count);
+			case NotEqual::class:
+				return $this->execbinaryplus($node, code::NOTEQUAL, $count);
+			case NotIdentical::class:
+				return $this->execbinaryplus($node, code::NOTIDENTICAL, $count);
+			case Pow::class:
+				return $this->execbinaryplus($node, code::POW, $count);
+			case ShiftLeft::class:
+				return $this->execbinaryplus($node, code::SHIFTLEFT, $count);
+			case ShiftRight::class:
+				return $this->execbinaryplus($node, code::SHIFTRIGHT, $count);
+			case Smaller::class:
+				return $this->execbinaryplus($node, code::SMALLER, $count);
+			case SmallerOrEqual::class:
+				return $this->execbinaryplus($node, code::SMALLEROREQUAL, $count);
+			case Spaceship::class:
+				return $this->execbinaryplus($node, code::SPACESHIP, $count);
 		}
 
 	}
