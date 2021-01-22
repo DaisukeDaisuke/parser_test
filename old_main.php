@@ -1,5 +1,5 @@
 <?php
-include __DIR__ . "/vendor/autoload.php";
+include __DIR__."/vendor/autoload.php";
 
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\BinaryOp;
@@ -72,7 +72,7 @@ class main_old{
 		switch(get_class($node)){
 			case Echo_::class:
 				var_dump("echo");
-				return code::PRINT . $this->execStmts($node->exprs);
+				return code::PRINT.$this->execStmts($node->exprs);
 				break;
 		}
 	}
@@ -102,10 +102,9 @@ class main_old{
 				var_dump($value);
 
 				$var = $value[0];
-				$var1 = $this->test($value[1],$values);
-				$var2 = $this->test($value[2],$values);
+				$var1 = $this->test($value[1], $values);
+				$var2 = $this->test($value[2], $values);
 				$output = $value[3];
-
 
 
 				$return1 = 0;
@@ -132,9 +131,9 @@ class main_old{
 		}
 	}
 
-	function test($value,&$array){
-		if(strpos($value,'H') !== false){
-			return (int) substr($value,0, -1);
+	function test($value, &$array){
+		if(strpos($value, 'H') !== false){
+			return (int) substr($value, 0, -1);
 		}
 		//var_dump($value);
 		$return = $array[$value];
@@ -161,6 +160,7 @@ class main_old{
 			case Minus::class:
 				return $this->execbinaryplus($node, "minus", $count);
 				break;
+			case Expr\AssignOp\BitwiseAnd::class
 		}
 
 	}
@@ -209,7 +209,7 @@ class main_old{
 		if($node->name instanceof Expr){
 			return "";//$$b
 		}
-		return code::READV . $this->getValualueId($node->name);
+		return code::READV.$this->getValualueId($node->name);
 	}
 
 	public function getValualueId($value){
@@ -237,9 +237,9 @@ class main_old{
 	}
 
 	function getInt($value){
-		return $value . "H";
+		return $value."H";
 		$size = $this->checkIntSize($value);
-		$return = code::INT . chr($size);
+		$return = code::INT.chr($size);
 		switch($size){
 			case self::TYPE_BYTE://byte
 				$return .= Binary::readSignedByte($value);
