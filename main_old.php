@@ -29,6 +29,7 @@ use PhpParser\Node\Expr\BinaryOp\ShiftRight;
 use PhpParser\Node\Expr\BinaryOp\Smaller;
 use PhpParser\Node\Expr\BinaryOp\SmallerOrEqual;
 use PhpParser\Node\Expr\BinaryOp\Spaceship;
+use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Scalar;
 use PhpParser\Node\Scalar\LNumber;
@@ -55,15 +56,18 @@ if(true===true){
 if(1+2===3){
 
 }else{
-	echo "else";
+	echo "else_test";
 }
 
 
 if(1+5===true){
-	echo "if";
+	echo "if_test";
 }else if($a === 100){
-	echo "else";
+	echo "else_test";
 }
+
+const TEST = "A";
+echo TEST;
 ';
 
 //$code = file_get_contents("/sdcard/www/public/php-parser/vendor/unphar.php");
@@ -73,9 +77,10 @@ $stmts = $parser->parse($code);
 //$oldTokens = $parser->getTokens();
 //var_dump($stmts);
 
+/*
 $dumper = new NodeDumper(['dumpComments' => true,]);
 echo $dumper->dump($stmts, $code);
-
+*/
 
 //var_dump($stmts);
 
@@ -112,7 +117,9 @@ class code{
 	const SMALLEROREQUAL = "\x1A";
 	const SPACESHIP = "\x1B";
 	const NOTEQUAL = "\x1C";
-	const ABC = "\x1";
+	const ABC = "\x1D";
+	//const ABC = "\x1";
+	//const ABC = "\x1";
 
 
 	const PRINT = "\xff";
@@ -139,10 +146,10 @@ class main_old{
 	}
 
 	function execStmt($node){
-		var_dump("execStmt");
+		//var_dump("execStmt");
 		switch(get_class($node)){
 			case Echo_::class:
-				var_dump("echo");
+				//var_dump("echo");
 				return code::PRINT.$this->execStmts($node->exprs);
 				break;
 			case if_::class:
@@ -158,6 +165,7 @@ class main_old{
 				break;
 			case ElseIf_::class:
 				break;
+
 		}
 	}
 
@@ -177,112 +185,153 @@ class main_old{
 		return $return;
 	}
 
+	function toBinaryOp(array $binaryOp){
+		$binary = "";
+		foreach($binaryOp as $value){
+			$var = $value[0];
+			$output = chr($value[3]);
+			$var1 = $this->getInt($value[1]);
+			$var2 = $this->getInt($value[2]);
+
+			$binary .= $var.$output.$var1.$var2;
+		}
+		return $binary;
+	}
+
+	function readValue($var, &$i, $values){
+		if($var[$i++] === code::READV){
+			return $values[ord($var[$i++])];
+		}elseif($var[$i++] === code::INT){
+			$size = ord($var[$i++]);
+			switch($size){
+				case self::TYPE_BYTE://byte
+					return Binary::readSignedByte($var[$i++]);
+					break;
+				case self::TYPE_SHORT://short
+					return Binary::readLShort($var[$i++].$var[$i++]);
+					break;
+				case self::TYPE_INT://int
+					return Binary::readInt($var[$i++].$var[$i++].$var[$i++].$var[$i++]);
+					break;
+				case self::TYPE_LONG://long
+					return Binary::readLong($var[$i++].$var[$i++].$var[$i++].$var[$i++].$var[$i++].$var[$i++].$var[$i++].$var[$i++]);
+					break;
+			}
+		}
+	}
+
 	function execExpr(Expr $expr){
-		if($expr instanceof BinaryOp){
-			$return = $this->execBinaryOp($expr);//array
-			return $return[0];
-			/*var_dump($return);
-			$values = [];
-			foreach($return as $value){
-				var_dump($value);
+		switch(true){
+			case $expr instanceof BinaryOp:
+				$return = $this->execBinaryOp($expr);//array
+				$return2 = $this->toBinaryOp($return);
+				var_dump($return);
+				$values = [];
+				$len = strlen($return2);
+				for($i = 1; $i <= $len; $i++){
+					$var = $return2[$i];
 
-				$var = $value[0];
-				$var1 = $this->test($value[1], $values);
-				$var2 = $this->test($value[2], $values);
-				$output = $value[3];
-*/
-				/** @var mixed $return1 */
-				/*$return1 = 0;
+					$var1 = $this->test($value[1], $values);//
+					$var2 = $this->test($value[2], $values);
+					$output = $value[3];
 
-				switch($var){
-					case code::ADD:
-						$return1 = $var1 + $var2;
-						break;
-					case code::MUL:
-						$return1 = $var1 * $var2;
-						break;
-					case code::DIV:
-						$return1 = $var1 / $var2;
-						break;
-					case code::MINUS:
-						$return1 = $var1 - $var2;
-						break;
-					case code::B_AND:
-						$return1 = $var1 & $var2;
-						break;
-					case code::B_OR:
-						$return1 = $var1 | $var2;
-						break;
-					case code::B_XOR:
-						$return1 = $var1 ^ $var2;
-						break;
-					case code::BOOL_AND:
-						$return1 = (int) $var1&&$var2;
-						break;
-					case code::BOOL_OR:
-						$return1 = (int) $var1||$var2;
-						break;
-					case code::COALESCE:
-						//$return1 = $var1 ?? $var2;
-						break;
-					case code::CONCAT:
-						$return1 = $var1.$var2;
-						break;
-					case code::EQUAL:
-						$return1 = (int) $var1 == $var2;
-						break;
-					case code::GREATER:
-						$return1 = (int) $var1 > $var2;
-						break;
-					case code::GREATEROREQUAL:
-						$return1 = (int) $var1 >= $var2;
-						break;
-					case code::IDENTICAL:
-						$return1 = (int) $var1 === $var2;
-						break;
-					case code::L_AND:
-						$return1 = (int) $var1 and $var2;
-						break;
-					case code::L_OR:
-						$return1 = (int) $var1 or $var2;
-						break;
-					case code::L_XOR:
-						$return1 = $var1 xor $var2;
-						break;
-					case code::MOD:
-						$return1 = $var1 % $var2;
-						break;
-					case code::NOTEQUAL:
-						$return = (int) $var1 != $var2;
-						break;
-					case code::NOTIDENTICAL:
-						$return1 = (int) $var1 !== $var2;
-						break;
-					case code::SHIFTLEFT:
-						$return1 = $var1 << $var2;
-						break;
-					case code::POW:
-						$return1 = $var1 ** $var2;
-						break;
-					case code::SHIFTRIGHT:
-						$return1 = $var1 >> $var2;
-						break;
-					case code::SMALLER:
-						$return1 = (int) $var1 < $var2;
-						break;
-					case code::SMALLEROREQUAL:
-						$return1 = (int) $var1 <= $var2;
-						break;
-					case code::SPACESHIP:
-						$return1 = (int) $var1 <=> $var2;
-						break;
+					/** @var mixed $return1 */
+					$return1 = 0;
+
+					switch($var){
+						case code::ADD:
+							$return1 = $var1 + $var2;
+							break;
+						case code::MUL:
+							$return1 = $var1 * $var2;
+							break;
+						case code::DIV:
+							$return1 = $var1 / $var2;
+							break;
+						case code::MINUS:
+							$return1 = $var1 - $var2;
+							break;
+						case code::B_AND:
+							$return1 = $var1 & $var2;
+							break;
+						case code::B_OR:
+							$return1 = $var1 | $var2;
+							break;
+						case code::B_XOR:
+							$return1 = $var1 ^ $var2;
+							break;
+						case code::BOOL_AND:
+							$return1 = (int) $var1&&$var2;
+							break;
+						case code::BOOL_OR:
+							$return1 = (int) $var1||$var2;
+							break;
+						case code::COALESCE:
+							//$return1 = $var1 ?? $var2;
+							break;
+						case code::CONCAT:
+							$return1 = $var1.$var2;
+							break;
+						case code::EQUAL:
+							$return1 = (int) $var1 == $var2;
+							break;
+						case code::GREATER:
+							$return1 = (int) $var1 > $var2;
+							break;
+						case code::GREATEROREQUAL:
+							$return1 = (int) $var1 >= $var2;
+							break;
+						case code::IDENTICAL:
+							$return1 = (int) $var1 === $var2;
+							break;
+						case code::L_AND:
+							$return1 = (int) $var1 and $var2;
+							break;
+						case code::L_OR:
+							$return1 = (int) $var1 or $var2;
+							break;
+						case code::L_XOR:
+							$return1 = $var1 xor $var2;
+							break;
+						case code::MOD:
+							$return1 = $var1 % $var2;
+							break;
+						case code::NOTEQUAL:
+							$return = (int) $var1 != $var2;
+							break;
+						case code::NOTIDENTICAL:
+							$return1 = (int) $var1 !== $var2;
+							break;
+						case code::SHIFTLEFT:
+							$return1 = $var1 << $var2;
+							break;
+						case code::POW:
+							$return1 = $var1 ** $var2;
+							break;
+						case code::SHIFTRIGHT:
+							$return1 = $var1 >> $var2;
+							break;
+						case code::SMALLER:
+							$return1 = (int) $var1 < $var2;
+							break;
+						case code::SMALLEROREQUAL:
+							$return1 = (int) $var1 <= $var2;
+							break;
+						case code::SPACESHIP:
+							$return1 = (int) $var1 <=> $var2;
+							break;
+					}
+					var_dump($output." => ".$return1);
+					$values[$output] = $return1;
+					//var_dump($values);
 				}
-				var_dump($output." => ".$return1);
-				$values[$output] = $return1;
-				//var_dump($values);
-			}*/
-			//var_dump($return1);
-			//return var_dump($this->execBinaryOp($expr));
+				//var_dump($return1);
+				//return var_dump($this->execBinaryOp($expr));
+				return $return2;
+			break;
+			case $expr instanceof ConstFetch:
+				return $expr->name->parts[0];//true
+				break;
 		}
 	}
 
@@ -392,6 +441,10 @@ class main_old{
 		if($value instanceof Variable){
 			return $this->exec_var($value);
 		}
+
+		if($value instanceof Expr){
+			return $this->execExpr($value);//再帰...?
+		}
 	}
 
 
@@ -427,12 +480,12 @@ class main_old{
 	}
 
 	function getInt($value){
-		return $value."H";
+		//return $value."H";
 		$size = $this->checkIntSize($value);
 		$return = code::INT.chr($size);
 		switch($size){
 			case self::TYPE_BYTE://byte
-				$return .= Binary::readSignedByte($value);
+				$return .= Binary::writeByte($value);//Binary::readSignedByte($value);
 				break;
 			case self::TYPE_SHORT://short
 				$return .= Binary::writeLShort($value);
@@ -495,7 +548,7 @@ class CodeBlock{
 $main_old = new main_old();
 $output = $main_old->execStmts($stmts);
 var_dump($output);
-file_put_contents("output.txt", $output);
+//file_put_contents("output.txt", $output);
 //var_dump(token_get_all($code));
 
 
