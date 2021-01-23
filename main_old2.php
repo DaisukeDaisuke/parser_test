@@ -32,6 +32,7 @@ use PhpParser\Node\Expr\BinaryOp\Spaceship;
 use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Scalar;
+use PhpParser\Node\Scalar\DNumber;
 use PhpParser\Node\Scalar\LNumber;
 use PhpParser\Node\Scalar\String_ as LString;
 use PhpParser\Node\Stmt;
@@ -42,17 +43,18 @@ use PhpParser\Node\Stmt\if_;
 use PhpParser\NodeDumper;
 use PhpParser\ParserFactory;
 use pocketmine\utils\Binary;
-use pocketmine\utils\BinaryStream;
 
 ini_set('xdebug.var_display_max_children', -1);
 ini_set('xdebug.var_display_max_data', -1);
 ini_set('xdebug.var_display_max_depth', -1);
 
+include __DIR__."/decoder.php";
+
 $code = '
 <?php
 $a = 100;
 //echo 1+2*(3/$a*1);
-echo ((2*1+1)+(2/1+3)-(2/(5*6+20)*(5*(6/2))))."\na";//3+5+50
+echo ((2*1+1)+(2/1+3)-(2/(5*6+20)*(5*(6/2))))+7.4;//3+5+50
 
 /*if(true===true){
 	echo "test print";
@@ -92,10 +94,23 @@ echo $dumper->dump($stmts, $code);
 //var_dump($stmts);
 
 class code{
+	//metadata
+	const TYPE_BYTE = 1;
+	const TYPE_SHORT = 2;
+	const TYPE_INT = 4;
+	const TYPE_LONG = 8;
+	const TYPE_DOUBLE = 9;
+
+	const TYPE_SIZE_DOUBLE = 8;
+
+	//opcode
+
 	//valueOP(Scalar)
-	const READV = "\x00";//readv $a(0)
-	const INT = "\x01";
-	const STRING = "\x1F";
+	const READV = "\xC1";//readv $a(0)
+	const INT = "\xC2";
+	const STRING = "\xC3";
+	//const DOUBLE = "\xC4";
+	//const READV = "\x00";
 
 	//binaryOP
 	const ADD = "\x02";//add 80 1000 $a
@@ -133,16 +148,11 @@ class code{
 	//const ABC = "\x1";
 
 
-	const PRINT = "\xf0";
+	const PRINT = "\xf9";
 
 }
 
 class main_old{
-	const TYPE_BYTE = 1;
-	const TYPE_SHORT = 2;
-	const TYPE_INT = 4;
-	const TYPE_LONG = 8;
-
 	public $count = 0;
 
 
@@ -161,7 +171,7 @@ class main_old{
 			case Echo_::class:
 				//var_dump("echo");
 				//var_dump([...$this->execStmts($node->exprs), [code::PRINT."echo", $this->count]]);
-				return [...$this->execStmts($node->exprs), [code::PRINT, $this->count]];
+				return [...$this->execStmts($node->exprs), [code::PRINT, $this->put_var($this->count)]];
 				break;
 			case if_::class:
 				$return = $this->execExpr($node->cond);
@@ -289,21 +299,23 @@ class main_old{
 
 		$count1 = $this->count;
 
+		// id output Read_v.id Read_v.id
+
 		$return = [];
 		if(is_array($left)&&is_array($right)){
 			//$count2 = ++$this->count;
 			$return = [...$left, ...$right];
-			$return[] = [$id, $count1, $basecount1, $basecount2];//$left,$right
+			$return[] = [$id, chr($count1), $this->put_var($basecount1), $this->put_var($basecount2)];//$left,$right
 		}elseif(is_array($left)){
 			/** @var array $left */
 			$return = $left;
-			$return[] = [$id, $count1, $basecount1, $right];
+			$return[] = [$id, chr($count1), $this->put_var($basecount1), $right];
 		}elseif(is_array($right)){
 			/** @var array $right */
 			$return = $right;
-			$return[] = [$id, $count1, $left, $basecount2];
+			$return[] = [$id, chr($count1), $left, $this->put_var($basecount2)];
 		}else{
-			$return[] = [$id, $count1, $left, $right];
+			$return[] = [$id, chr($count1), $left, $right];
 		}
 		//var_dump($return);
 		return $return;
@@ -336,6 +348,10 @@ class main_old{
 		return code::READV.$this->getValualueId($node->name);
 	}
 
+	function put_var(int $var): string{
+		return code::READV.chr($var);
+	}
+
 	public function getValualueId($value): string{
 		return chr($this->block[$this->blockid]->get($value));
 	}
@@ -350,14 +366,17 @@ class main_old{
 	}*/
 
 	function execScalar($node): string{
+		var_dump(get_class($node));
 		switch(get_class($node)){
 			case LNumber::class:
+			case DNumber::class:
 				//$value = $node->value;
 				//$intsize = $this->checkIntSize($value);
 				//return [$intsize, $value];
 				return $this->getInt($node->value);
 			case LString::class;
 				return $this->getString($node->value);
+
 		}
 	}
 
@@ -370,21 +389,28 @@ class main_old{
 		$size = $this->checkIntSize($value);
 		$return = code::INT.chr($size);
 		switch($size){
-			case self::TYPE_BYTE://byte
+			case code::TYPE_BYTE://byte 1-byte
 				$return .= Binary::writeByte($value);//Binary::readSignedByte($value);
 				break;
-			case self::TYPE_SHORT://short
+			case code::TYPE_SHORT:// 2-byte
 				$return .= Binary::writeLShort($value);
 				break;
-			case self::TYPE_INT://int
+			case code::TYPE_INT://int 4-byte
 				$return .= Binary::writeInt($value);
 				break;
-			case self::TYPE_LONG://long
+			case code::TYPE_LONG://long 8-byte
 				$return .= Binary::writeLong($value);
+				break;
+			case code::TYPE_DOUBLE://Double 8-byte
+				$return .= Binary::writeLDouble($value);
 				break;
 		}
 		return $return;
 	}
+
+	/*public function getDouble($var){
+		return code::INT.code::TYPE_DOUBLE.Binary::writeLDouble($var);//;
+	}*/
 
 	public function getString(string $value): string{
 		$len = strlen($value);
@@ -394,15 +420,19 @@ class main_old{
 
 
 	function checkIntSize($value){
+		if(is_float($value)){
+			return code::TYPE_DOUBLE;
+		}
+
 		switch(true){
 			case $value <= 127&&$value >= -128://byte
-				return self::TYPE_BYTE;
+				return code::TYPE_BYTE;
 			case $value <= 0xffff&&$value >= -0xffff://short
-				return self::TYPE_SHORT;
+				return code::TYPE_SHORT;
 			case $value <= 0x7FFFFFFF&&$value >= -0x7FFFFFFF://int
-				return self::TYPE_INT;
+				return code::TYPE_INT;
 			case $value <= 0x7FFFFFFFFFFFFFFF&&$value >= -0x7FFFFFFFFFFFFFFF://long
-				return self::TYPE_LONG;
+				return code::TYPE_LONG;
 		}
 	}
 }
@@ -443,6 +473,21 @@ $output = $main_old->execStmts($stmts);
 var_dump($output);
 $output = $main_old->encode_opcode_array($output);
 var_dump($output);
+
+
+function hexentities($str){
+	$return = '';
+	for($i = 0, $iMax = strlen($str); $i < $iMax; $i++){
+		$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+	}
+	return $return;
+}
+
+var_dump(hexentities($output));
+
+$decoder = new decoder();
+$decoder->decode($output);
+
 //$main_old->decodeop_array($output);
 //file_put_contents("output.txt", $output);
 //var_dump(token_get_all($code));
