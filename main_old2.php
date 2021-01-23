@@ -39,7 +39,7 @@ use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Echo_;
 use PhpParser\Node\Stmt\Else_;
 use PhpParser\Node\Stmt\ElseIf_;
-use PhpParser\Node\Stmt\if_;
+use PhpParser\Node\Stmt\If_;
 use PhpParser\NodeDumper;
 use PhpParser\ParserFactory;
 use pocketmine\utils\Binary;
@@ -56,11 +56,11 @@ $a = 100;
 //echo 1+2*(3/$a*1);
 echo ((2*1+1)+(2/1+3)-(2/(5*6+20)*(5*(6/2))))+7.4;//3+5+50
 
-/*if(true===true){
+if(true===true){
 	echo "test print";
 }
 
-
+/*
 if(1+2===3){
 
 }else{
@@ -106,9 +106,9 @@ class code{
 	//opcode
 
 	//valueOP(Scalar)
-	const READV = "\xC1";//readv $a(0)
-	const INT = "\xC2";
-	const STRING = "\xC3";
+	const READV = "\x91";//readv $a(0)
+	const INT = "\x92";
+	const STRING = "\x93";
 	//const DOUBLE = "\xC4";
 	//const READV = "\x00";
 
@@ -148,7 +148,11 @@ class code{
 	//const ABC = "\x1";
 
 
-	const PRINT = "\xf9";
+	//Stmt
+	const PRINT = "\xA0";
+	const JMP = "\xA1";//JMPZ int...?
+	const JMPZ = "\xA2";//JMPZ READV
+
 
 }
 
@@ -163,7 +167,7 @@ class main_old{
 
 	public function __construct(){
 		$this->block[$this->blockid] = new CodeBlock($this->blockid);
-		var_dump($this->checkIntSize(254));
+		//var_dump($this->checkIntSize(254));
 	}
 
 	function execStmt($node){
@@ -173,11 +177,20 @@ class main_old{
 				//var_dump([...$this->execStmts($node->exprs), [code::PRINT."echo", $this->count]]);
 				return [...$this->execStmts($node->exprs), [code::PRINT, $this->put_var($this->count)]];
 				break;
-			case if_::class:
+			case PhpParser\Node\Stmt\If_::class://...?
 				$return = $this->execExpr($node->cond);
+				/** @var array $return */
+				$return[] = [code::JMPZ, $this->getInt(),$this->put_var($this->count)];
+
 				$stmts = $this->execStmts($node->stmts);
-				$elseifs = $this->execStmts($node->elseifs);
-				$else = $this->execStmts($node->else);
+
+				if(isset($node->else)){
+					$elseifs = $this->execStmts($node->elseifs);
+				}
+				if(isset($node->else)){
+					$else = $this->execStmts($node->else);
+				}
+
 
 				//elseifs
 				//else
@@ -216,6 +229,10 @@ class main_old{
 		return $binary;
 	}
 
+	/**
+	 * @param Expr $expr
+	 * @return string|mixed[]|mixed[][]
+	 */
 	function execExpr(Expr $expr){
 		switch(true){
 			case $expr instanceof BinaryOp:
@@ -226,6 +243,15 @@ class main_old{
 				//var_dump($this->decodeop_array($return));
 				return $return;
 			case $expr instanceof ConstFetch:
+				$value = $expr->name->parts[0];
+				if($value === "false"){
+					return $this->getInt(0);
+				}
+
+				if($value === "true"){
+					return $this->getInt(1);
+				}
+
 				return $expr->name->parts[0];//true
 				break;
 		}
@@ -366,7 +392,6 @@ class main_old{
 	}*/
 
 	function execScalar($node): string{
-		var_dump(get_class($node));
 		switch(get_class($node)){
 			case LNumber::class:
 			case DNumber::class:
@@ -485,8 +510,8 @@ function hexentities($str){
 
 var_dump(hexentities($output));
 
-$decoder = new decoder();
-$decoder->decode($output);
+//$decoder = new decoder();
+//$decoder->decode($output);
 
 //$main_old->decodeop_array($output);
 //file_put_contents("output.txt", $output);
