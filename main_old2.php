@@ -39,7 +39,6 @@ use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Echo_;
 use PhpParser\Node\Stmt\Else_;
 use PhpParser\Node\Stmt\ElseIf_;
-use PhpParser\Node\Stmt\If_;
 use PhpParser\NodeDumper;
 use PhpParser\ParserFactory;
 use pocketmine\utils\Binary;
@@ -58,6 +57,10 @@ echo ((2*1+1)+(2/1+3)-(2/(5*6+20)*(5*(6/2))))+7.4;//3+5+50
 
 if(true===true){
 	echo "test print";
+}elseif(1===1){
+
+}elseif(2===2){
+
 }
 
 /*
@@ -151,7 +154,7 @@ class code{
 	//Stmt
 	const PRINT = "\xA0";
 	const JMP = "\xA1";//JMPZ int...?
-	const JMPZ = "\xA2";//JMPZ READV
+	const JMPZ = "\xA2";//JMPZ READV === 0
 
 
 }
@@ -170,26 +173,34 @@ class main_old{
 		//var_dump($this->checkIntSize(254));
 	}
 
-	function execStmt($node){
+	public function execStmt($node){
+		$return = "";
 		switch(get_class($node)){
 			case Echo_::class:
 				//var_dump("echo");
 				//var_dump([...$this->execStmts($node->exprs), [code::PRINT."echo", $this->count]]);
-				return [...$this->execStmts($node->exprs), [code::PRINT, $this->put_var($this->count)]];
+				return $this->execStmts($node->exprs).code::PRINT.$this->put_var($this->count);
 				break;
 			case PhpParser\Node\Stmt\If_::class://...?
 				$return = $this->execExpr($node->cond);
-				/** @var array $return */
-				$return[] = [code::JMPZ, $this->getInt(),$this->put_var($this->count)];
-
-				$stmts = $this->execStmts($node->stmts);
-
-				if(isset($node->else)){
-					$elseifs = $this->execStmts($node->elseifs);
+				/*$else = null;
+				if(isset($node->elseifs[0])){
+					$else = $this->execStmts($node->elseifs);
 				}
+
 				if(isset($node->else)){
 					$else = $this->execStmts($node->else);
 				}
+
+				if($else !== null){
+
+				}*/
+
+				$stmts = $this->execStmts($node->stmts);
+
+				var_dump($node->stmts,strlen($stmts), $stmts);
+
+				$return .= code::JMPZ . $this->put_var($this->count) . $this->getInt(strlen($stmts));//-1
 
 
 				//elseifs
@@ -203,14 +214,14 @@ class main_old{
 		}
 	}
 
-	function execStmts(array $nodes){
-		$return = [];
+	public function execStmts(array $nodes){
+		$return = "";
 		foreach($nodes as $node){
 			if($node instanceof Expr){
-				$return = array_merge($this->execExpr($node) ?? [], $return);
+				$return = ($this->execExpr($node) ?? "").$return;
 			}
 			if($node instanceof Stmt){
-				$return = array_merge($this->execStmt($node) ?? [], $return);
+				$return = ($this->execStmt($node) ?? "").$return;
 			}
 			/*if($node instanceof node){
 
@@ -219,7 +230,7 @@ class main_old{
 		return $return;
 	}
 
-	function encode_opcode_array(array $binaryOp){
+	public function encode_opcode_array(array $binaryOp){
 		$binary = "";
 		foreach($binaryOp as $value){
 			foreach($value as $code){
@@ -229,35 +240,7 @@ class main_old{
 		return $binary;
 	}
 
-	/**
-	 * @param Expr $expr
-	 * @return string|mixed[]|mixed[][]
-	 */
-	function execExpr(Expr $expr){
-		switch(true){
-			case $expr instanceof BinaryOp:
-				$return = $this->execBinaryOp($expr);//array
-				//$return2 = $this->toBinaryOp($return);
-				//var_dump($return);
-
-				//var_dump($this->decodeop_array($return));
-				return $return;
-			case $expr instanceof ConstFetch:
-				$value = $expr->name->parts[0];
-				if($value === "false"){
-					return $this->getInt(0);
-				}
-
-				if($value === "true"){
-					return $this->getInt(1);
-				}
-
-				return $expr->name->parts[0];//true
-				break;
-		}
-	}
-
-	function execBinaryOp($node, $count = 0): array{//output //add 10 10 1
+	public function execBinaryOp($node, $count = 0): string{//output //add 10 10 1
 		//var_dump($count);
 		switch(get_class($node)){
 			case Plus::class:
@@ -316,65 +299,75 @@ class main_old{
 
 	}
 
-	function execbinaryplus($node, $id): array{
-		$left = $this->execScalar_var($node->left);
+	public function execbinaryplus($node, $id): string{
+		$recursionLeft = false;
+		$recursionRight = false;
+
+		$left = $this->execExpr($node->left, $recursionLeft);
 		$basecount1 = $this->count;
 
-		$right = $this->execScalar_var($node->right);
+		$right = $this->execExpr($node->right, $recursionRight);
 		$basecount2 = $this->count++;
 
 		$count1 = $this->count;
 
+		var_dump([$recursionLeft, $recursionRight]);
+
 		// id output Read_v.id Read_v.id
 
-		$return = [];
-		if(is_array($left)&&is_array($right)){
+		$return = "";
+		if($recursionLeft&&$recursionRight){
 			//$count2 = ++$this->count;
-			$return = [...$left, ...$right];
-			$return[] = [$id, chr($count1), $this->put_var($basecount1), $this->put_var($basecount2)];//$left,$right
-		}elseif(is_array($left)){
-			/** @var array $left */
-			$return = $left;
-			$return[] = [$id, chr($count1), $this->put_var($basecount1), $right];
-		}elseif(is_array($right)){
-			/** @var array $right */
-			$return = $right;
-			$return[] = [$id, chr($count1), $left, $this->put_var($basecount2)];
+			$return = $left.$right;
+			$return .= $id.chr($count1).$this->put_var($basecount1).$this->put_var($basecount2);//$left,$right
+		}elseif($recursionLeft){
+			//$return = $left;
+			$return .= $left.$id.chr($count1).$this->put_var($basecount1).$right;
+		}elseif($recursionRight){
+			$return .= $right.$id.chr($count1).$left.$this->put_var($basecount2);
 		}else{
-			$return[] = [$id, chr($count1), $left, $right];
+			$return .= $id.chr($count1).$left.$right;
 		}
 		//var_dump($return);
 		return $return;
 	}
 
-	function execScalar_var($value){//array...?
-		if($value instanceof Scalar){
-			return $this->execScalar($value);
-		}
+	public function execExpr($expr, &$recursion = false){//array...?
+		switch(true){
+			case $expr instanceof BinaryOp:
+				$recursion = true;
+				return $this->execBinaryOp($expr);
+			case $expr instanceof ConstFetch:
+				$value = $expr->name->parts[0];
+				if($value === "false"){
+					return $this->getInt(0);
+				}
 
-		if($value instanceof BinaryOp){
-			return $this->execBinaryOp($value);
-			//return $this->execBinaryOp($value);
-		}
+				if($value === "true"){
+					return $this->getInt(1);
+				}
 
-		if($value instanceof Variable){
-			return $this->exec_var($value);
-		}
-
-		if($value instanceof Expr){
-			return $this->execExpr($value);//再帰...?
+				return $expr->name->parts[0];//true
+			case $expr instanceof Scalar:
+				return $this->execScalar($expr);
+			case $expr instanceof Variable:
+				return $this->exec_var($expr);
+			case $expr instanceof Expr:
+				$recursion = true;
+				return $this->execExpr($expr);//再帰...?
+			break;
 		}
 	}
 
 
-	function exec_var(Variable $node): string{//変数処理...
+	public function exec_var(Variable $node): string{//変数処理...
 		if($node->name instanceof Expr){
 			return "";//$$b
 		}
 		return code::READV.$this->getValualueId($node->name);
 	}
 
-	function put_var(int $var): string{
+	public function put_var(int $var): string{
 		return code::READV.chr($var);
 	}
 
@@ -391,7 +384,7 @@ class main_old{
 		}
 	}*/
 
-	function execScalar($node): string{
+	public function execScalar($node): string{
 		switch(get_class($node)){
 			case LNumber::class:
 			case DNumber::class:
@@ -409,7 +402,7 @@ class main_old{
 
 	}*/
 
-	function getInt($value): string{
+	public function getInt($value): string{
 		//return $value."H";
 		$size = $this->checkIntSize($value);
 		$return = code::INT.chr($size);
@@ -444,7 +437,7 @@ class main_old{
 	}
 
 
-	function checkIntSize($value){
+	public function checkIntSize($value){
 		if(is_float($value)){
 			return code::TYPE_DOUBLE;
 		}
@@ -496,8 +489,8 @@ class CodeBlock{
 $main_old = new main_old();
 $output = $main_old->execStmts($stmts);
 var_dump($output);
-$output = $main_old->encode_opcode_array($output);
-var_dump($output);
+//$output = $main_old->encode_opcode_array($output);
+//var_dump($output);
 
 
 function hexentities($str){

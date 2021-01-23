@@ -84,3 +84,179 @@ Int:f2; size:01; 2:02;
 :0a; :61;
 
 print:f9; :f3; :0d;"
+
+:03; :01; :f2; :01; :02; :f2; :01; :01; :02; :02; :f3; :01; :f2; :01; :01; :04; :03; :f2; :01; :02; :f2; :01; :01; :02; :04; :f3; :03; :f2; :01; :03; :02; :05; :f3; :02; :f3; :04; :03; :06; :f2; :01; :05; :f2; :01; :06; :02; :07; :f3; :06; :f2; :01; :14; :04; :08; :f2; :01; :02; :f3; :07; :04; :09; :f2; :01; :06; :f2; :01; :02; :03; :0a; :f2; :01; :05; :f3; :09; :03; :0b; :f3; :08; :f3; :0a; :05; :0c; :f3; :05; :f3; :0b;
+:03; :01; :92; :01; :02; :92; :01; :01; :02; :02; :91; :01; :92; :01; :01; :04; :03; :92; :01; :02; :92; :01; :01; :02; :04; :91; :03; :92; :01; :03; :02; :05; :91; :02; :91; :04; :03; :06; :92; :01; :05; :92; :01; :06; :02; :07; :91; :06; :92; :01; :14; :04; :08; :92; :01; :02; :91; :07; :04; :09; :92; :01; :06; :92; :01; :02; :03; :0a; :92; :01; :05; :91; :09; :03; :0b; :91; :08; :91; :0a; :05; :0c; :91; :05; :91; :0b; :02; :0d; :91; :0c; :92; :09; :9a; :99; :99; :99; :99; :99; :1d; :40; :a0; :91; :0d;"
+
+:03; :01; :92; :01; :02; :92; :01; :01; :02; :02; :91; :01; :92; :01; :01; :04; :03; :92; :01; :02; :92; :01; :01; :02; :04; :91; :03; :92; :01; :03; :02; :05; :91; :02; :91; :04; :03; :06; :92; :01; :05; :92; :01; :06; :02; :07; :91; :06; :92; :01; :14; :04; :08; :92; :01; :02; :91; :07; :04; :09; :92; :01; :06; :92; :01; :02; :03; :0a; :92; :01; :05; :91; :09; :03; :0b; :91; :08; :91; :0a; :05; :0c; :91; :05; :91; :0b; :02; :0d; :91; :0c; :92; :09; :9a; :99; :99; :99; :99; :99; :1d; :40; :41; :72; :72; :61; :79; :a0; :91; :0d; :41; :72; :72; :61; :79;"
+:03; :01; :92; :01; :02; :92; :01; :01; :02; :02; :91; :01; :92; :01; :01; :04; :03; :92; :01; :02; :92; :01; :01; :02; :04; :91; :03; :92; :01; :03; :02; :05; :91; :02; :91; :04; :03; :06; :92; :01; :05; :92; :01; :06; :02; :07; :91; :06; :92; :01; :14; :04; :08; :92; :01; :02; :91; :07; :04; :09; :92; :01; :06; :92; :01; :02; :03; :0a; :92; :01; :05; :91; :09; :03; :0b; :91; :08; :91; :0a; :05; :0c; :91; :05; :91; :0b; :02; :0d; :91; :0c; :92; :09; :9a; :99; :99; :99; :99; :99; :1d; :40; :41; :72; :72; :61; :79; :a0; :91; :0d; :41; :72; :72; :61; :79;"
+
+array(
+    0: Stmt_InlineHTML(
+        value:
+
+    )
+    1: Stmt_Expression(
+        expr: Expr_Assign(
+            var: Expr_Variable(
+                name: a
+            )
+            expr: Scalar_LNumber(
+                value: 100
+            )
+        )
+    )
+    2: Stmt_Echo(
+        exprs: array(
+            0: Expr_BinaryOp_Plus(
+                left: Expr_BinaryOp_Minus(
+                    left: Expr_BinaryOp_Plus(
+                        left: Expr_BinaryOp_Plus(
+                            left: Expr_BinaryOp_Mul(
+                                left: Scalar_LNumber(
+                                    value: 2
+                                )
+                                right: Scalar_LNumber(
+                                    value: 1
+                                )
+                            )
+                            right: Scalar_LNumber(
+                                value: 1
+                            )
+                        )
+                        right: Expr_BinaryOp_Plus(
+                            left: Expr_BinaryOp_Div(
+                                left: Scalar_LNumber(
+                                    value: 2
+                                )
+                                right: Scalar_LNumber(
+                                    value: 1
+                                )
+                            )
+                            right: Scalar_LNumber(
+                                value: 3
+                            )
+                        )
+                    )
+                    right: Expr_BinaryOp_Mul(
+                        left: Expr_BinaryOp_Div(
+                            left: Scalar_LNumber(
+                                value: 2
+                            )
+                            right: Expr_BinaryOp_Plus(
+                                left: Expr_BinaryOp_Mul(
+                                    left: Scalar_LNumber(
+                                        value: 5
+                                    )
+                                    right: Scalar_LNumber(
+                                        value: 6
+                                    )
+                                )
+                                right: Scalar_LNumber(
+                                    value: 20
+                                )
+                            )
+                        )
+                        right: Expr_BinaryOp_Mul(
+                            left: Scalar_LNumber(
+                                value: 5
+                            )
+                            right: Expr_BinaryOp_Div(
+                                left: Scalar_LNumber(
+                                    value: 6
+                                )
+                                right: Scalar_LNumber(
+                                    value: 2
+                                )
+                            )
+                        )
+                    )
+                )
+                right: Scalar_DNumber(
+                    value: 7.4
+                )
+            )
+        )
+        comments: array(
+            0: //echo 1+2*(3/$a*1);
+        )
+    )
+    3: Stmt_If(
+        cond: Expr_BinaryOp_Identical(
+            left: Expr_ConstFetch(
+                name: Name(
+                    parts: array(
+                        0: true
+                    )
+                )
+            )
+            right: Expr_ConstFetch(
+                name: Name(
+                    parts: array(
+                        0: true
+                    )
+                )
+            )
+        )
+        stmts: array(
+            0: Stmt_Echo(
+                exprs: array(
+                    0: Scalar_String(
+                        value: test print
+                    )
+                )
+            )
+        )
+        elseifs: array(
+            0: Stmt_ElseIf(
+                cond: Expr_BinaryOp_Identical(
+                    left: Scalar_LNumber(
+                        value: 1
+                    )
+                    right: Scalar_LNumber(
+                        value: 1
+                    )
+                )
+                stmts: array(
+                )
+            )
+            1: Stmt_ElseIf(
+                cond: Expr_BinaryOp_Identical(
+                    left: Scalar_LNumber(
+                        value: 2
+                    )
+                    right: Scalar_LNumber(
+                        value: 2
+                    )
+                )
+                stmts: array(
+                )
+            )
+        )
+        else: null
+        comments: array(
+            0: //3+5+50
+        )
+    )
+    4: Stmt_Nop(
+        comments: array(
+            0: /*
+            if(1+2===3){
+
+            }else{
+            	echo "else_test";
+            }
+
+
+            if(1+5===true){
+            	echo "if_test";
+            }else if($a === 100){
+            	echo "else_test";
+            }
+
+            const TEST = "A";
+            echo TEST;
+            */
+        )
+    )
+)
