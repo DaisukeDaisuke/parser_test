@@ -72,10 +72,10 @@ class decoder{
 				$return1 = $var1 ^ $var2;
 				break;
 			case code::BOOL_AND:
-				$return1 = (int) $var1&&$var2;
+				$return1 = (int) ($var1&&$var2);
 				break;
 			case code::BOOL_OR:
-				$return1 = (int) $var1||$var2;
+				$return1 = (int) ($var1||$var2);
 				break;
 			case code::COALESCE:
 				//$return1 = $var1 ?? $var2;
@@ -84,22 +84,22 @@ class decoder{
 				$return1 = $var1.$var2;
 				break;
 			case code::EQUAL:
-				$return1 = (int) $var1 == $var2;
+				$return1 = (int) ($var1 == $var2);
 				break;
 			case code::GREATER:
-				$return1 = (int) $var1 > $var2;
+				$return1 = (int) ($var1 > $var2);
 				break;
 			case code::GREATEROREQUAL:
-				$return1 = (int) $var1 >= $var2;
+				$return1 = (int) ($var1 >= $var2);
 				break;
 			case code::IDENTICAL:
-				$return1 = (int) $var1 === $var2;
+				$return1 = (int) ($var1 === $var2);
 				break;
 			case code::L_AND:
-				$return1 = (int) $var1 and $var2;
+				$return1 = (int) ($var1 and $var2);
 				break;
 			case code::L_OR:
-				$return1 = (int) $var1 or $var2;
+				$return1 = (int) ($var1 or $var2);
 				break;
 			case code::L_XOR:
 				$return1 = $var1 xor $var2;
@@ -108,10 +108,10 @@ class decoder{
 				$return1 = $var1 % $var2;
 				break;
 			case code::NOTEQUAL:
-				$return1 = (int) $var1 != $var2;
+				$return1 = (int) ($var1 != $var2);
 				break;
 			case code::NOTIDENTICAL:
-				$return1 = (int) $var1 !== $var2;
+				$return1 = (int) ($var1 !== $var2);
 				break;
 			case code::SHIFTLEFT:
 				$return1 = $var1 << $var2;
@@ -123,13 +123,13 @@ class decoder{
 				$return1 = $var1 >> $var2;
 				break;
 			case code::SMALLER:
-				$return1 = (int) $var1 < $var2;
+				$return1 = (int) ($var1 < $var2);
 				break;
 			case code::SMALLEROREQUAL:
-				$return1 = (int) $var1 <= $var2;
+				$return1 = (int) ($var1 <= $var2);
 				break;
 			case code::SPACESHIP:
-				$return1 = (int) $var1 <=> $var2;
+				$return1 = ($var1 <=> $var2);
 				break;
 		}
 		var_dump($output." => ".$return1);
