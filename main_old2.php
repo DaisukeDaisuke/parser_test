@@ -32,9 +32,6 @@ use PhpParser\Node\Expr\BinaryOp\Spaceship;
 use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Scalar;
-use PhpParser\Node\Scalar\DNumber;
-use PhpParser\Node\Scalar\LNumber;
-use PhpParser\Node\Scalar\String_ as LString;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Echo_;
 use PhpParser\Node\Stmt\Else_;
@@ -51,18 +48,25 @@ include __DIR__."/decoder.php";
 
 $code = '
 <?php
-$a = 100;
-//echo 1+2*(3/$a*1);
-echo ((2*1+1)+(2/1+3)-(2/(5*6+20)*(5*(6/2))))+7.4;//3+5+50
+echo ((2*1+1)+(2/1+3));
+if(true){
+	echo "test print";
+}elseif(1===1){
+	
+}
 
-if(true===true){
+';
+//$a = 100;
+//echo ((2*1+1)+(2/1+3)-(2/(5*6+20)*(5*(6/2))))+7.4===true;//3+5+50
+//echo 1+2*(3/$a*1);
+/*
+if(true){
 	echo "test print";
 }elseif(1===1){
 
 }elseif(2===2){
 
-}
-
+}*/
 /*
 if(1+2===3){
 
@@ -80,8 +84,6 @@ if(1+5===true){
 const TEST = "A";
 echo TEST;
 */
-';
-
 //$code = file_get_contents("/sdcard/www/public/php-parser/vendor/unphar.php");
 
 $parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7);
@@ -92,7 +94,6 @@ $stmts = $parser->parse($code);
 
 $dumper = new NodeDumper(['dumpComments' => true,]);
 echo $dumper->dump($stmts, $code);
-
 
 //var_dump($stmts);
 
@@ -110,8 +111,9 @@ class code{
 
 	//valueOP(Scalar)
 	const READV = "\x91";//readv $a(0)
-	const INT = "\x92";
-	const STRING = "\x93";
+	const WRITEV = "\x32";//writev output int size 1
+	const INT = "\x93";
+	const STRING = "\x94";
 	//const DOUBLE = "\xC4";
 	//const READV = "\x00";
 
@@ -179,36 +181,53 @@ class main_old{
 			case Echo_::class:
 				//var_dump("echo");
 				//var_dump([...$this->execStmts($node->exprs), [code::PRINT."echo", $this->count]]);
-				return $this->execStmts($node->exprs).code::PRINT.$this->put_var($this->count);
+
+				return $this->execStmts($node->exprs).code::PRINT.$this->put_var($this->count++);
 				break;
 			case PhpParser\Node\Stmt\If_::class://...?
+				//ConstFetch
 				$return = $this->execExpr($node->cond);
-				/*$else = null;
+				$ifcount = $this->count++;
+
+				var_dump($this->hexentities($return));
+				$elseifs = null;
+				$else = null;
+
 				if(isset($node->elseifs[0])){
 					$else = $this->execStmts($node->elseifs);
 				}
-
 				if(isset($node->else)){
-					$else = $this->execStmts($node->else);
+					$elseifs = $this->execStmts($node->else);
 				}
-
-				if($else !== null){
-
-				}*/
 
 				$stmts = $this->execStmts($node->stmts);
 
-				var_dump($node->stmts,strlen($stmts), $stmts);
+				if($else !== null){
+					$return .=
+						code::JMPZ.$this->put_var($ifcount).$this->getInt(strlen($stmts)).$stmts.
+						code::JMP.$this->getInt(strlen($else)).$else;//-1 //if code::JMP
+				}
 
-				$return .= code::JMPZ . $this->put_var($this->count) . $this->getInt(strlen($stmts));//-1
+				var_dump($return);
+
+
+				//var_dump(["if",$this->hexentities($if),strlen($stmts)]);
+				//var_dump(["print",$this->hexentities($stmts)]);//then
+
+				//var_dump($node->stmts,strlen($stmts), $stmts);
+				var_dump("return", $this->hexentities($return));
 
 
 				//elseifs
 				//else
 				break;
 			case Else_::class:
+				return $this->execStmts($node->stmts);//JMPZ
 				break;
 			case ElseIf_::class:
+				$return = $this->execExpr($node->cond);
+				$ifcount = $this->count++;
+				$this->execStmts($node->stmts);
 				break;
 
 		}
@@ -218,10 +237,18 @@ class main_old{
 		$return = "";
 		foreach($nodes as $node){
 			if($node instanceof Expr){
-				$return = ($this->execExpr($node) ?? "").$return;
+				$root = false;
+				$return1 = $this->execExpr($node, $root) ?? "";
+				//var_dump(["??Expr",$root,$return1,$return1[0] === code::STRING]);
+
+				if($root === false){
+					$return1 = code::WRITEV.$this->write_varId($this->count).$return1;
+				}
+				$return .= $return1.$return;
+
 			}
 			if($node instanceof Stmt){
-				$return = ($this->execStmt($node) ?? "").$return;
+				$return .= ($this->execStmt($node) ?? "").$return;
 			}
 			/*if($node instanceof node){
 
@@ -338,16 +365,18 @@ class main_old{
 				$recursion = true;
 				return $this->execBinaryOp($expr);
 			case $expr instanceof ConstFetch:
+				$recursion = true;
 				$value = $expr->name->parts[0];
+				//$return = $this->put_Scalar();
 				if($value === "false"){
-					return $this->getInt(0);
+					return $this->write_var($this->count, 0);
 				}
 
 				if($value === "true"){
-					return $this->getInt(1);
+					return $this->write_var($this->count, 1);
 				}
 
-				return $expr->name->parts[0];//true
+				return $expr->name->parts[0];//read const id(global...?)
 			case $expr instanceof Scalar:
 				return $this->execScalar($expr);
 			case $expr instanceof Variable:
@@ -355,7 +384,7 @@ class main_old{
 			case $expr instanceof Expr:
 				$recursion = true;
 				return $this->execExpr($expr);//再帰...?
-			break;
+				break;
 		}
 	}
 
@@ -367,6 +396,27 @@ class main_old{
 		return code::READV.$this->getValualueId($node->name);
 	}
 
+	/**
+	 * @param int $var
+	 * @param $value
+	 * @return string
+	 *
+	 * 指定した変数に指定した値を代入する指示を書きます...
+	 */
+	public function write_var(int $var, $value): string{
+		return code::WRITEV.$this->write_varId($var).$this->put_Scalar($value);
+	}
+
+	public function write_varId(int $var): string{
+		return chr($var);
+	}
+
+	/**
+	 * @param int $var
+	 * @return string
+	 *
+	 * 指定したidの変数を読みます...
+	 */
 	public function put_var(int $var): string{
 		return code::READV.chr($var);
 	}
@@ -384,8 +434,9 @@ class main_old{
 		}
 	}*/
 
-	public function execScalar($node): string{
-		switch(get_class($node)){
+	public function execScalar(Scalar $node): string{
+		return $this->put_Scalar($node->value);
+		/*switch(get_class($node)){
 			case LNumber::class:
 			case DNumber::class:
 				//$value = $node->value;
@@ -394,6 +445,20 @@ class main_old{
 				return $this->getInt($node->value);
 			case LString::class;
 				return $this->getString($node->value);
+
+		}*/
+	}
+
+	public function put_Scalar($value){
+		switch(true){
+			case is_int($value):
+			case is_float($value):
+				//$value = $node->value;
+				//$intsize = $this->checkIntSize($value);
+				//return [$intsize, $value];
+				return $this->getInt($value);
+			case is_string($value);
+				return $this->getString($value);
 
 		}
 	}
@@ -453,6 +518,15 @@ class main_old{
 				return code::TYPE_LONG;
 		}
 	}
+
+	public function hexentities($str){
+		$return = '';
+		for($i = 0, $iMax = strlen($str); $i < $iMax; $i++){
+			$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+		}
+		return $return;
+	}
+
 }
 
 class CodeBlock{
@@ -501,7 +575,7 @@ function hexentities($str){
 	return $return;
 }
 
-var_dump(hexentities($output));
+var_dump(["!!", hexentities($output)]);
 
 //$decoder = new decoder();
 //$decoder->decode($output);
