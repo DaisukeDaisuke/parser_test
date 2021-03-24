@@ -92,11 +92,11 @@ if(1+2===3){
 }else{
 	echo "c";
 }';*/
-$code = 'if(1===2){
+$code = 'if(2===2){
 	echo "test print";
-}elseif(1===1){
+}elseif(1===3){
 	echo "a";
-}elseif(1===1){
+}elseif(2===2){
 	echo "b";
 }else{
 	echo "c";

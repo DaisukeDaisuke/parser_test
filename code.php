@@ -59,8 +59,11 @@ class code{
 
 	//Stmt
 	const PRINT = "\xA0";
-	const JMP = "\xA1";//JMPZ int...?
+	const JMP = "\xA1";//JMPZ int...? //relative
 	const JMPZ = "\xA2";//JMPZ READV === 0 INT size offset ...
 
+	const LABEL = "\xA3";//LABEL INT 1 1
+	const LGOTO = "\xA4";//GOTOL INT 1 1
+	const JMPA = "\xA5";//JMPA INT 1 255
 
 }

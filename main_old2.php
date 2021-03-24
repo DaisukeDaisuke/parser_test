@@ -35,10 +35,7 @@ use PhpParser\Node\Scalar;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Echo_;
 use PhpParser\Node\Stmt\Else_;
-use PhpParser\Node\Stmt\ElseIf_;
 use PhpParser\Node\Stmt\Nop;
-use PhpParser\NodeDumper;
-use PhpParser\ParserFactory;
 use pocketmine\utils\Binary;
 
 ini_set('xdebug.var_display_max_children', -1);
@@ -103,11 +100,13 @@ $stmts = $parser->parse($code);*/
 $dumper = new NodeDumper(['dumpComments' => true,]);
 echo $dumper->dump($stmts, $code);
 */
+
 //var_dump($stmts);
 
 class main_old2{
 	public $count = 0;
-
+	public $label_count = 0;
+	public $label = [];
 
 	/** @var int */
 	public $blockid = 1;
@@ -119,7 +118,7 @@ class main_old2{
 		//var_dump($this->checkIntSize(254));
 	}
 
-	public function execStmt($node){
+	public function execStmt(Stmt $node){
 		$return = "";
 		switch(get_class($node)){
 			case Echo_::class:
@@ -131,6 +130,7 @@ class main_old2{
 			case PhpParser\Node\Stmt\If_::class://...?
 				//ConstFetch
 				$return = "";
+				$label = $this->label_count;
 				$expr = $this->execExpr($node->cond);
 				$ifcount = $this->count++;
 
@@ -139,51 +139,62 @@ class main_old2{
 				$else = null;
 
 				if(isset($node->elseifs[0])){
-					$elseifs = $this->execStmts($node->elseifs,true);
+					$return6 = "";
+					foreach($node->elseifs as $elseif){
+						$elseifs .= $this->execExpr($elseif->cond).$this->putjmpz($this->count++, $this->execStmts($elseif->stmts).$this->putGotoLabel($label));
+					}
+
+
 				}
 				if(isset($node->else)){
 					$else = $this->execStmt($node->else);
 				}
 
-				$stmts = $this->execStmts($node->stmts);
+				$stmts = $this->execStmts($node->stmts).$this->putGotoLabel($label);
+
+				return $this->solveLabel($expr.$this->putjmpz($ifcount, $stmts).$elseifs.$else, $label);//.$this->putLabel($label);
 
 				//var_dump(["test",$else,$this->hexentities1($else)]);
 
 
 				//var_dump($elseifs);
-				$elseifs1 = [];
-				$elseifs2 = "";
-				if($elseifs !== null){
-					$elseifs = array_reverse($elseifs);
-					$count1 = count($elseifs)-1;
-					$tmp1 = strlen($else);
-					foreach($elseifs as $key => $else_array){
-						list($ifcount_elseif, $return_elseif, $stmts_elseif) = $else_array;
-						$tmp2 = count($elseifs1);
-						//$elseifs1[$tmp2] = $return_elseif.code::JMPZ.$this->put_var($ifcount_elseif).$this->getInt(strlen($stmts_elseif)).$stmts_elseif;
-						if($tmp1 === 0){
-							var_dump($this->hexentities($stmts_elseif));
-							$elseifs1[$tmp2] = $return_elseif.code::JMPZ.$this->put_var($ifcount_elseif).$this->getInt(strlen($stmts_elseif)).$stmts_elseif;
-						}else{
-							var_dump($this->hexentities($stmts_elseif));
-							$elseifs1[$tmp2] = $return_elseif.code::JMPZ.$this->put_var($ifcount_elseif).$this->getInt(strlen($stmts_elseif.code::JMP.$this->getInt($tmp1))).$stmts_elseif.code::JMP.$this->getInt($tmp1);
-						}
-						$tmp1 += strlen($elseifs1[$tmp2]);
-					}
-					$elseifs1 = array_reverse($elseifs1);
-					$elseifs2 = implode("",$elseifs1);
-					//var_dump($elseifs2);
-					//var_dump("elseifs1",$this->hexentities($elseifs2));
-					/*$tmp = $stmts.
-						code::JMP.$this->getInt(strlen($else));
-					$return .=
-						code::JMPZ.$this->put_var($ifcount).$this->getInt(strlen($tmp)).$tmp.$else;//-1 //if code::JMP
-					*/
-				}
+//				$elseifs1 = [];
+//				$elseifs2 = "";
+//				if($elseifs !== null){
+//					//$elseifs = array_reverse($elseifs);
+//					$count1 = count($elseifs)-1;
+//					$tmp1 = strlen($else);
+//					foreach($elseifs as $key => $else_array){
+//						list($ifcount_elseif, $return_elseif, $stmts_elseif) = $else_array;
+//						$tmp2 = count($elseifs1);
+//						//$elseifs1[$tmp2] = $return_elseif.code::JMPZ.$this->put_var($ifcount_elseif).$this->getInt(strlen($stmts_elseif)).$stmts_elseif;
+//						if($tmp1 === 0){
+//							var_dump($this->hexentities($stmts_elseif));
+//							//$elseifs1[$tmp2] = $return_elseif.code::JMPZ.$this->put_var($ifcount_elseif).$this->getInt(strlen($stmts_elseif)).$stmts_elseif;
+//						}else{
+//							$tmp = $stmts_elseif.$this->putGotoLabel($label);
+//							var_dump($this->hexentities($tmp));
+//
+//							$elseifs1[$tmp2] = $return_elseif.$this->putjmpz($ifcount_elseif, $tmp);//code::JMP.$this->getInt($tmp1);
+//
+//							//$elseifs1[$tmp2] = $return_elseif.$stmts_elseif;//.$this->putjmpz($ifcount_elseif,$stmts_elseif);
+//							var_dump([$this->hexentities($elseifs1[$tmp2])]);
+//						}
+//						$tmp1 += strlen($elseifs1[$tmp2]);
+//					}
+//					//$elseifs1 = array_reverse($elseifs1);
+//					//$elseifs2 = implode("",$elseifs1);
+//					//var_dump($elseifs2);
+//					//var_dump("elseifs1",$this->hexentities($elseifs2));
+//					/*$tmp = $stmts.
+//						code::JMP.$this->getInt(strlen($else));
+//					$return .=
+//						code::JMPZ.$this->put_var($ifcount).$this->getInt(strlen($tmp)).$tmp.$else;//-1 //if code::JMP
+//					*/
+//				}
 
 
-
-				if($elseifs !== null){
+				/*if($elseifs !== null){
 					if($else !== null){
 						//$tmp = $this->putjmp($else);
 						//var_dump(["!!!!!!!!!!!!!!!!!!!!!!!!!!!!",$tmp]);
@@ -194,44 +205,189 @@ class main_old2{
 						$elseifs2 .= $else;
 					}
 
-					$tmp1 = $stmts.$this->putjmp($elseifs2);
+					$tmp1 = $stmts.$this->putGotoLabel($label);
 
 					//$tmp = $expr.$this->putjmpz($ifcount,$tmp1);// $elseifs1[0]
 					//$tmp = $expr.code::JMPZ.$this->put_var($ifcount).$this->getInt(strlen($elseifs1[count($elseifs1)-1])).$tmp1;
-					$return .= $expr.code::JMPZ.$this->put_var($ifcount).$this->getInt(strlen($elseifs1[count($elseifs1)-1])).$tmp1;//-1 //if code::JMP // $this->getInt(strlen($tmp))
-				}elseif($else !== null){
-					$tmp1 = $stmts.$this->putjmp($else,true);
-					$return .= $expr.$this->putjmpz($ifcount,$tmp1).$else;
+					$return .= $expr.code::JMPZ.$this->put_var($ifcount).$this->getInt(strlen($elseifs1[count($elseifs1)-1])).$tmp1.$this->putLabel($label);//-1 //if code::JMP // $this->getInt(strlen($tmp))
+				}else*/
+				/*if($else !== null){
+					$tmp1 = $stmts.$this->putjmp($else, true);
+					$return .= $expr.$this->putjmpz($ifcount, $tmp1).$else;
 				}else{
 					$return .= $expr.$this->putjmpz($ifcount, $stmts);//-1 //if code::JMP // $this->getInt(strlen($tmp))
-				}
-			 return $return;
+				}*/
+				//return $return;
 				break;
 			case Else_::class:
 				return $this->execStmts($node->stmts);//JMPZ
 				break;
-			case ElseIf_::class:
-				//var_dump("ElseIf_");
-				$return = $this->execExpr($node->cond);
-				//var_dump($this->hexentities($return));
-				$ifcount = $this->count++;
+				/*case ElseIf_::class:
+					//var_dump("ElseIf_");
+					$return = $this->execExpr($node->cond);
+					//var_dump($this->hexentities($return));
+					$ifcount = $this->count++;
 
-				//var_dump($ifcount);
-				$stmts = $this->execStmts($node->stmts);
+					//var_dump($ifcount);
+					$stmts = $this->execStmts($node->stmts).$this->putGotoLabel($this->label);
 
-				//var_dump($stmts);
+					//var_dump($stmts);
 
-				//var_dump(["stmts",$this->hexentities($stmts)]);
-				//$return1 = $return.code::JMPZ.$this->put_var($ifcount).$this->getInt(strlen($stmts)).$stmts;
-				//var_dump($this->hexentities($return1));
+					//var_dump(["stmts",$this->hexentities($stmts)]);
+					//$return1 = $return.code::JMPZ.$this->put_var($ifcount).$this->getInt(strlen($stmts)).$stmts;
+					//var_dump($this->hexentities($return1));
 
-				return [$ifcount, $return, $stmts];
+
+				return $return.$this->putjmpz($ifcount,$stmts);*/
+				//return [$ifcount, $return, $stmts];
 				break;
 
 		}
 	}
 
-	public function execStmts(array $nodes,$array = false){
+	public function solveLabel(string $exec, int $label): string{
+		$len = strlen($exec);
+		for($i = 0, $iMax = strlen($exec); $i < $iMax;){
+			switch($exec[$i]){
+				case code::INT:
+					$i++;
+					$size = ord($exec[$i++]);
+					switch($size){
+						case code::TYPE_BYTE://byte
+							$i++;
+							break;
+						case code::TYPE_SHORT://short
+							$i += 2;
+							break;
+						case code::TYPE_INT://int
+							$i += 4;
+							break;
+						case code::TYPE_LONG://long
+							$i += 8;
+							break;
+						case code::TYPE_DOUBLE:
+							$i += 8;
+							break;
+					}
+					break;
+				case code::STRING:
+					$i++;
+					$i++;
+					$size = ord($exec[$i++]);
+					//($size);
+					$return1 = 0;
+					switch($size){
+						case code::TYPE_BYTE://byte
+							$return1 = Binary::readSignedByte($exec[$i++]);
+							break;
+						case code::TYPE_SHORT://short
+							$return1 = Binary::readLShort(substr($exec, $i, 2));
+							$i += 2;
+							break;
+						case code::TYPE_INT://int
+							$return1 = Binary::readInt(substr($exec, $i, 4));
+							$i += 4;
+							break;
+						case code::TYPE_LONG://long
+							$return1 = Binary::readLong(substr($exec, $i, 8));
+							$i += 8;
+							break;
+						case code::TYPE_DOUBLE:
+							$return1 = Binary::readLDouble(substr($exec, $i, 8));
+							$i += 8;
+							break;
+					}
+					for($f = 1; $f <= $return1; $f++){
+						$i++;
+					}
+					break;
+				case code::READV:
+				case code::WRITEV:
+				case code::ADD:
+				case code::MUL:
+				case code::DIV:
+				case code::MINUS:
+				case code::B_AND:
+				case code::B_OR:
+				case code::B_XOR:
+				case code::BOOL_AND:
+				case code::BOOL_OR:
+				case code::COALESCE:
+				case code::CONCAT:
+				case code::EQUAL:
+				case code::GREATER:
+				case code::GREATEROREQUAL:
+				case code::IDENTICAL:
+				case code::L_AND:
+				case code::L_OR:
+				case code::L_XOR:
+				case code::MOD:
+				case code::NOTIDENTICAL:
+				case code::SHIFTLEFT:
+				case code::POW:
+				case code::SHIFTRIGHT:
+				case code::SMALLER:
+				case code::SMALLEROREQUAL:
+				case code::SPACESHIP:
+				case code::NOTEQUAL:
+				case code::ABC:
+					$i += 2;
+					break;
+				case code::PRINT:
+				case code::JMP:
+				case code::JMPZ:
+				case code::LABEL:
+				case code::JMPA:
+					$i++;
+					break;
+				case code::LGOTO:
+					$start = $i;
+					if($exec[++$i] !== code::INT){
+						break;
+					}
+					$return1 = -1;
+					switch(ord($exec[++$i])){
+						case code::TYPE_BYTE://byte
+							$return1 = Binary::readSignedByte($exec[++$i]);
+							break;
+						case code::TYPE_SHORT://short
+							$return1 = Binary::readLShort(substr($exec, $i, 2));
+							$i += 2;
+							break;
+						case code::TYPE_INT://int
+							$return1 = Binary::readInt(substr($exec, $i, 4));
+							$i += 4;
+							break;
+						case code::TYPE_LONG://long
+							$return1 = Binary::readLong(substr($exec, $i, 8));
+							$i += 8;
+							break;
+						case code::TYPE_DOUBLE:
+							$return1 = Binary::readLDouble(substr($exec, $i, 8));
+							$i += 8;
+							break;
+					}
+					//var_dump([$this->hexentities(substr($exec,20,15))]);
+					if($label === $return1){
+						$i++;
+						//var_dump($len-($i++));
+						/** @var string $exec */
+						$exec = substr_replace($exec, '', $start,$i-$start);
+						$new = code::JMP.$this->getInt($len-($i++)+1);
+						$exec = substr_replace($exec, $new, $start,0);
+						//var_dump([$this->hexentities(substr($exec,20,20)),$this->hexentities1($new)]);
+						$iMax = strlen($exec);
+
+					}
+					break;
+				default:
+					$i++;
+			}
+		}
+		return $exec;
+	}
+
+	public function execStmts(array $nodes, $array = false){
 		/** @var string|string[] $return */
 		$return = "";
 		if($array === true){
@@ -530,23 +686,31 @@ class main_old2{
 		}
 	}
 
-	public function putjmpz(string $var,?string $stmts = null,?string $target = null){//0 => jmp
+	public function putjmpz(string $var, ?string $stmts = null, ?string $target = null){//0 => jmp
 		if($target !== null){
 			return code::JMPZ.$this->put_var($var).$this->getInt(strlen($target)).$stmts;
 		}
 		return code::JMPZ.$this->put_var($var).$this->getInt(strlen($stmts)).$stmts;
 	}
 
-	public function putjmp(string $stmts,$skip = false){
+	public function putjmp(string $stmts, $skip = false){
 		if($skip === true){
 			return code::JMP.$this->getInt(strlen($stmts));
 		}
 		return code::JMP.$this->getInt(strlen($stmts)).$stmts;
 	}
 
+	public function putGotoLabel($label){
+		return code::LGOTO.$this->getInt($label);
+	}
+
+	public function putLabel($label){
+		return code::LABEL.$this->getInt($label);
+	}
+
 	public function hexentities($str){
 		$return = '';
-		for($i = 0, $iMax = strlen($str); $i < $iMax;$i++){
+		for($i = 0, $iMax = strlen($str); $i < $iMax; $i++){
 			switch(substr($str, $i, 1)){
 				case code::READV:
 					$return .= ' READV:'.bin2hex(substr($str, $i++, 1)).';';
@@ -592,7 +756,7 @@ class main_old2{
 							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
 							break;
 						case code::TYPE_DOUBLE:
-							$return1 =  Binary::readLDouble(substr($str, $i, 8));
+							$return1 = Binary::readLDouble(substr($str, $i, 8));
 							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
 							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
 							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
@@ -643,7 +807,7 @@ class main_old2{
 							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
 							break;
 						case code::TYPE_DOUBLE:
-							$return1 =  Binary::readLDouble(substr($str, $i, 8));
+							$return1 = Binary::readLDouble(substr($str, $i, 8));
 							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
 							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
 							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
@@ -655,7 +819,7 @@ class main_old2{
 							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
 							break;
 					}
-					for ($f = 1; $f <= $return1; $f++) {
+					for($f = 1; $f <= $return1; $f++){
 						$return .= ' '.substr($str, $i, 1).':'.bin2hex(substr($str, $i++, 1)).';';
 					}
 					$i--;
@@ -783,6 +947,15 @@ class main_old2{
 				case code::JMPZ:
 					$return .= ' JMPZ:'.bin2hex(substr($str, $i, 1)).';';
 					break;
+				case code::LABEL:
+					$return .= ' LABEL:'.bin2hex(substr($str, $i, 1)).';';
+					break;
+				case code::LGOTO:
+					$return .= ' LGOTO:'.bin2hex(substr($str, $i, 1)).';';
+					break;
+				case code::JMPA:
+					$return .= ' JMPA:'.bin2hex(substr($str, $i, 1)).';';
+					break;
 				default:
 					$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
 			}
@@ -830,6 +1003,7 @@ class CodeBlock{
 	}
 
 }
+
 /*
 $main_old = new main_old();
 $output = $main_old->execStmts($stmts);

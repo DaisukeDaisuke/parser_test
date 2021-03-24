@@ -168,6 +168,11 @@ class decoder{
 				}
 				return;
 				break;
+			case code::JMPA:
+				$jmp = $this->decodeScalar();
+				$this->setOffset($jmp);
+				return;
+				break;
 		}
 		throw new \RuntimeException("Stmt ".bin2hex($opcode)." not found");
 	}
@@ -243,6 +248,10 @@ class decoder{
 
 	public function getOffset(): int{
 		return $this->stream->getOffset();
+	}
+
+	public function setOffset(int $offset){
+		$this->stream->setOffset($offset);
 	}
 
 	public function setvalue($name, $var){
