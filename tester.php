@@ -92,7 +92,7 @@ if(1+2===3){
 }else{
 	echo "c";
 }';*/
-$code = 'if(2===2){
+/*$code = 'if(2===2){
 	echo "test print";
 }elseif(1===3){
 	echo "a";
@@ -100,7 +100,14 @@ $code = 'if(2===2){
 	echo "b";
 }else{
 	echo "c";
-}';
+}';*/
+$code = '
+if(true){
+	echo "1";
+}elseif(false){
+	echo "2";
+}
+echo "3";';
 /*
 true;
 false;
