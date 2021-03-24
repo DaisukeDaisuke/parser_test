@@ -36,6 +36,7 @@ use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Echo_;
 use PhpParser\Node\Stmt\Else_;
 use PhpParser\Node\Stmt\ElseIf_;
+use PhpParser\Node\Stmt\Nop;
 use PhpParser\NodeDumper;
 use PhpParser\ParserFactory;
 use pocketmine\utils\Binary;
@@ -161,8 +162,10 @@ class main_old2{
 						$tmp2 = count($elseifs1);
 						//$elseifs1[$tmp2] = $return_elseif.code::JMPZ.$this->put_var($ifcount_elseif).$this->getInt(strlen($stmts_elseif)).$stmts_elseif;
 						if($tmp1 === 0){
+							var_dump($this->hexentities($stmts_elseif));
 							$elseifs1[$tmp2] = $return_elseif.code::JMPZ.$this->put_var($ifcount_elseif).$this->getInt(strlen($stmts_elseif)).$stmts_elseif;
 						}else{
+							var_dump($this->hexentities($stmts_elseif));
 							$elseifs1[$tmp2] = $return_elseif.code::JMPZ.$this->put_var($ifcount_elseif).$this->getInt(strlen($stmts_elseif.code::JMP.$this->getInt($tmp1))).$stmts_elseif.code::JMP.$this->getInt($tmp1);
 						}
 						$tmp1 += strlen($elseifs1[$tmp2]);
@@ -178,33 +181,30 @@ class main_old2{
 					*/
 				}
 
-				if($else !== null){
-					$tmp = $this->putjmp($else);
-					//var_dump(["!!!!!!!!!!!!!!!!!!!!!!!!!!!!",$tmp]);
-					$elseifs2 .= $this->putjmpz($ifcount,$tmp);//-1 //if code::JMP
-				}
-				if($elseifs2 !== ""){
+
+
+				if($elseifs !== null){
+					if($else !== null){
+						//$tmp = $this->putjmp($else);
+						//var_dump(["!!!!!!!!!!!!!!!!!!!!!!!!!!!!",$tmp]);
+						//$elseifs2 .= $this->putjmpz($ifcount,$tmp);//-1 //if code::JMP
+						if(count($elseifs1) === 0){
+							$elseifs1[] = $else;
+						}
+						$elseifs2 .= $else;
+					}
+
 					$tmp1 = $stmts.$this->putjmp($elseifs2);
 
 					//$tmp = $expr.$this->putjmpz($ifcount,$tmp1);// $elseifs1[0]
-					$tmp = $expr.code::JMPZ.$this->put_var($ifcount).$this->getInt(strlen($elseifs1[count($elseifs1)-1])).$tmp1;
-					$return .= $tmp;//-1 //if code::JMP // $this->getInt(strlen($tmp))
+					//$tmp = $expr.code::JMPZ.$this->put_var($ifcount).$this->getInt(strlen($elseifs1[count($elseifs1)-1])).$tmp1;
+					$return .= $expr.code::JMPZ.$this->put_var($ifcount).$this->getInt(strlen($elseifs1[count($elseifs1)-1])).$tmp1;//-1 //if code::JMP // $this->getInt(strlen($tmp))
+				}elseif($else !== null){
+					$tmp1 = $stmts.$this->putjmp($else,true);
+					$return .= $expr.$this->putjmpz($ifcount,$tmp1).$else;
+				}else{
+					$return .= $expr.$this->putjmpz($ifcount, $stmts);//-1 //if code::JMP // $this->getInt(strlen($tmp))
 				}
-
-
-
-				//var_dump($return);
-
-
-				//var_dump(["if",$this->hexentities($if),strlen($stmts)]);
-				//var_dump(["print",$this->hexentities($stmts)]);//then
-
-				//var_dump($node->stmts,strlen($stmts), $stmts);
-				//var_dump("return", $this->hexentities($return));
-
-
-				//elseifs
-				//else
 			 return $return;
 				break;
 			case Else_::class:
@@ -251,6 +251,9 @@ class main_old2{
 
 			}
 			if($node instanceof Stmt){
+				if($node instanceof Nop){
+					continue;
+				}
 				if($array === true){
 					/** @var string[] $return */
 					$return[] = $this->execStmt($node);
@@ -339,7 +342,7 @@ class main_old2{
 		$recursionRight = false;
 
 		$left = $this->execExpr($node->left, $recursionLeft);
-		$basecount1 = $this->count;
+		$basecount1 = $this->count++;
 
 		$right = $this->execExpr($node->right, $recursionRight);
 		$basecount2 = $this->count++;
@@ -527,11 +530,17 @@ class main_old2{
 		}
 	}
 
-	public function putjmpz(string $var,?string $stmts = null){//0 => jmp
+	public function putjmpz(string $var,?string $stmts = null,?string $target = null){//0 => jmp
+		if($target !== null){
+			return code::JMPZ.$this->put_var($var).$this->getInt(strlen($target)).$stmts;
+		}
 		return code::JMPZ.$this->put_var($var).$this->getInt(strlen($stmts)).$stmts;
 	}
 
-	public function putjmp(string $stmts){
+	public function putjmp(string $stmts,$skip = false){
+		if($skip === true){
+			return code::JMP.$this->getInt(strlen($stmts));
+		}
 		return code::JMP.$this->getInt(strlen($stmts)).$stmts;
 	}
 

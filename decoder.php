@@ -10,7 +10,7 @@ class decoder{
 
 	/** @var int $len */
 	public $len;
-	
+
 	public $values = [];
 
 	public function __construct(){
@@ -153,8 +153,23 @@ class decoder{
 
 				echo $var1;
 				//$return1 = 1;
+				return;
+				break;
+			case code::JMP:
+				$jmp = $this->decodeScalar();
+				$this->offset_seek($jmp);
+				return;
+				break;
+			case code::JMPZ://JMPZ READV === 0 INT size offset ...
+				$target = $this->decodeScalar();
+				$jmp = $this->decodeScalar();
+				if($target === 0){
+					$this->offset_seek($jmp);
+				}
+				return;
 				break;
 		}
+		throw new \RuntimeException("Stmt ".bin2hex($opcode)." not found");
 	}
 
 	function decodeScalar(?string $opcode = null){
@@ -175,7 +190,7 @@ class decoder{
 		if($opcode === code::WRITEV){
 			$output = $this->getByteInt();
 			$var = $this->decodeScalar();
-			$this->setvalue($output,$var);
+			$this->setvalue($output, $var);
 			return null;
 		}
 		throw new \RuntimeException("Scalar ".bin2hex($opcode)." not found");
@@ -209,7 +224,7 @@ class decoder{
 	public function getlen(){
 		return $this->len;
 	}
-	
+
 	public function get($len){
 		return $this->stream->get($len);
 	}
@@ -222,6 +237,14 @@ class decoder{
 		return ord($this->getByte());
 	}
 
+	public function offset_seek($jmp){
+		$this->stream->setOffset($this->getOffset()+$jmp);
+	}
+
+	public function getOffset(): int{
+		return $this->stream->getOffset();
+	}
+
 	public function setvalue($name, $var){
 		$this->values[$name] = $var;
 	}
@@ -232,7 +255,7 @@ class decoder{
 		unset($this->values[$byte]);
 		return $value;
 	}
-	
+
 	public function value($name){
 		return $this->values[$name];
 	}
