@@ -27,12 +27,16 @@ class decoder{
 		$values = [];
 		while(!$this->feof()){
 			$opcode = $this->getByte();//......!!!!!!!!!!
+			$test = bin2hex($opcode);
 			//binaryOP
-			if($opcode >= code::ADD&&$opcode <= code::NOTEQUAL){
+			if($opcode >= code::ADD&&$opcode <= code::ABC){
 				$this->decodebinaryop_array($opcode);
 			}
 			if($opcode >= code::PRINT){
 				$this->decodeStmt_array($opcode);
+			}
+			if($opcode >= code::READV&&$opcode <= code::STRING){
+				$this->decodeScalar($opcode);
 			}
 		}
 		//var_dump($values);
@@ -40,12 +44,12 @@ class decoder{
 
 	public function decodebinaryop_array($opcode){
 		if($opcode === code::CONCAT){
-			var_dump("!!");
+			//var_dump("!!");
 		}
 		$output = $this->getByteInt();
 		$var1 = $this->decodeScalar();//
 		$var2 = $this->decodeScalar();
-		var_dump([$output, $var1, $var2]);
+		//var_dump([$output, $var1, $var2]);
 		$return1 = 0;
 
 		switch($opcode){
@@ -132,7 +136,7 @@ class decoder{
 				$return1 = ($var1 <=> $var2);
 				break;
 		}
-		var_dump($output." => ".$return1);
+		//var_dump($output." => ".$return1);
 		$this->setvalue($output, $return1);
 	}
 
@@ -144,7 +148,7 @@ class decoder{
 
 		switch($opcode){
 			case code::PRINT:
-				var_dump($this->values);
+				//var_dump($this->values);
 				$var1 = $this->decodeScalar();
 
 				echo $var1;
@@ -153,9 +157,11 @@ class decoder{
 		}
 	}
 
-	function decodeScalar(){
-		$opcode = $this->get(1);
-		var_dump([ord($opcode),$this->stream->getOffset()]);
+	function decodeScalar(?string $opcode = null){
+		if($opcode === null){
+			$opcode = $this->get(1);
+		}
+		//var_dump([ord($opcode),$this->stream->getOffset()]);
 		if($opcode === code::READV){
 			return $this->getvalue();
 		}
@@ -166,7 +172,13 @@ class decoder{
 			$this->getByte();//remove code::INT
 			return $this->get($this->getInt());
 		}
-		throw new \RuntimeException("Scalar not found");
+		if($opcode === code::WRITEV){
+			$output = $this->getByteInt();
+			$var = $this->decodeScalar();
+			$this->setvalue($output,$var);
+			return null;
+		}
+		throw new \RuntimeException("Scalar ".bin2hex($opcode)." not found");
 	}
 
 	function getInt(){

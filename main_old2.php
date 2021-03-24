@@ -48,14 +48,20 @@ include __DIR__."/decoder.php";
 
 $code = '
 <?php
-echo ((2*1+1)+(2/1+3));
-if(true){
+//echo ((2*1+1)+(2/1+3));
+if(20 === 28){
+//if(1+2===3){
 	echo "test print";
 }elseif(1===1){
-	
+	echo "a";
+}elseif(1===1){
+	echo "b";
+}else{
+	echo "c";
 }
 
 ';
+
 //$a = 100;
 //echo ((2*1+1)+(2/1+3)-(2/(5*6+20)*(5*(6/2))))+7.4===true;//3+5+50
 //echo 1+2*(3/$a*1);
@@ -85,83 +91,20 @@ const TEST = "A";
 echo TEST;
 */
 //$code = file_get_contents("/sdcard/www/public/php-parser/vendor/unphar.php");
-
+/*
 $parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7);
-$stmts = $parser->parse($code);
+$stmts = $parser->parse($code);*/
+
 //$oldTokens = $parser->getTokens();
 //var_dump($stmts);
 
-
+/*
 $dumper = new NodeDumper(['dumpComments' => true,]);
 echo $dumper->dump($stmts, $code);
-
+*/
 //var_dump($stmts);
 
-class code{
-	//metadata
-	const TYPE_BYTE = 1;
-	const TYPE_SHORT = 2;
-	const TYPE_INT = 4;
-	const TYPE_LONG = 8;
-	const TYPE_DOUBLE = 9;
-
-	const TYPE_SIZE_DOUBLE = 8;
-
-	//opcode
-
-	//valueOP(Scalar)
-	const READV = "\x91";//readv $a(0)
-	const WRITEV = "\x32";//writev output int size 1
-	const INT = "\x93";
-	const STRING = "\x94";
-	//const DOUBLE = "\xC4";
-	//const READV = "\x00";
-
-	//binaryOP
-	const ADD = "\x02";//add 80 1000 $a
-	const MUL = "\x03";
-	const DIV = "\x04";
-	const MINUS = "\x05";
-	const B_AND = "\x06";
-	const B_OR = "\x07";
-	const B_XOR = "\x08";
-	const BOOL_AND = "\x09";
-	const BOOL_OR = "\x0A";
-	const COALESCE = "\x0B";
-	const CONCAT = "\x0C";
-
-	const EQUAL = "\x0D";
-	const GREATER = "\x0E";
-	const GREATEROREQUAL = "\x0F";
-
-	const IDENTICAL = "\x10";
-	const L_AND = "\x11";
-	const L_OR = "\x12";
-	const L_XOR = "\x13";
-	const MOD = "\x14";
-	const NOTIDENTICAL = "\x15";
-	const SHIFTLEFT = "\x16";
-	const POW = "\x17";
-	const SHIFTRIGHT = "\x18";
-	const SMALLER = "\x19";
-	const SMALLEROREQUAL = "\x1A";
-	const SPACESHIP = "\x1B";
-	const NOTEQUAL = "\x1C";
-	const ABC = "\x1D";
-	//const STRING = "\x1F";
-	//const ABC = "\x1";
-	//const ABC = "\x1";
-
-
-	//Stmt
-	const PRINT = "\xA0";
-	const JMP = "\xA1";//JMPZ int...?
-	const JMPZ = "\xA2";//JMPZ READV === 0
-
-
-}
-
-class main_old{
+class main_old2{
 	public $count = 0;
 
 
@@ -186,55 +129,115 @@ class main_old{
 				break;
 			case PhpParser\Node\Stmt\If_::class://...?
 				//ConstFetch
-				$return = $this->execExpr($node->cond);
+				$return = "";
+				$expr = $this->execExpr($node->cond);
 				$ifcount = $this->count++;
 
-				var_dump($this->hexentities($return));
+				//var_dump($this->hexentities($return));
 				$elseifs = null;
 				$else = null;
 
 				if(isset($node->elseifs[0])){
-					$else = $this->execStmts($node->elseifs);
+					$elseifs = $this->execStmts($node->elseifs,true);
 				}
 				if(isset($node->else)){
-					$elseifs = $this->execStmts($node->else);
+					$else = $this->execStmt($node->else);
 				}
 
 				$stmts = $this->execStmts($node->stmts);
 
-				if($else !== null){
+				//var_dump(["test",$else,$this->hexentities1($else)]);
+
+
+				//var_dump($elseifs);
+				$elseifs1 = [];
+				$elseifs2 = "";
+				if($elseifs !== null){
+					$elseifs = array_reverse($elseifs);
+					$count1 = count($elseifs)-1;
+					$tmp1 = strlen($else);
+					foreach($elseifs as $key => $else_array){
+						list($ifcount_elseif, $return_elseif, $stmts_elseif) = $else_array;
+						$tmp2 = count($elseifs1);
+						//$elseifs1[$tmp2] = $return_elseif.code::JMPZ.$this->put_var($ifcount_elseif).$this->getInt(strlen($stmts_elseif)).$stmts_elseif;
+						if($tmp1 === 0){
+							$elseifs1[$tmp2] = $return_elseif.code::JMPZ.$this->put_var($ifcount_elseif).$this->getInt(strlen($stmts_elseif)).$stmts_elseif;
+						}else{
+							$elseifs1[$tmp2] = $return_elseif.code::JMPZ.$this->put_var($ifcount_elseif).$this->getInt(strlen($stmts_elseif.code::JMP.$this->getInt($tmp1))).$stmts_elseif.code::JMP.$this->getInt($tmp1);
+						}
+						$tmp1 += strlen($elseifs1[$tmp2]);
+					}
+					$elseifs1 = array_reverse($elseifs1);
+					$elseifs2 = implode("",$elseifs1);
+					//var_dump($elseifs2);
+					//var_dump("elseifs1",$this->hexentities($elseifs2));
+					/*$tmp = $stmts.
+						code::JMP.$this->getInt(strlen($else));
 					$return .=
-						code::JMPZ.$this->put_var($ifcount).$this->getInt(strlen($stmts)).$stmts.
-						code::JMP.$this->getInt(strlen($else)).$else;//-1 //if code::JMP
+						code::JMPZ.$this->put_var($ifcount).$this->getInt(strlen($tmp)).$tmp.$else;//-1 //if code::JMP
+					*/
 				}
 
-				var_dump($return);
+				if($else !== null){
+					$tmp = $this->putjmp($else);
+					//var_dump(["!!!!!!!!!!!!!!!!!!!!!!!!!!!!",$tmp]);
+					$elseifs2 .= $this->putjmpz($ifcount,$tmp);//-1 //if code::JMP
+				}
+				if($elseifs2 !== ""){
+					$tmp1 = $stmts.$this->putjmp($elseifs2);
+
+					//$tmp = $expr.$this->putjmpz($ifcount,$tmp1);// $elseifs1[0]
+					$tmp = $expr.code::JMPZ.$this->put_var($ifcount).$this->getInt(strlen($elseifs1[count($elseifs1)-1])).$tmp1;
+					$return .= $tmp;//-1 //if code::JMP // $this->getInt(strlen($tmp))
+				}
+
+
+
+				//var_dump($return);
 
 
 				//var_dump(["if",$this->hexentities($if),strlen($stmts)]);
 				//var_dump(["print",$this->hexentities($stmts)]);//then
 
 				//var_dump($node->stmts,strlen($stmts), $stmts);
-				var_dump("return", $this->hexentities($return));
+				//var_dump("return", $this->hexentities($return));
 
 
 				//elseifs
 				//else
+			 return $return;
 				break;
 			case Else_::class:
 				return $this->execStmts($node->stmts);//JMPZ
 				break;
 			case ElseIf_::class:
+				//var_dump("ElseIf_");
 				$return = $this->execExpr($node->cond);
+				//var_dump($this->hexentities($return));
 				$ifcount = $this->count++;
-				$this->execStmts($node->stmts);
+
+				//var_dump($ifcount);
+				$stmts = $this->execStmts($node->stmts);
+
+				//var_dump($stmts);
+
+				//var_dump(["stmts",$this->hexentities($stmts)]);
+				//$return1 = $return.code::JMPZ.$this->put_var($ifcount).$this->getInt(strlen($stmts)).$stmts;
+				//var_dump($this->hexentities($return1));
+
+				return [$ifcount, $return, $stmts];
 				break;
 
 		}
 	}
 
-	public function execStmts(array $nodes){
+	public function execStmts(array $nodes,$array = false){
+		/** @var string|string[] $return */
 		$return = "";
+		if($array === true){
+			$return = [];
+		}
+
 		foreach($nodes as $node){
 			if($node instanceof Expr){
 				$root = false;
@@ -248,7 +251,12 @@ class main_old{
 
 			}
 			if($node instanceof Stmt){
-				$return .= ($this->execStmt($node) ?? "").$return;
+				if($array === true){
+					/** @var string[] $return */
+					$return[] = $this->execStmt($node);
+				}else{
+					$return .= ($this->execStmt($node) ?? "").$return;
+				}
 			}
 			/*if($node instanceof node){
 
@@ -338,7 +346,7 @@ class main_old{
 
 		$count1 = $this->count;
 
-		var_dump([$recursionLeft, $recursionRight]);
+		//var_dump([$recursionLeft, $recursionRight]);
 
 		// id output Read_v.id Read_v.id
 
@@ -519,7 +527,261 @@ class main_old{
 		}
 	}
 
+	public function putjmpz(string $var,?string $stmts = null){//0 => jmp
+		return code::JMPZ.$this->put_var($var).$this->getInt(strlen($stmts)).$stmts;
+	}
+
+	public function putjmp(string $stmts){
+		return code::JMP.$this->getInt(strlen($stmts)).$stmts;
+	}
+
 	public function hexentities($str){
+		$return = '';
+		for($i = 0, $iMax = strlen($str); $i < $iMax;$i++){
+			switch(substr($str, $i, 1)){
+				case code::READV:
+					$return .= ' READV:'.bin2hex(substr($str, $i++, 1)).';';
+					$return .= ' var:'.bin2hex(substr($str, $i, 1)).';';
+					break;
+				case code::WRITEV:
+					$return .= ' WRITEV:'.bin2hex(substr($str, $i++, 1)).';';
+					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					break;
+				case code::INT:
+					$return .= ' INT:'.bin2hex(substr($str, $i++, 1)).';';
+					$return .= ' size:'.bin2hex(substr($str, $i, 1)).';';
+					$size = ord(substr($str, $i++, 1));
+					$return1 = 0;
+					switch($size){
+						case code::TYPE_BYTE://byte
+							$return1 = Binary::readSignedByte(substr($str, $i, 1));
+							$return .= ' '.$return1.':'.bin2hex(substr($str, $i, 1)).';';
+
+							break;
+						case code::TYPE_SHORT://short
+							$return1 = Binary::readLShort(substr($str, $i, 2));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_INT://int
+							$return1 = Binary::readInt(substr($str, $i, 4));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_LONG://long
+							$return1 = Binary::readLong(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_DOUBLE:
+							$return1 =  Binary::readLDouble(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+					}
+
+					break;
+				case code::STRING:
+					$return .= ' STRING:'.bin2hex(substr($str, $i++, 1)).';';
+					$return .= ' INT:'.bin2hex(substr($str, $i++, 1)).';';
+					$return .= ' size:'.bin2hex(substr($str, $i, 1)).';';
+					$size = ord(substr($str, $i++, 1));
+					//($size);
+					$return1 = 0;
+					switch($size){
+						case code::TYPE_BYTE://byte
+							$return .= ' '.Binary::readSignedByte(substr($str, $i, 1)).':'.bin2hex(substr($str, $i, 1)).';';
+							$return1 = Binary::readSignedByte(substr($str, $i++, 1));
+							break;
+						case code::TYPE_SHORT://short
+							$return1 = Binary::readLShort(substr($str, $i, 2));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_INT://int
+							$return1 = Binary::readInt(substr($str, $i, 4));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_LONG://long
+							$return1 = Binary::readLong(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_DOUBLE:
+							$return1 =  Binary::readLDouble(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+					}
+					for ($f = 1; $f <= $return1; $f++) {
+						$return .= ' '.substr($str, $i, 1).':'.bin2hex(substr($str, $i++, 1)).';';
+					}
+					$i--;
+					break;
+				case code::ADD:
+					$return .= ' ADD?:'.bin2hex(substr($str, $i++, 1)).';';
+					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					break;
+				case code::MUL:
+					$return .= ' MUL?:'.bin2hex(substr($str, $i++, 1)).';';
+					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					break;
+				case code::DIV:
+					$return .= ' DIV?:'.bin2hex(substr($str, $i++, 1)).';';
+					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					break;
+				case code::MINUS:
+					$return .= ' MINUS?:'.bin2hex(substr($str, $i++, 1)).';';
+					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					break;
+				case code::B_AND:
+					$return .= ' B_AND?:'.bin2hex(substr($str, $i++, 1)).';';
+					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					break;
+				case code::B_OR:
+					$return .= ' B_OR?:'.bin2hex(substr($str, $i++, 1)).';';
+					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					break;
+				case code::B_XOR:
+					$return .= ' B_XOR?:'.bin2hex(substr($str, $i++, 1)).';';
+					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					break;
+				case code::BOOL_AND:
+					$return .= ' BOOL_AND?:'.bin2hex(substr($str, $i++, 1)).';';
+					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					break;
+				case code::BOOL_OR:
+					$return .= ' BOOL_OR?:'.bin2hex(substr($str, $i++, 1)).';';
+					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					break;
+				case code::COALESCE:
+					$return .= ' COALESCE?:'.bin2hex(substr($str, $i++, 1)).';';
+					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					break;
+				case code::CONCAT:
+					$return .= ' CONCAT?:'.bin2hex(substr($str, $i++, 1)).';';
+					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					break;
+
+				case code::EQUAL:
+					$return .= ' EQUAL?:'.bin2hex(substr($str, $i++, 1)).';';
+					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					break;
+				case code::GREATER:
+					$return .= ' GREATER?:'.bin2hex(substr($str, $i++, 1)).';';
+					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					break;
+				case code::GREATEROREQUAL:
+					$return .= ' GREATEROREQUAL?:'.bin2hex(substr($str, $i++, 1)).';';
+					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					break;
+
+				case code::IDENTICAL:
+					$return .= ' IDENTICAL?:'.bin2hex(substr($str, $i++, 1)).';';
+					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					break;
+				case code::L_AND:
+					$return .= ' L_AND?:'.bin2hex(substr($str, $i++, 1)).';';
+					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					break;
+				case code::L_OR:
+					$return .= ' L_OR?:'.bin2hex(substr($str, $i++, 1)).';';
+					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					break;
+				case code::L_XOR:
+					$return .= ' L_XOR?:'.bin2hex(substr($str, $i++, 1)).';';
+					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					break;
+				case code::MOD:
+					$return .= ' MOD?:'.bin2hex(substr($str, $i++, 1)).';';
+					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					break;
+				case code::NOTIDENTICAL:
+					$return .= ' NOTIDENTICAL?:'.bin2hex(substr($str, $i++, 1)).';';
+					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					break;
+				case code::SHIFTLEFT:
+					$return .= ' SHIFTLEFT?:'.bin2hex(substr($str, $i++, 1)).';';
+					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					break;
+				case code::POW:
+					$return .= ' POW?:'.bin2hex(substr($str, $i++, 1)).';';
+					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					break;
+				case code::SHIFTRIGHT:
+					$return .= ' SHIFTRIGHT?:'.bin2hex(substr($str, $i++, 1)).';';
+					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					break;
+				case code::SMALLER:
+					$return .= ' SMALLER?:'.bin2hex(substr($str, $i++, 1)).';';
+					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					break;
+				case code::SMALLEROREQUAL:
+					$return .= ' SMALLEROREQUAL?:'.bin2hex(substr($str, $i++, 1)).';';
+					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					break;
+				case code::SPACESHIP:
+					$return .= ' SPACESHIP?:'.bin2hex(substr($str, $i++, 1)).';';
+					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					break;
+				case code::NOTEQUAL:
+					$return .= ' NOTEQUAL?:'.bin2hex(substr($str, $i++, 1)).';';
+					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					break;
+				case code::ABC:
+					$return .= ' ABC?:'.bin2hex(substr($str, $i++, 1)).';';
+					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					break;
+				case code::PRINT:
+					$return .= ' PRINT:'.bin2hex(substr($str, $i, 1)).';';
+					break;
+				case code::JMP:
+					$return .= ' JMP:'.bin2hex(substr($str, $i, 1)).';';
+					break;
+				case code::JMPZ:
+					$return .= ' JMPZ:'.bin2hex(substr($str, $i, 1)).';';
+					break;
+				default:
+					$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+			}
+		}
+		return $return;
+	}
+
+	function hexentities1($str){
 		$return = '';
 		for($i = 0, $iMax = strlen($str); $i < $iMax; $i++){
 			$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
@@ -559,10 +821,11 @@ class CodeBlock{
 	}
 
 }
-
+/*
 $main_old = new main_old();
 $output = $main_old->execStmts($stmts);
 var_dump($output);
+*/
 //$output = $main_old->encode_opcode_array($output);
 //var_dump($output);
 
@@ -575,13 +838,13 @@ function hexentities($str){
 	return $return;
 }
 
-var_dump(["!!", hexentities($output)]);
+//var_dump(["!!", hexentities($output),$main_old->hexentities($output)]);
 
 //$decoder = new decoder();
 //$decoder->decode($output);
 
 //$main_old->decodeop_array($output);
-//file_put_contents("output.txt", $output);
+//file_put_contents("output2.txt", $output);
 //var_dump(token_get_all($code));
 
 

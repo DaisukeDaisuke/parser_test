@@ -98,3 +98,171 @@ array(3) {
 }
 
 Process finished with exit code 0
+
+:02; output:07;
+:93; size:01; :01;
+:93; size:01; :02;
+:10; output:08; :91; 3:07; :93; :01; 3:03; = true
+
+ADD:02; OUTPUT:07; int:93; size:01; 1:01; int:93; size:01; 2:02; IDENTICAL:10; output:08; READV:91; 7:07; INT:93; size:01; 3:03;
+:02; :07; INT:93; size:01; 1:01; INT:93; size:01; 2:02; :10; :08; READV:91; output:07; :01; :03
+C:\Users\Owner\Desktop\php\parser_test\main_old2.php:194:
+string(75) " :02; :07; :93; :01; :01; :93; :01; :02; :10; :08; :91; :07; :93; :01; :03;"
+C:\Users\Owner\Desktop\php\parser_test\main_old2.php:194:
+string(92) " :02; :07; INT:93; size:01; INT:93; size:01; :10; :08; READV:91; output:07; INT:93; size:01;"
+string(99) "0 :74; :65; :73; :74; :20; :70; :72; :69; :6e; :74; :a0; READV:91; output:0b; :a1; INT:93; size:01;"
+
+IDENTICAL?:10; output:01; INT:93; size:01; 20:14; INT:93; size:01; 28:1c;
+JMPZ:a2; :01; INT:93; size:01; 19:13;
+
+WRITEV:32; output:04; STRING:94; INT:93; size:01;
+:0a; :74; :65; :73; :74;
+:20; :70; :72; :69; :6e;
+:74; READV:91; output:04; JMP:a1; :01; :00;" //-1
+
+IDENTICAL?:10; output:01; INT:93; size:01; 20:14; INT:93; size:01; 28:1c; JMPZ:a2; READV:91; var:01; INT:93; size:01; 19:13;
+
+WRITEV:32; output:06; STRING:94; INT:93; size:01; :0a; :74; :65; :73; :74; :20; :70; :72; :69; :6e; :74; READV:91; var:06; JMP:a1; INT:93; size:01; 42:2a; IDENTICAL?:10; output:03; INT:93; size:01; 1:01; INT:93; size:01; 1:01; JMPZ:a2; READV:91; var:03; INT:93; size:01; 0:00; IDENTICAL?:10; output:05; INT:93; size:01; 1:01; INT:93; size:01; 1:01; JMPZ:a2; READV:91; var:05; INT:93; size:01; 0:00; IDENTICAL?:10; output:03; INT:93; size:01; 1:01; INT:93; size:01; 1:01; JMPZ:a2; READV:91; var:03; INT:93; size:01; 0:00;"
+
+IDENTICAL?:10; output:01; INT:93; size:01; 20:14; INT:93; size:01; 28:1c; JMPZ:a2; READV:91; var:01; INT:93; size:01; 19:13;
+WRITEV:32; output:06; STRING:94; INT:93; size:01;
+:0a; t:74; e:65; s:73; t:74;
+ :20; p:70; r:72; i:69; n:6e;
+t:74; READV:91; var:06; JMP:a1; INT:93;
+size:01; 42:2a; IDENTICAL?:10; output:03; INT:93; size:01; 1:01; INT:93; size:01; 1:01; JMPZ:a2; READV:91; var:03; INT:93; size:01; 0:00; IDENTICAL?:10; output:05; INT:93; size:01; 1:01; INT:93; size:01; 1:01; JMPZ:a2; READV:91; var:05; INT:93; size:01; 0:00; IDENTICAL?:10; output:03; INT:93; size:01; 1:01; INT:93; size:01; 1:01; JMPZ:a2; READV:91; var:03; INT:93; size:01; 0:00;"
+
+IDENTICAL?:10; output:01; INT:93; size:01; 20:14; INT:93; size:01; 28:1c;
+JMPZ:a2; READV:91; var:01; INT:93; size:01; 65:41; WRITEV:32; output:06; STRING:94; INT:93; size:01; :0a; t:74; e:65; s:73; t:74;  :20; p:70; r:72; i:69; n:6e; t:74; READV:91; var:06; JMP:a1; INT:93; size:01; 42:2a; IDENTICAL?:10; output:03; INT:93; size:01; 1:01; INT:93; size:01; 1:01; JMPZ:a2; READV:91; var:03; INT:93; size:01; 0:00; IDENTICAL?:10; output:05; INT:93; size:01; 1:01; INT:93; size:01; 1:01; JMPZ:a2; READV:91; var:05; INT:93; size:01; 0:00; IDENTICAL?:10; output:03; INT:93; size:01; 1:01; INT:93; size:01; 1:01; JMPZ:a2; READV:91; var:03; INT:93; size:01; 0:00;"
+
+IDENTICAL?:10; output:01; INT:93; size:01; 20:14; INT:93; size:01; 28:1c;
+JMPZ:a2; READV:91; var:01; INT:93; size:01; 23:17;
+
+WRITEV:32; output:06; STRING:94; INT:93; size:01;
+:0a; t:74; e:65; s:73; t:74;
+ :20; p:70; r:72; i:69; n:6e;
+t:74; READV:91; var:06; JMP:a1; INT:93;
+size:01; 42:2a;
+
+IDENTICAL?:10; output:03; INT:93; size:01; 1:01;
+INT:93; size:01; 1:01; JMPZ:a2; READV:91;
+var:03; INT:93; size:01; 0:00; IDENTICAL?:10;
+output:05; INT:93; size:01; 1:01; INT:93;
+
+size:01; 1:01; JMPZ:a2; READV:91; var:05;
+INT:93; size:01; 0:00; IDENTICAL?:10; output:03;
+INT:93; size:01; 1:01; INT:93; size:01;
+1:01; JMPZ:a2; READV:91; var:03; INT:93;
+size:01; 0:00;
+
+IDENTICAL?:10; output:03; INT:93; size:01; 1:01; INT:93; size:01; 1:01;
+JMPZ:a2; READV:91; var:03; INT:93; size:01; 10:0a;
+WRITEV:32; output:04; STRING:94; INT:93; size:01; :01; :01; PRINT:a0; READV:91; var:04; JMP:a1; INT:93; size:01; 24:18;
+
+
+IDENTICAL?:10; output:03; INT:93; size:01; 1:01; INT:93; size:01; 1:01; //if(20 === 28){
+JMPZ:a2; READV:91; var:03; INT:93; size:01; 10:0a;
+WRITEV:32; output:04; STRING:94; INT:93; size:01;
+:01; a:01; PRINT:a0; READV:91; var:04; IDENTICAL?:10; output:06; INT:93; size:01; 1:01; INT:93; size:01; 1:01; JMPZ:a2; READV:91; var:06; INT:93; size:01; 10:0a; WRITEV:32; output:07; STRING:94; INT:93; size:01; :01; a:01; PRINT:a0; READV:91; var:07;"
+
+:10; :03; :93; :01; :01; :93; :01; :01;
+:a2; :91; :03; :93; :01; :0a;
+:32; :04; :94; :93; :01; :01; :61; :a0; :91; :04; :10; :06; :93; :01; :01; :93; :01; :01; :a2; :91; :06; :93; :01; :0a; :32; :07; :94; :93; :01; :01; :61; :a0; :91; :07;"
+
+
+
+
+JMP:a1; INT:93; size:01; 24:18; IDENTICAL?:10; output:03; INT:93; size:01; 1:01; INT:93; size:01; 1:01; JMPZ:a2; READV:91; var:03; INT:93; size:01; 10:0a; WRITEV:32; output:04; STRING:94; INT:93; size:01; 1:01; a:61; READV:91; var:04; IDENTICAL?:10; output:06; INT:93; size:01; 1:01; INT:93; size:01; 1:01; JMPZ:a2; READV:91; var:06; INT:93; size:01; 10:0a; WRITEV:32; output:07; STRING:94; INT:93; size:01; 1:01; a:61; READV:91; var:07;"
+
+//
+
+IDENTICAL?:10; output:03; INT:93; size:01; 1:01; INT:93; size:01; 1:01;
+JMPZ:a2; READV:91; var:03; INT:93; size:01; 10:0a;
+
+WRITEV:32; output:04; STRING:94; INT:93; size:01;
+1:01; a:61; READV:91; var:04;
+
+JMP:a1; INT:93; size:01; 24:18; //24-1=23
+
+IDENTICAL?:10; output:06; INT:93; size:01; 1:01;
+INT:93; size:01; 1:01;
+
+JMPZ:a2; READV:91;
+var:06; INT:93; size:01; 10:0a; WRITEV:32; //10
+output:07; STRING:94; INT:93; size:01; 1:01;
+a:61; READV:91; var:07;" //0
+
+
+IDENTICAL?:10; output:03; INT:93; size:01; 1:01; INT:93; size:01; 1:01;
+JMPZ:a2; READV:91; var:03; INT:93; size:01; 10:0a;
+
+WRITEV:32; output:04; STRING:94; INT:93; size:01;
+1:01; a:61; READV:91; var:04; JMP:a1;
+
+INT:93; size:01; 52:34; IDENTICAL?:10; output:06; INT:93; size:01; 1:01; INT:93; size:01; 1:01; JMPZ:a2; READV:91; var:06; INT:93; size:01; 10:0a; WRITEV:32; output:07; STRING:94; INT:93; size:01; 1:01; b:62; READV:91; var:07; JMP:a1; INT:93; size:01; 24:18; IDENTICAL?:10; output:09; INT:93; size:01; 1:01; INT:93; size:01; 1:01; JMPZ:a2; READV:91; var:09; INT:93; size:01; 10:0a; WRITEV:32; output:0a; STRING:94; INT:93; size:01; 1:01; c:63; READV:91; var:0a;"
+
+
+
+ IDENTICAL?:10; output:03; INT:93; size:01; 1:01; INT:93; size:01; 1:01;
+
+ JMPZ:a2; READV:91; var:03; INT:93; size:01; 14:0e;
+ WRITEV:32; output:04; STRING:94; INT:93; size:01;
+ 1:01; a:61; READV:91; var:04; JMP:a1;
+ INT:93; size:01; 52:34; /13
+
+ IDENTICAL?:10; output:06;
+ INT:93; size:01; 1:01; INT:93; size:01; 1:01;
+
+ JMPZ:a2; READV:91; var:06; INT:93; size:01; 14:0e;
+ WRITEV:32; output:07; STRING:94; INT:93; size:01;
+ 1:01; b:62; READV:91; var:07; JMP:a1;
+ INT:93; size:01; 24:18; //13
+
+ IDENTICAL?:10; output:09; INT:93; size:01; 1:01;
+ INT:93; size:01; 1:01;
+
+ JMPZ:a2; READV:91; var:09; INT:93; size:01; 10:0a;
+ WRITEV:32; output:0a; STRING:94; INT:93; size:01;
+ 1:01; c:63; READV:91; var:0a;"
+
+
+
+IDENTICAL?:10; output:01; INT:93; size:01; 20:14; INT:93; size:01; 28:1c; // 20 === 28 = jmp 99
+JMPZ:a2; READV:91; var:01; INT:93; size:01; 99:63;
+WRITEV:32; output:09; STRING:94; INT:93; size:01; 10:0a; t:74; e:65; s:73; t:74;  :20; p:70; r:72; i:69; n:6e; t:74; READV:91; var:09; //echo "test print"
+JMP:a1; INT:93; size:01; 76:4c;
+
+IDENTICAL?:10; output:03; INT:93; size:01; 1:01; INT:93; size:01; 1:01; JMPZ:a2; READV:91; var:03; INT:93; size:01; 14:0e; //1 === 1 //jmpz 14
+WRITEV:32; output:04; STRING:94; INT:93; size:01; 1:01; a:61; READV:91; var:04; JMP:a1; INT:93; size:01; 38:26; //print "a", jmp 38
+
+IDENTICAL?:10; output:06; INT:93; size:01; 1:01; INT:93; size:01; 1:01; JMPZ:a2; READV:91; var:06; INT:93; size:01; 14:0e; // 1 === 1 //jmpz 14
+WRITEV:32; output:07; STRING:94; INT:93; size:01; 1:01; b:62; READV:91; var:07; JMP:a1; INT:93; size:01; 10:0a;  //print "b", jmp 10
+
+JMPZ:a2; READV:91; var:01; INT:93; size:01; 14:0e; JMP:a1; INT:93; size:01; 10:0a; //else
+WRITEV:32; output:08; STRING:94; INT:93; size:01; 1:01; c:63; READV:91; var:08;"
+
+
+
+IDENTICAL?:10; output:03; INT:93; size:01; 1:01; INT:93; size:01; 1:01; JMPZ:a2; READV:91; var:03; INT:93; size:01; 14:0e;
+WRITEV:32; output:04; STRING:94; INT:93; size:01;
+1:01; a:61; READV:91; var:04; JMP:a1;
+INT:93; size:01; 38:26; //13
+IDENTICAL?:10; output:06; INT:93; size:01; 1:01; INT:93; size:01; 1:01; JMPZ:a2; READV:91; var:06; INT:93; size:01; 14:0e; WRITEV:32; output:07; STRING:94; INT:93; size:01; 1:01; b:62; READV:91; var:07; JMP:a1; INT:93; size:01; 10:0a;"
+C
+
+IDENTICAL?:10; output:01; INT:93; size:01; 1:01;
+INT:93; size:01; 0:00;
+
+PRINT:a0; READV:91; var:01;
+
+
+ WRITEV:92; output:00; STRING:94; INT:93; size:01; 10:0a; t:74; e:65; s:73; t:74;  :20; p:70; r:72; i:69; n:6e; t:74; READV:91; var:00;
+
+ WRITEV:92; output:00; INT:93; size:01; 1:01;
+ WRITEV:92; output:00; INT:93; size:01; 0:00;
+ IDENTICAL?:10; output:01; READV:91; var:00; READV:91; var:00;
+
+ PRINT:a0; READV:91; var:01;"
+
+
+
+
