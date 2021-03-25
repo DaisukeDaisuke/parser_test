@@ -106,7 +106,7 @@ class decoder{
 				$return1 = (int) ($var1 or $var2);
 				break;
 			case code::L_XOR:
-				$return1 = $var1 xor $var2;
+				$return1 = (int) ($var1 xor $var2);
 				break;
 			case code::MOD:
 				$return1 = $var1 % $var2;

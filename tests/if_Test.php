@@ -199,7 +199,82 @@ class if_Test extends TestCase{
 				echo "3";',
 				"23"
 			],
+			[
+				'if(false){
+					echo "1";
+				}elseif(false){
+					echo "2";
+				}elseif(false){
+					echo "3";
+				}
+				echo "5";',
+				"5"
+			],
+			[
+				'if(false){
+					echo "1";
+				}elseif(false){
+					echo "2";
+				}elseif(false){
+					echo "3";
+				}else{
+					echo "6";
+				}',
+				"6"
+			],
+			[
+				'if(false){
+					echo "1";
+				}elseif(false){
+					echo "2";
+				}elseif(false){
+					echo "3";
+				}else{
+					echo "6";
+				}
+				echo "7";',
+				"67"
+			],
+			[
+				'if(false){
+					echo "1";
+				}elseif(false){
+					echo "2";
+				}elseif(false){
+					echo "3";
+				}else{
+					echo "6";
+				}
+				echo 7;',
+				"67"
+			],
+			[
+				'if(false){
+					echo "1";
+				}elseif(false){
+					echo "2";
+				}elseif(false){
+					echo "3";
+				}else{
+					echo (200-((100/10*20)+50));
+				}',
+				"-50"
+			],
+			[
+				'if(false){
+					echo "1";
+				}elseif(false){
+					echo "2";
+				}elseif(false){
+					echo "3";
+				}else{
+					echo "6_";
+				}
+				echo 200-(100/10*20)*(100*200%50);',
+				"6_200"
+			],
 		];
+
 	}
 
 }
