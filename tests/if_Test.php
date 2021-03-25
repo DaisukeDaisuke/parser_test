@@ -188,7 +188,7 @@ class if_Test extends TestCase{
 					echo "2";
 				}
 				echo "3";',
-				"3"
+				"13"
 			],
 			[
 				'if(false){

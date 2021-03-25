@@ -13,6 +13,8 @@ class code{
 
 	//opcode
 
+	const NOP = "\x00";//(string) null or nop
+
 	//valueOP(Scalar)
 	const READV = "\x91";//readv $a(0)
 	const WRITEV = "\x92";//writev output int size 1

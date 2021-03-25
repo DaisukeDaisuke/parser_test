@@ -125,7 +125,6 @@ class main_old2{
 				//var_dump("echo");
 				//var_dump([...$this->execStmts($node->exprs), [code::PRINT."echo", $this->count]]);
 
-				var_dump($this->hexentities($this->execStmts($node->exprs)));
 				return $this->execStmts($node->exprs).code::PRINT.$this->put_var($this->count++);
 				break;
 			case PhpParser\Node\Stmt\If_::class://...?
@@ -143,7 +142,6 @@ class main_old2{
 					$return6 = "";
 					foreach($node->elseifs as $elseif){
 						$elseifs .= $this->execExpr($elseif->cond).$this->putjmpz($this->count++, $this->execStmts($elseif->stmts).$this->putGotoLabel($label));
-						var_dump($elseifs);
 					}
 
 				}
@@ -153,10 +151,7 @@ class main_old2{
 
 				$stmts = $this->execStmts($node->stmts).$this->putGotoLabel($label);
 
-				var_dump([$this->hexentities($expr),$this->hexentities($stmts),$this->hexentities($elseifs),$this->hexentities($else)]);
-
-				var_dump(strlen($expr.$this->putjmpz($ifcount, $stmts).$elseifs.$else));
-				return $this->solveLabel($expr.$this->putjmpz($ifcount, $stmts).$elseifs.$else, $label);//.$this->putLabel($label);
+				return $this->solveLabel($expr.$this->putjmpz($ifcount, $stmts).$elseifs.$else, $label);//.$this->putLabel($label); $else
 
 				//var_dump(["test",$else,$this->hexentities1($else)]);
 
@@ -390,11 +385,11 @@ class main_old2{
 						//$exec = substr_replace($exec, $new, $start,0);
 						//var_dump([$this->hexentities(substr($exec,20,20)),$this->hexentities1($new)]);
 						//$iMax = strlen($exec);
-						if($i === $iMax){
+						/*if($i === $iMax){
 							$array[] = [$start, $size+3, $i++,true];
 							break;
-						}
-						$array[] = [$start, $size+3, $i++,false];
+						}*/
+						$array[] = [$start, $size+3, $i++];
 					}
 					break;
 				default:
@@ -402,17 +397,13 @@ class main_old2{
 			}
 		}
 		$len = strlen($exec);
-		var_dump($array);
 		foreach(array_reverse($array) as $value){
-			var_dump($value);
-			[$start, $len1, $end, $skip_replace] = $value;
+			[$start, $len1, $end] = $value; //$skip_replace
 			//var_dump("!!",$len - ($end + 1));
 			$new = code::JMP.$this->getInt($len - ($end + 0));
 			//var_dump($len1,$this->hexentities1(substr($exec, $end, $len1+19)),$this->hexentities1(substr($exec, $start, $len1+100)),);
 			$exec = substr_replace($exec, '', $start, $len1);
-			if($skip_replace === false){
-				$exec = substr_replace($exec, $new, $start, 0);
-			}
+			$exec = substr_replace($exec, $new, $start, 0);
 
 			//var_dump($this->hexentities1(substr($exec, $start, $len1+19)));
 			$len = strlen($exec);
@@ -438,7 +429,6 @@ class main_old2{
 				}
 				//$return .= $return1.$return;//.=
 				$return .= $return1;
-				var_dump("TEST");
 			}
 			if($node instanceof Stmt){
 				if($node instanceof Nop){
@@ -456,7 +446,6 @@ class main_old2{
 
 			}*/
 		}
-		var_dump($this->hexentities($return));
 		return $return;
 	}
 
