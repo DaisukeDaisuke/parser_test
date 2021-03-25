@@ -27,7 +27,6 @@ class decoder{
 		$values = [];
 		while(!$this->feof()){
 			$opcode = $this->getByte();//......!!!!!!!!!!
-			$test = bin2hex($opcode);
 			//binaryOP
 			if($opcode >= code::ADD&&$opcode <= code::ABC){
 				$this->decodebinaryop_array($opcode);
@@ -46,7 +45,8 @@ class decoder{
 		if($opcode === code::CONCAT){
 			//var_dump("!!");
 		}
-		$output = $this->getByteInt();
+		$output = $this->getInt();
+		var_dump($output);
 		$var1 = $this->decodeScalar();//
 		$var2 = $this->decodeScalar();
 		//var_dump([$output, $var1, $var2]);
@@ -193,7 +193,7 @@ class decoder{
 			return $this->get($this->getInt());
 		}
 		if($opcode === code::WRITEV){
-			$output = $this->getByteInt();
+			$output = $this->getInt();
 			$var = $this->decodeScalar();
 			$this->setvalue($output, $var);
 			return null;
@@ -259,7 +259,7 @@ class decoder{
 	}
 
 	public function getvalue(){
-		$byte = $this->getByteInt();
+		$byte = $this->getInt();
 		$value = $this->values[$byte];
 		unset($this->values[$byte]);
 		return $value;

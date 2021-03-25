@@ -77,18 +77,21 @@ if(true){
 	echo "2";
 }
 echo "3";';*/
-/*$code = 'if(1+2===3){
+$code = 'if(1+2===3){
 	echo "true";
 }else{
 	echo "false";
-}';*/
+}';
 /*
 $code = "echo 1 xor 1;";
 */
+/*
 $code = '
+$i = 100;
+$$$i = 100+200+300;
 for($i = 1; $i <= 10; $i++){
 	echo $i;
-}';
+}';*/
 /*
 true;
 false;
@@ -100,7 +103,7 @@ $stmts = $parser->parse("<?php\n".$code);
 $dumper = new NodeDumper(['dumpComments' => true,]);
 echo $dumper->dump($stmts, "<?php\n".$code);
 
-/*$main_old = new main_old2();
+$main_old = new main_old2();
 $output = $main_old->execStmts($stmts);
 
 var_dump($code, $main_old->hexentities($output),$main_old->hexentities1($output));
@@ -109,4 +112,4 @@ ob_start();
 $decoder = new decoder();
 $decoder->decode($output);
 $log = ob_get_clean();
-var_dump($log);*/
+var_dump($log);

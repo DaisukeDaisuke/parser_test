@@ -2,6 +2,7 @@
 include __DIR__."/vendor/autoload.php";
 
 use PhpParser\Node\Expr;
+use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\BinaryOp;
 use PhpParser\Node\Expr\BinaryOp\BitwiseAnd;
 use PhpParser\Node\Expr\BinaryOp\BitwiseOr;
@@ -332,7 +333,29 @@ class main_old2{
 				case code::SPACESHIP:
 				case code::NOTEQUAL:
 				case code::ABC:
-					$i += 2;
+					//$i += 2;
+				$size = $exec[++$i];
+				switch($size){
+					case code::TYPE_BYTE://byte
+						$return1 = Binary::readSignedByte($exec[$i++]);
+						break;
+					case code::TYPE_SHORT://short
+						$return1 = Binary::readLShort(substr($exec, $i, 2));
+						$i += 2;
+						break;
+					case code::TYPE_INT://int
+						$return1 = Binary::readInt(substr($exec, $i, 4));
+						$i += 4;
+						break;
+					case code::TYPE_LONG://long
+						$return1 = Binary::readLong(substr($exec, $i, 8));
+						$i += 8;
+						break;
+					case code::TYPE_DOUBLE:
+						$return1 = Binary::readLDouble(substr($exec, $i, 8));
+						$i += 8;
+						break;
+				}
 					break;
 				case code::PRINT:
 				case code::JMP:
@@ -538,14 +561,14 @@ class main_old2{
 		if($recursionLeft&&$recursionRight){
 			//$count2 = ++$this->count;
 			$return = $left.$right;
-			$return .= $id.chr($count1).$this->put_var($basecount1).$this->put_var($basecount2);//$left,$right
+			$return .= $id.$this->write_varId($count1).$this->put_var($basecount1).$this->put_var($basecount2);//$left,$right
 		}elseif($recursionLeft){
 			//$return = $left;
-			$return .= $left.$id.chr($count1).$this->put_var($basecount1).$right;
+			$return .= $left.$id.$this->write_varId($count1).$this->put_var($basecount1).$right;
 		}elseif($recursionRight){
-			$return .= $right.$id.chr($count1).$left.$this->put_var($basecount2);
+			$return .= $right.$id.$this->write_varId($count1).$left.$this->put_var($basecount2);
 		}else{
-			$return .= $id.chr($count1).$left.$right;
+			$return .= $id.$this->write_varId($count1).$left.$right;
 		}
 		//var_dump($return);
 		return $return;
@@ -577,6 +600,12 @@ class main_old2{
 				$recursion = true;
 				return $this->execExpr($expr);//再帰...?
 				break;
+			case $expr instanceof Assign:
+				$recursion = true;
+				$name = $this->execExpr($expr->var);//再帰...?
+
+				break;
+				//case
 		}
 	}
 
@@ -600,7 +629,7 @@ class main_old2{
 	}
 
 	public function write_varId(int $var): string{
-		return chr($var);
+		return $this->putRawInt($var);//chr($var);
 	}
 
 	/**
@@ -610,7 +639,7 @@ class main_old2{
 	 * 指定したidの変数を読みます...
 	 */
 	public function put_var(int $var): string{
-		return code::READV.chr($var);
+		return code::READV.$this->putRawInt($var);
 	}
 
 	public function getValualueId($value): string{
@@ -660,9 +689,13 @@ class main_old2{
 	}*/
 
 	public function getInt($value): string{
+		return code::INT.$this->putRawInt($value);
+	}
+
+	function putRawInt($value){
 		//return $value."H";
 		$size = $this->checkIntSize($value);
-		$return = code::INT.chr($size);
+		$return = chr($size);
 		switch($size){
 			case code::TYPE_BYTE://byte 1-byte
 				$return .= Binary::writeByte($value);//Binary::readSignedByte($value);
@@ -851,117 +884,1377 @@ class main_old2{
 					break;
 				case code::ADD:
 					$return .= ' ADD?:'.bin2hex(substr($str, $i++, 1)).';';
-					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					$size = substr($str, $i++, 1);
+					$return .= ' size:'.bin2hex($size).';';
+					switch($size){
+						case code::TYPE_BYTE://byte
+							$return1 = Binary::readSignedByte(substr($str, $i, 1));
+							$return .= ' '.$return1.':'.bin2hex(substr($str, $i, 1)).';';
+
+							break;
+						case code::TYPE_SHORT://short
+							$return1 = Binary::readLShort(substr($str, $i, 2));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_INT://int
+							$return1 = Binary::readInt(substr($str, $i, 4));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_LONG://long
+							$return1 = Binary::readLong(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_DOUBLE:
+							$return1 = Binary::readLDouble(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+					}
+					$i--;
 					break;
 				case code::MUL:
 					$return .= ' MUL?:'.bin2hex(substr($str, $i++, 1)).';';
-					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					$size = substr($str, $i++, 1);
+					$return .= ' size:'.bin2hex($size).';';
+					switch($size){
+						case code::TYPE_BYTE://byte
+							$return1 = Binary::readSignedByte(substr($str, $i, 1));
+							$return .= ' '.$return1.':'.bin2hex(substr($str, $i, 1)).';';
+
+							break;
+						case code::TYPE_SHORT://short
+							$return1 = Binary::readLShort(substr($str, $i, 2));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_INT://int
+							$return1 = Binary::readInt(substr($str, $i, 4));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_LONG://long
+							$return1 = Binary::readLong(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_DOUBLE:
+							$return1 = Binary::readLDouble(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+					}
+					$i--;
 					break;
 				case code::DIV:
 					$return .= ' DIV?:'.bin2hex(substr($str, $i++, 1)).';';
-					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					$size = substr($str, $i++, 1);
+					$return .= ' size:'.bin2hex($size).';';
+					switch($size){
+						case code::TYPE_BYTE://byte
+							$return1 = Binary::readSignedByte(substr($str, $i, 1));
+							$return .= ' '.$return1.':'.bin2hex(substr($str, $i, 1)).';';
+
+							break;
+						case code::TYPE_SHORT://short
+							$return1 = Binary::readLShort(substr($str, $i, 2));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_INT://int
+							$return1 = Binary::readInt(substr($str, $i, 4));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_LONG://long
+							$return1 = Binary::readLong(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_DOUBLE:
+							$return1 = Binary::readLDouble(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+					}
+					$i--;
 					break;
 				case code::MINUS:
 					$return .= ' MINUS?:'.bin2hex(substr($str, $i++, 1)).';';
-					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					$size = substr($str, $i++, 1);
+					$return .= ' size:'.bin2hex($size).';';
+					switch($size){
+						case code::TYPE_BYTE://byte
+							$return1 = Binary::readSignedByte(substr($str, $i, 1));
+							$return .= ' '.$return1.':'.bin2hex(substr($str, $i, 1)).';';
+
+							break;
+						case code::TYPE_SHORT://short
+							$return1 = Binary::readLShort(substr($str, $i, 2));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_INT://int
+							$return1 = Binary::readInt(substr($str, $i, 4));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_LONG://long
+							$return1 = Binary::readLong(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_DOUBLE:
+							$return1 = Binary::readLDouble(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+					}
+					$i--;
 					break;
 				case code::B_AND:
 					$return .= ' B_AND?:'.bin2hex(substr($str, $i++, 1)).';';
-					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					$size = substr($str, $i++, 1);
+					$return .= ' size:'.bin2hex($size).';';
+					switch($size){
+						case code::TYPE_BYTE://byte
+							$return1 = Binary::readSignedByte(substr($str, $i, 1));
+							$return .= ' '.$return1.':'.bin2hex(substr($str, $i, 1)).';';
+
+							break;
+						case code::TYPE_SHORT://short
+							$return1 = Binary::readLShort(substr($str, $i, 2));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_INT://int
+							$return1 = Binary::readInt(substr($str, $i, 4));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_LONG://long
+							$return1 = Binary::readLong(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_DOUBLE:
+							$return1 = Binary::readLDouble(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+					}
+					$i--;
 					break;
 				case code::B_OR:
 					$return .= ' B_OR?:'.bin2hex(substr($str, $i++, 1)).';';
-					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					$size = substr($str, $i++, 1);
+					$return .= ' size:'.bin2hex($size).';';
+					switch($size){
+						case code::TYPE_BYTE://byte
+							$return1 = Binary::readSignedByte(substr($str, $i, 1));
+							$return .= ' '.$return1.':'.bin2hex(substr($str, $i, 1)).';';
+
+							break;
+						case code::TYPE_SHORT://short
+							$return1 = Binary::readLShort(substr($str, $i, 2));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_INT://int
+							$return1 = Binary::readInt(substr($str, $i, 4));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_LONG://long
+							$return1 = Binary::readLong(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_DOUBLE:
+							$return1 = Binary::readLDouble(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+					}
+					$i--;
 					break;
 				case code::B_XOR:
 					$return .= ' B_XOR?:'.bin2hex(substr($str, $i++, 1)).';';
-					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					$size = substr($str, $i++, 1);
+					$return .= ' size:'.bin2hex($size).';';
+					switch($size){
+						case code::TYPE_BYTE://byte
+							$return1 = Binary::readSignedByte(substr($str, $i, 1));
+							$return .= ' '.$return1.':'.bin2hex(substr($str, $i, 1)).';';
+
+							break;
+						case code::TYPE_SHORT://short
+							$return1 = Binary::readLShort(substr($str, $i, 2));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_INT://int
+							$return1 = Binary::readInt(substr($str, $i, 4));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_LONG://long
+							$return1 = Binary::readLong(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_DOUBLE:
+							$return1 = Binary::readLDouble(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+					}
+					$i--;
 					break;
 				case code::BOOL_AND:
 					$return .= ' BOOL_AND?:'.bin2hex(substr($str, $i++, 1)).';';
-					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					$size = substr($str, $i++, 1);
+					$return .= ' size:'.bin2hex($size).';';
+					switch($size){
+						case code::TYPE_BYTE://byte
+							$return1 = Binary::readSignedByte(substr($str, $i, 1));
+							$return .= ' '.$return1.':'.bin2hex(substr($str, $i, 1)).';';
+
+							break;
+						case code::TYPE_SHORT://short
+							$return1 = Binary::readLShort(substr($str, $i, 2));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_INT://int
+							$return1 = Binary::readInt(substr($str, $i, 4));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_LONG://long
+							$return1 = Binary::readLong(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_DOUBLE:
+							$return1 = Binary::readLDouble(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+					}
+					$i--;
 					break;
 				case code::BOOL_OR:
 					$return .= ' BOOL_OR?:'.bin2hex(substr($str, $i++, 1)).';';
-					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					$size = substr($str, $i++, 1);
+					$return .= ' size:'.bin2hex($size).';';
+					switch($size){
+						case code::TYPE_BYTE://byte
+							$return1 = Binary::readSignedByte(substr($str, $i, 1));
+							$return .= ' '.$return1.':'.bin2hex(substr($str, $i, 1)).';';
+
+							break;
+						case code::TYPE_SHORT://short
+							$return1 = Binary::readLShort(substr($str, $i, 2));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_INT://int
+							$return1 = Binary::readInt(substr($str, $i, 4));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_LONG://long
+							$return1 = Binary::readLong(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_DOUBLE:
+							$return1 = Binary::readLDouble(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+					}
+					$i--;
 					break;
 				case code::COALESCE:
 					$return .= ' COALESCE?:'.bin2hex(substr($str, $i++, 1)).';';
-					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					$size = substr($str, $i++, 1);
+					$return .= ' size:'.bin2hex($size).';';
+					switch($size){
+						case code::TYPE_BYTE://byte
+							$return1 = Binary::readSignedByte(substr($str, $i, 1));
+							$return .= ' '.$return1.':'.bin2hex(substr($str, $i, 1)).';';
+
+							break;
+						case code::TYPE_SHORT://short
+							$return1 = Binary::readLShort(substr($str, $i, 2));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_INT://int
+							$return1 = Binary::readInt(substr($str, $i, 4));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_LONG://long
+							$return1 = Binary::readLong(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_DOUBLE:
+							$return1 = Binary::readLDouble(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+					}
+					$i--;
 					break;
 				case code::CONCAT:
 					$return .= ' CONCAT?:'.bin2hex(substr($str, $i++, 1)).';';
-					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					$size = substr($str, $i++, 1);
+					$return .= ' size:'.bin2hex($size).';';
+					switch($size){
+						case code::TYPE_BYTE://byte
+							$return1 = Binary::readSignedByte(substr($str, $i, 1));
+							$return .= ' '.$return1.':'.bin2hex(substr($str, $i, 1)).';';
+
+							break;
+						case code::TYPE_SHORT://short
+							$return1 = Binary::readLShort(substr($str, $i, 2));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_INT://int
+							$return1 = Binary::readInt(substr($str, $i, 4));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_LONG://long
+							$return1 = Binary::readLong(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_DOUBLE:
+							$return1 = Binary::readLDouble(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+					}
+					$i--;
 					break;
 
 				case code::EQUAL:
 					$return .= ' EQUAL?:'.bin2hex(substr($str, $i++, 1)).';';
-					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					$size = substr($str, $i++, 1);
+					$return .= ' size:'.bin2hex($size).';';
+					switch($size){
+						case code::TYPE_BYTE://byte
+							$return1 = Binary::readSignedByte(substr($str, $i, 1));
+							$return .= ' '.$return1.':'.bin2hex(substr($str, $i, 1)).';';
+
+							break;
+						case code::TYPE_SHORT://short
+							$return1 = Binary::readLShort(substr($str, $i, 2));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_INT://int
+							$return1 = Binary::readInt(substr($str, $i, 4));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_LONG://long
+							$return1 = Binary::readLong(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_DOUBLE:
+							$return1 = Binary::readLDouble(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+					}
+					$i--;
 					break;
 				case code::GREATER:
 					$return .= ' GREATER?:'.bin2hex(substr($str, $i++, 1)).';';
-					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					$size = substr($str, $i++, 1);
+					$return .= ' size:'.bin2hex($size).';';
+					switch($size){
+						case code::TYPE_BYTE://byte
+							$return1 = Binary::readSignedByte(substr($str, $i, 1));
+							$return .= ' '.$return1.':'.bin2hex(substr($str, $i, 1)).';';
+
+							break;
+						case code::TYPE_SHORT://short
+							$return1 = Binary::readLShort(substr($str, $i, 2));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_INT://int
+							$return1 = Binary::readInt(substr($str, $i, 4));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_LONG://long
+							$return1 = Binary::readLong(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_DOUBLE:
+							$return1 = Binary::readLDouble(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+					}
+					$i--;
 					break;
 				case code::GREATEROREQUAL:
 					$return .= ' GREATEROREQUAL?:'.bin2hex(substr($str, $i++, 1)).';';
-					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					$size = substr($str, $i++, 1);
+					$return .= ' size:'.bin2hex($size).';';
+					switch($size){
+						case code::TYPE_BYTE://byte
+							$return1 = Binary::readSignedByte(substr($str, $i, 1));
+							$return .= ' '.$return1.':'.bin2hex(substr($str, $i, 1)).';';
+
+							break;
+						case code::TYPE_SHORT://short
+							$return1 = Binary::readLShort(substr($str, $i, 2));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_INT://int
+							$return1 = Binary::readInt(substr($str, $i, 4));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_LONG://long
+							$return1 = Binary::readLong(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_DOUBLE:
+							$return1 = Binary::readLDouble(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+					}
+					$i--;
 					break;
 
 				case code::IDENTICAL:
 					$return .= ' IDENTICAL?:'.bin2hex(substr($str, $i++, 1)).';';
-					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					$size = substr($str, $i++, 1);
+					$return .= ' size:'.bin2hex($size).';';
+					switch($size){
+						case code::TYPE_BYTE://byte
+							$return1 = Binary::readSignedByte(substr($str, $i, 1));
+							$return .= ' '.$return1.':'.bin2hex(substr($str, $i, 1)).';';
+
+							break;
+						case code::TYPE_SHORT://short
+							$return1 = Binary::readLShort(substr($str, $i, 2));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_INT://int
+							$return1 = Binary::readInt(substr($str, $i, 4));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_LONG://long
+							$return1 = Binary::readLong(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_DOUBLE:
+							$return1 = Binary::readLDouble(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+					}
+					$i--;
 					break;
 				case code::L_AND:
 					$return .= ' L_AND?:'.bin2hex(substr($str, $i++, 1)).';';
-					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					$size = substr($str, $i++, 1);
+					$return .= ' size:'.bin2hex($size).';';
+					switch($size){
+						case code::TYPE_BYTE://byte
+							$return1 = Binary::readSignedByte(substr($str, $i, 1));
+							$return .= ' '.$return1.':'.bin2hex(substr($str, $i, 1)).';';
+
+							break;
+						case code::TYPE_SHORT://short
+							$return1 = Binary::readLShort(substr($str, $i, 2));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_INT://int
+							$return1 = Binary::readInt(substr($str, $i, 4));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_LONG://long
+							$return1 = Binary::readLong(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_DOUBLE:
+							$return1 = Binary::readLDouble(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+					}
+					$i--;
 					break;
 				case code::L_OR:
 					$return .= ' L_OR?:'.bin2hex(substr($str, $i++, 1)).';';
-					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					$size = substr($str, $i++, 1);
+					$return .= ' size:'.bin2hex($size).';';
+					switch($size){
+						case code::TYPE_BYTE://byte
+							$return1 = Binary::readSignedByte(substr($str, $i, 1));
+							$return .= ' '.$return1.':'.bin2hex(substr($str, $i, 1)).';';
+
+							break;
+						case code::TYPE_SHORT://short
+							$return1 = Binary::readLShort(substr($str, $i, 2));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_INT://int
+							$return1 = Binary::readInt(substr($str, $i, 4));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_LONG://long
+							$return1 = Binary::readLong(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_DOUBLE:
+							$return1 = Binary::readLDouble(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+					}
+					$i--;
 					break;
 				case code::L_XOR:
 					$return .= ' L_XOR?:'.bin2hex(substr($str, $i++, 1)).';';
-					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					$size = substr($str, $i++, 1);
+					$return .= ' size:'.bin2hex($size).';';
+					switch($size){
+						case code::TYPE_BYTE://byte
+							$return1 = Binary::readSignedByte(substr($str, $i, 1));
+							$return .= ' '.$return1.':'.bin2hex(substr($str, $i, 1)).';';
+
+							break;
+						case code::TYPE_SHORT://short
+							$return1 = Binary::readLShort(substr($str, $i, 2));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_INT://int
+							$return1 = Binary::readInt(substr($str, $i, 4));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_LONG://long
+							$return1 = Binary::readLong(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_DOUBLE:
+							$return1 = Binary::readLDouble(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+					}
+					$i--;
 					break;
 				case code::MOD:
 					$return .= ' MOD?:'.bin2hex(substr($str, $i++, 1)).';';
-					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					$size = substr($str, $i++, 1);
+					$return .= ' size:'.bin2hex($size).';';
+					switch($size){
+						case code::TYPE_BYTE://byte
+							$return1 = Binary::readSignedByte(substr($str, $i, 1));
+							$return .= ' '.$return1.':'.bin2hex(substr($str, $i, 1)).';';
+
+							break;
+						case code::TYPE_SHORT://short
+							$return1 = Binary::readLShort(substr($str, $i, 2));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_INT://int
+							$return1 = Binary::readInt(substr($str, $i, 4));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_LONG://long
+							$return1 = Binary::readLong(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_DOUBLE:
+							$return1 = Binary::readLDouble(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+					}
+					$i--;
 					break;
 				case code::NOTIDENTICAL:
 					$return .= ' NOTIDENTICAL?:'.bin2hex(substr($str, $i++, 1)).';';
-					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					$size = substr($str, $i++, 1);
+					$return .= ' size:'.bin2hex($size).';';
+					switch($size){
+						case code::TYPE_BYTE://byte
+							$return1 = Binary::readSignedByte(substr($str, $i, 1));
+							$return .= ' '.$return1.':'.bin2hex(substr($str, $i, 1)).';';
+
+							break;
+						case code::TYPE_SHORT://short
+							$return1 = Binary::readLShort(substr($str, $i, 2));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_INT://int
+							$return1 = Binary::readInt(substr($str, $i, 4));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_LONG://long
+							$return1 = Binary::readLong(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_DOUBLE:
+							$return1 = Binary::readLDouble(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+					}
+					$i--;
 					break;
 				case code::SHIFTLEFT:
 					$return .= ' SHIFTLEFT?:'.bin2hex(substr($str, $i++, 1)).';';
-					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					$size = substr($str, $i++, 1);
+					$return .= ' size:'.bin2hex($size).';';
+					switch($size){
+						case code::TYPE_BYTE://byte
+							$return1 = Binary::readSignedByte(substr($str, $i, 1));
+							$return .= ' '.$return1.':'.bin2hex(substr($str, $i, 1)).';';
+
+							break;
+						case code::TYPE_SHORT://short
+							$return1 = Binary::readLShort(substr($str, $i, 2));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_INT://int
+							$return1 = Binary::readInt(substr($str, $i, 4));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_LONG://long
+							$return1 = Binary::readLong(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_DOUBLE:
+							$return1 = Binary::readLDouble(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+					}
+					$i--;
 					break;
 				case code::POW:
 					$return .= ' POW?:'.bin2hex(substr($str, $i++, 1)).';';
-					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					$size = substr($str, $i++, 1);
+					$return .= ' size:'.bin2hex($size).';';
+					switch($size){
+						case code::TYPE_BYTE://byte
+							$return1 = Binary::readSignedByte(substr($str, $i, 1));
+							$return .= ' '.$return1.':'.bin2hex(substr($str, $i, 1)).';';
+
+							break;
+						case code::TYPE_SHORT://short
+							$return1 = Binary::readLShort(substr($str, $i, 2));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_INT://int
+							$return1 = Binary::readInt(substr($str, $i, 4));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_LONG://long
+							$return1 = Binary::readLong(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_DOUBLE:
+							$return1 = Binary::readLDouble(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+					}
+					$i--;
 					break;
 				case code::SHIFTRIGHT:
 					$return .= ' SHIFTRIGHT?:'.bin2hex(substr($str, $i++, 1)).';';
-					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					$size = substr($str, $i++, 1);
+					$return .= ' size:'.bin2hex($size).';';
+					switch($size){
+						case code::TYPE_BYTE://byte
+							$return1 = Binary::readSignedByte(substr($str, $i, 1));
+							$return .= ' '.$return1.':'.bin2hex(substr($str, $i, 1)).';';
+
+							break;
+						case code::TYPE_SHORT://short
+							$return1 = Binary::readLShort(substr($str, $i, 2));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_INT://int
+							$return1 = Binary::readInt(substr($str, $i, 4));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_LONG://long
+							$return1 = Binary::readLong(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_DOUBLE:
+							$return1 = Binary::readLDouble(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+					}
+					$i--;
 					break;
 				case code::SMALLER:
 					$return .= ' SMALLER?:'.bin2hex(substr($str, $i++, 1)).';';
-					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					$size = substr($str, $i++, 1);
+					$return .= ' size:'.bin2hex($size).';';
+					switch($size){
+						case code::TYPE_BYTE://byte
+							$return1 = Binary::readSignedByte(substr($str, $i, 1));
+							$return .= ' '.$return1.':'.bin2hex(substr($str, $i, 1)).';';
+
+							break;
+						case code::TYPE_SHORT://short
+							$return1 = Binary::readLShort(substr($str, $i, 2));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_INT://int
+							$return1 = Binary::readInt(substr($str, $i, 4));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_LONG://long
+							$return1 = Binary::readLong(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_DOUBLE:
+							$return1 = Binary::readLDouble(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+					}
+					$i--;
 					break;
 				case code::SMALLEROREQUAL:
 					$return .= ' SMALLEROREQUAL?:'.bin2hex(substr($str, $i++, 1)).';';
-					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					$size = substr($str, $i++, 1);
+					$return .= ' size:'.bin2hex($size).';';
+					switch($size){
+						case code::TYPE_BYTE://byte
+							$return1 = Binary::readSignedByte(substr($str, $i, 1));
+							$return .= ' '.$return1.':'.bin2hex(substr($str, $i, 1)).';';
+
+							break;
+						case code::TYPE_SHORT://short
+							$return1 = Binary::readLShort(substr($str, $i, 2));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_INT://int
+							$return1 = Binary::readInt(substr($str, $i, 4));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_LONG://long
+							$return1 = Binary::readLong(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_DOUBLE:
+							$return1 = Binary::readLDouble(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+					}
+					$i--;
 					break;
 				case code::SPACESHIP:
 					$return .= ' SPACESHIP?:'.bin2hex(substr($str, $i++, 1)).';';
-					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					$size = substr($str, $i++, 1);
+					$return .= ' size:'.bin2hex($size).';';
+					switch($size){
+						case code::TYPE_BYTE://byte
+							$return1 = Binary::readSignedByte(substr($str, $i, 1));
+							$return .= ' '.$return1.':'.bin2hex(substr($str, $i, 1)).';';
+
+							break;
+						case code::TYPE_SHORT://short
+							$return1 = Binary::readLShort(substr($str, $i, 2));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_INT://int
+							$return1 = Binary::readInt(substr($str, $i, 4));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_LONG://long
+							$return1 = Binary::readLong(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_DOUBLE:
+							$return1 = Binary::readLDouble(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+					}
+					$i--;
 					break;
 				case code::NOTEQUAL:
 					$return .= ' NOTEQUAL?:'.bin2hex(substr($str, $i++, 1)).';';
-					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					$size = substr($str, $i++, 1);
+					$return .= ' size:'.bin2hex($size).';';
+					switch($size){
+						case code::TYPE_BYTE://byte
+							$return1 = Binary::readSignedByte(substr($str, $i, 1));
+							$return .= ' '.$return1.':'.bin2hex(substr($str, $i, 1)).';';
+
+							break;
+						case code::TYPE_SHORT://short
+							$return1 = Binary::readLShort(substr($str, $i, 2));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_INT://int
+							$return1 = Binary::readInt(substr($str, $i, 4));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_LONG://long
+							$return1 = Binary::readLong(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_DOUBLE:
+							$return1 = Binary::readLDouble(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+					}
+					$i--;
 					break;
 				case code::ABC:
 					$return .= ' ABC?:'.bin2hex(substr($str, $i++, 1)).';';
-					$return .= ' output:'.bin2hex(substr($str, $i, 1)).';';
+					$size = substr($str, $i++, 1);
+					$return .= ' size:'.bin2hex($size).';';
+					switch($size){
+						case code::TYPE_BYTE://byte
+							$return1 = Binary::readSignedByte(substr($str, $i, 1));
+							$return .= ' '.$return1.':'.bin2hex(substr($str, $i, 1)).';';
+
+							break;
+						case code::TYPE_SHORT://short
+							$return1 = Binary::readLShort(substr($str, $i, 2));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_INT://int
+							$return1 = Binary::readInt(substr($str, $i, 4));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_LONG://long
+							$return1 = Binary::readLong(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+						case code::TYPE_DOUBLE:
+							$return1 = Binary::readLDouble(substr($str, $i, 8));
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i++, 1)).';';
+							$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+							break;
+					}
+					$i--;
 					break;
 				case code::PRINT:
 					$return .= ' PRINT:'.bin2hex(substr($str, $i, 1)).';';
