@@ -125,6 +125,7 @@ class main_old2{
 				//var_dump("echo");
 				//var_dump([...$this->execStmts($node->exprs), [code::PRINT."echo", $this->count]]);
 
+				var_dump($this->hexentities($this->execStmts($node->exprs)));
 				return $this->execStmts($node->exprs).code::PRINT.$this->put_var($this->count++);
 				break;
 			case PhpParser\Node\Stmt\If_::class://...?
@@ -135,15 +136,15 @@ class main_old2{
 				$ifcount = $this->count++;
 
 				//var_dump($this->hexentities($return));
-				$elseifs = null;
+				$elseifs = null; // 00 = null
 				$else = null;
 
 				if(isset($node->elseifs[0])){
 					$return6 = "";
 					foreach($node->elseifs as $elseif){
 						$elseifs .= $this->execExpr($elseif->cond).$this->putjmpz($this->count++, $this->execStmts($elseif->stmts).$this->putGotoLabel($label));
+						var_dump($elseifs);
 					}
-
 
 				}
 				if(isset($node->else)){
@@ -152,6 +153,9 @@ class main_old2{
 
 				$stmts = $this->execStmts($node->stmts).$this->putGotoLabel($label);
 
+				var_dump([$this->hexentities($expr),$this->hexentities($stmts),$this->hexentities($elseifs),$this->hexentities($else)]);
+
+				var_dump(strlen($expr.$this->putjmpz($ifcount, $stmts).$elseifs.$else));
 				return $this->solveLabel($expr.$this->putjmpz($ifcount, $stmts).$elseifs.$else, $label);//.$this->putLabel($label);
 
 				//var_dump(["test",$else,$this->hexentities1($else)]);
@@ -246,6 +250,8 @@ class main_old2{
 	}
 
 	public function solveLabel(string $exec, int $label): string{
+		//return $exec;
+		$array = [];
 		$len = strlen($exec);
 		for($i = 0, $iMax = strlen($exec); $i < $iMax;){
 			switch($exec[$i]){
@@ -346,24 +352,30 @@ class main_old2{
 						break;
 					}
 					$return1 = -1;
+					$size = 0;
 					switch(ord($exec[++$i])){
 						case code::TYPE_BYTE://byte
 							$return1 = Binary::readSignedByte($exec[++$i]);
+							$size = 1;
 							break;
 						case code::TYPE_SHORT://short
 							$return1 = Binary::readLShort(substr($exec, $i, 2));
+							$size = 2;
 							$i += 2;
 							break;
 						case code::TYPE_INT://int
 							$return1 = Binary::readInt(substr($exec, $i, 4));
+							$size = 4;
 							$i += 4;
 							break;
 						case code::TYPE_LONG://long
 							$return1 = Binary::readLong(substr($exec, $i, 8));
+							$size = 8;
 							$i += 8;
 							break;
 						case code::TYPE_DOUBLE:
 							$return1 = Binary::readLDouble(substr($exec, $i, 8));
+							$size = 8;
 							$i += 8;
 							break;
 					}
@@ -372,17 +384,38 @@ class main_old2{
 						$i++;
 						//var_dump($len-($i++));
 						/** @var string $exec */
-						$exec = substr_replace($exec, '', $start,$i-$start);
-						$new = code::JMP.$this->getInt($len-($i++)+1);
-						$exec = substr_replace($exec, $new, $start,0);
-						//var_dump([$this->hexentities(substr($exec,20,20)),$this->hexentities1($new)]);
-						$iMax = strlen($exec);
+						//$exec = substr_replace($exec, '', $start,$i-$start);
 
+						//$new = code::JMP.$this->getInt($len - ($i++) + 1);
+						//$exec = substr_replace($exec, $new, $start,0);
+						//var_dump([$this->hexentities(substr($exec,20,20)),$this->hexentities1($new)]);
+						//$iMax = strlen($exec);
+						if($i === $iMax){
+							$array[] = [$start, $size+3, $i++,true];
+							break;
+						}
+						$array[] = [$start, $size+3, $i++,false];
 					}
 					break;
 				default:
 					$i++;
 			}
+		}
+		$len = strlen($exec);
+		var_dump($array);
+		foreach(array_reverse($array) as $value){
+			var_dump($value);
+			[$start, $len1, $end, $skip_replace] = $value;
+			//var_dump("!!",$len - ($end + 1));
+			$new = code::JMP.$this->getInt($len - ($end + 0));
+			//var_dump($len1,$this->hexentities1(substr($exec, $end, $len1+19)),$this->hexentities1(substr($exec, $start, $len1+100)),);
+			$exec = substr_replace($exec, '', $start, $len1);
+			if($skip_replace === false){
+				$exec = substr_replace($exec, $new, $start, 0);
+			}
+
+			//var_dump($this->hexentities1(substr($exec, $start, $len1+19)));
+			$len = strlen($exec);
 		}
 		return $exec;
 	}
@@ -403,8 +436,9 @@ class main_old2{
 				if($root === false){
 					$return1 = code::WRITEV.$this->write_varId($this->count).$return1;
 				}
-				$return .= $return1.$return;
-
+				//$return .= $return1.$return;//.=
+				$return .= $return1;
+				var_dump("TEST");
 			}
 			if($node instanceof Stmt){
 				if($node instanceof Nop){
@@ -414,13 +448,15 @@ class main_old2{
 					/** @var string[] $return */
 					$return[] = $this->execStmt($node);
 				}else{
-					$return .= ($this->execStmt($node) ?? "").$return;
+					//$return .= ($this->execStmt($node) ?? "").$return;
+					$return .= ($this->execStmt($node) ?? "");//.$return;
 				}
 			}
 			/*if($node instanceof node){
 
 			}*/
 		}
+		var_dump($this->hexentities($return));
 		return $return;
 	}
 
@@ -675,7 +711,7 @@ class main_old2{
 		}
 
 		switch(true){
-			case $value <= 127&&$value >= -128://byte
+			case $value <= 126&&$value >= -127://byte overflow ff
 				return code::TYPE_BYTE;
 			case $value <= 0xffff&&$value >= -0xffff://short
 				return code::TYPE_SHORT;
