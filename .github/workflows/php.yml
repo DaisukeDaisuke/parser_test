@@ -41,10 +41,19 @@ jobs:
           php-
     
     - name: update autoload or Install dependencies
-      run: (test -d vendor && composer dump-autoload) || composer install --no-dev --prefer-dist --no-progress --no-suggest
-      
+      run: (test -d vendor && (XDEBUG_MODE=off composer dump-autoload)) || (XDEBUG_MODE=off composer install --no-dev --prefer-dist --no-progress --no-suggest)
+
+    - name: Run Information gathering php -v
+      run: php -v
+    - name: Run Information gathering php -m
+      run: php -m
+    - name: Run Information gathering php -i
+      run: php -i
+    - name: Run Information gathering php -ini
+      run: php -ini
+
     - name: Run phpstan test
-      run: phpstan analyze --no-progress --memory-limit=2G
+      run: XDEBUG_MODE=off phpstan analyze --no-progress --memory-limit=2G
       
     - name: Run phpunit test
-      run: phpunit
+      run: XDEBUG_MODE=off phpunit
