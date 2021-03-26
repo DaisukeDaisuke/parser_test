@@ -3,6 +3,7 @@
 namespace purser;
 
 use PhpParser\Node\Expr;
+use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\BinaryOp;
 use PhpParser\Node\Expr\BinaryOp\BitwiseAnd;
 use PhpParser\Node\Expr\BinaryOp\BitwiseOr;
@@ -40,6 +41,7 @@ use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Echo_;
 use PhpParser\Node\Stmt\Else_;
+use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\If_;
 use PhpParser\Node\Stmt\Nop;
 use pocketmine\utils\Binary;
@@ -94,6 +96,8 @@ class main_old2{
 				return $this->solveLabel($expr.$this->putjmpz($ifcount, $stmts).$elseifs.$else, $label);//.$this->putLabel($label); $else
 			case Else_::class:
 				return $this->execStmts($node->stmts);//JMPZ
+			case Expression::class:
+				return $this->execExpr($node->expr);
 		}
 	}
 
@@ -370,9 +374,20 @@ class main_old2{
 				return $this->execScalar($expr);
 			case $expr instanceof Variable:
 				return $this->exec_var($expr);
+			case $expr instanceof Assign:
+				var_dump("!!!!!!!!!!!!!!!!!");
+				$id = $this->execExpr($expr->var);
+				$count = $this->count++;
+
+				$content = $this->execExpr($expr->expr);
+				var_dump(opcode_dumper::hexentities($content));//割り当て... copy //.code::WRITEV.$this->put_Scalar($count).$this->put_var($this->count))
+				var_dump($id,$content);
+				return $content;//.$this->put_Scalar($count).$this->put_var($this->count);//$id
 			case $expr instanceof Expr:
+				var_dump(get_class($expr));
 				$recursion = true;
 				return $this->execExpr($expr);//再帰...?
+
 		}
 	}
 
@@ -381,7 +396,7 @@ class main_old2{
 		if($node->name instanceof Expr){
 			return "";//$$b
 		}
-		return code::READV.$this->getValualueId($node->name);
+		return $this->getValualueId($node->name);
 	}
 
 	/**
@@ -409,8 +424,14 @@ class main_old2{
 		return code::READV.$this->write_varId($var);
 	}
 
-	public function getValualueId($value): string{
-		return chr($this->block[$this->blockid]->get($value));
+	/**
+	 * @see exec_var
+	 *
+	 * @param string $value
+	 * @return string
+	 */
+	public function getValualueId(string $value): string{
+		return $this->put_var($this->block[$this->blockid]->get($value,$this->count));
 	}
 
 	public function execScalar(Scalar $node): string{
@@ -422,14 +443,18 @@ class main_old2{
 			default:
 				throw new \RuntimeException('scalar "'.get_class($node).'" is unprocessed.');
 		}
-
 	}
 
 	/**
+	 * @see execScalar
+	 *
 	 * @param mixed $value
 	 * @return string
 	 */
 	public function put_Scalar($value){
+		if(is_object($value)){
+			throw new \RuntimeException('The function "put_Scalar" cannot accept the object "'.get_class($value).'".');
+		}
 		switch(true){
 			case is_int($value):
 			case is_float($value):

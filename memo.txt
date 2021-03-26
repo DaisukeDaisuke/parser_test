@@ -320,6 +320,7 @@ JMPZ opcodeの仕様について
 echo "test print"; // String 迷子
 ?>
 
+ADD?:02; output:00; output:03; INT:93; size:01; 100:64; INT:93; size:02; :c8; :00; WRITEV:92; output:00; output:03; READV:91; var:00; var:00; PRINT:a0; READV:91; var:00; var:03;"
 
 
 
