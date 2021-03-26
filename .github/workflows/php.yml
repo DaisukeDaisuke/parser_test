@@ -1,4 +1,4 @@
-name: PHP Script Test
+name: PHP Test
 
 on:
   push:
@@ -14,9 +14,6 @@ jobs:
       matrix:
         include:
            - php: "7.2.34"
-             jit: 0
-           - php: "8.0.3"
-             jit: 1205
 
     steps:
     - uses: actions/checkout@v2
@@ -25,8 +22,7 @@ jobs:
       with:
         php-version: ${{ matrix.php }}
         tools: composer, phpunit:8.5.15
-        ini-values: opcache.enable_cli=1, opcache.enable_cli=1, opcache.jit=${{ matrix.jit }}, opcache.jit_buffer_size=64M
-
+        
     - name: Validate composer.json and composer.lock
       run: composer validate --strict
 
