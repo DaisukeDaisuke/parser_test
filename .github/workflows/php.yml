@@ -22,7 +22,7 @@ jobs:
       uses: shivammathur/setup-php@v2
       with:
         php-version: ${{ matrix.php }}
-        tools: composer, phpunit:8.5.15
+        tools: composer, phpstan, phpunit:8.5.15
         
     - name: Validate composer.json and composer.lock
       run: composer validate --strict
@@ -41,5 +41,7 @@ jobs:
     # Add a test script to composer.json, for instance: "test": "vendor/bin/phpunit"
     # Docs: https://getcomposer.org/doc/articles/scripts.md
 
+    - name: Run phpstan test
+      run: phpstan
     - name: Run phpunit test
       run: phpunit
