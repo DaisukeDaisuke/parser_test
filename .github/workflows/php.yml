@@ -15,12 +15,6 @@ jobs:
         include:
            - php: "7.2.34"
              jit: 0
-           - php: "7.3"
-             jit: 0
-           - php: "7.4"
-             jit: 0
-           - php: "8.0.3"
-             jit: 0
            - php: "8.0.3"
              jit: 1205
 
