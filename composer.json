@@ -3,18 +3,19 @@
   "description": "",
   "license": "MIT",
   "require": {
-      "php": "~7.2 || 8.*",
+      "php": "^7.2 || ^8.0",
     "nikic/php-parser": "^4.10",
     "pocketmine/binaryutils": "^0.1.13"
   },
   "autoload": {
     "psr-4": {
-      "": ["src/"]
+      "purser\\": ["src/"]
     }
   },
   "require-dev": {
-    "roave/security-advisories": "dev-latest",
-    "phpunit/phpunit": "8.*"
+    "phpstan/phpstan": "^0.12.82",
+    "phpunit/phpunit": "8.*",
+    "roave/security-advisories": "dev-latest"
   },
   "scripts": {
     "test": "vendor/bin/phpunit"

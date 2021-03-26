@@ -1,5 +1,7 @@
 <?php
 
+namespace purser;
+
 use pocketmine\utils\Binary;
 
 class opcode_dumper{

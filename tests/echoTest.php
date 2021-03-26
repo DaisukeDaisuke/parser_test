@@ -2,6 +2,8 @@
 
 use PhpParser\ParserFactory;
 use PHPUnit\Framework\TestCase;
+use purser\decoder;
+use purser\main_old2;
 
 class echoTest extends TestCase{
 	/**
@@ -51,7 +53,7 @@ class echoTest extends TestCase{
 				'echo ((2*1+1)+(2/1+3))."_test";',
 				'8_test',
 			],
-			[
+			/*[
 				'echo 1 === 0;',
 				'false',
 			],
@@ -66,7 +68,7 @@ class echoTest extends TestCase{
 			[
 				'echo true === true;',
 				'true',
-			],
+			],*/
 			[
 				"echo ((2*1+1)+(2/1+3)-(2/(5*6+20)*(5*(6/2))))+7.4;",
 				"14.8"

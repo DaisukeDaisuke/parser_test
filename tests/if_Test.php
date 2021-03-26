@@ -3,6 +3,8 @@
 
 use PhpParser\ParserFactory;
 use PHPUnit\Framework\TestCase;
+use purser\decoder;
+use purser\main_old2;
 
 class if_Test extends TestCase{
 	/**

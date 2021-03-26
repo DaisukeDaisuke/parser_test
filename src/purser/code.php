@@ -1,6 +1,6 @@
 <?php
 
-
+namespace purser;
 
 class code{
 	//metadata

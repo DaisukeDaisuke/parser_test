@@ -1,5 +1,6 @@
 <?php
 
+namespace purser;
 
 use pocketmine\utils\Binary;
 use pocketmine\utils\BinaryStream;
@@ -156,12 +157,10 @@ class decoder{
 				echo $var1;
 				//$return1 = 1;
 				return;
-				break;
 			case code::JMP:
 				$jmp = $this->decodeScalar();
 				$this->offset_seek($jmp);
 				return;
-				break;
 			case code::JMPZ://JMPZ READV === 0 INT size offset ...
 				$target = $this->decodeScalar();
 				$jmp = $this->decodeScalar();
@@ -169,12 +168,10 @@ class decoder{
 					$this->offset_seek($jmp);
 				}
 				return;
-				break;
 			case code::JMPA:
 				$jmp = $this->decodeScalar();
 				$this->setOffset($jmp);
 				return;
-				break;
 		}
 		throw new \RuntimeException("Stmt ".bin2hex($opcode)." not found");
 	}
@@ -244,7 +241,7 @@ class decoder{
 		return ord($this->getByte());
 	}
 
-	public function getShort(): string{
+	public function getShort(): int{
 		return $this->stream->getShort();
 	}
 

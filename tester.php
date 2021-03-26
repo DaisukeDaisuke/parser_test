@@ -5,6 +5,9 @@ error_reporting(E_ALL);
 
 use PhpParser\NodeDumper;
 use PhpParser\ParserFactory;
+use purser\decoder;
+use purser\main_old2;
+use purser\opcode_dumper;
 
 ini_set('xdebug.var_display_max_children', -1);
 ini_set('xdebug.var_display_max_data', -1);

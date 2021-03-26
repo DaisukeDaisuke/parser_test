@@ -1,5 +1,7 @@
 <?php
 
+namespace purser;
+
 class CodeBlock{
 	public $ids = [];
 	public $values = [];

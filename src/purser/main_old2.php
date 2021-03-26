@@ -1,5 +1,6 @@
 <?php
-include __DIR__."/vendor/autoload.php";
+
+namespace purser;
 
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\BinaryOp;
@@ -33,9 +34,13 @@ use PhpParser\Node\Expr\BinaryOp\Spaceship;
 use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Scalar;
+use PhpParser\Node\Scalar\DNumber;
+use PhpParser\Node\Scalar\LNumber;
+use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Echo_;
 use PhpParser\Node\Stmt\Else_;
+use PhpParser\Node\Stmt\If_;
 use PhpParser\Node\Stmt\Nop;
 use pocketmine\utils\Binary;
 
@@ -44,8 +49,6 @@ error_reporting(E_ALL);
 ini_set('xdebug.var_display_max_children', -1);
 ini_set('xdebug.var_display_max_data', -1);
 ini_set('xdebug.var_display_max_depth', -1);
-
-include __DIR__."/decoder.php";
 
 class main_old2{
 	public $count = 0;
@@ -66,8 +69,7 @@ class main_old2{
 		switch(get_class($node)){
 			case Echo_::class:
 				return $this->execStmts($node->exprs).code::PRINT.$this->put_var($this->count++);
-				break;
-			case PhpParser\Node\Stmt\If_::class://...?
+			case If_::class://...?
 				//ConstFetch
 				$return = "";
 				$label = $this->label_count;
@@ -92,7 +94,6 @@ class main_old2{
 				return $this->solveLabel($expr.$this->putjmpz($ifcount, $stmts).$elseifs.$else, $label);//.$this->putLabel($label); $else
 			case Else_::class:
 				return $this->execStmts($node->stmts);//JMPZ
-				break;
 		}
 	}
 
@@ -372,7 +373,6 @@ class main_old2{
 			case $expr instanceof Expr:
 				$recursion = true;
 				return $this->execExpr($expr);//再帰...?
-				break;
 		}
 	}
 
@@ -385,11 +385,11 @@ class main_old2{
 	}
 
 	/**
-	 * @param int $var
-	 * @param $value
-	 * @return string
+	 * 指定した変数に指定した値を代入する指示を書きます
 	 *
-	 * 指定した変数に指定した値を代入する指示を書きます...
+	 * @param int $var
+	 * @param mixed $value
+	 * @return string
 	 */
 	public function write_var(int $var, $value): string{
 		return code::WRITEV.$this->write_varId($var).$this->put_Scalar($value);
@@ -414,9 +414,21 @@ class main_old2{
 	}
 
 	public function execScalar(Scalar $node): string{
-		return $this->put_Scalar($node->value);
+		switch(true){
+			case $node instanceof LNumber:
+			case $node instanceof DNumber:
+			case $node instanceof String_:
+				return $this->put_Scalar($node->value);
+			default:
+				throw new \RuntimeException('scalar "'.get_class($node).'" is unprocessed.');
+		}
+
 	}
 
+	/**
+	 * @param mixed $value
+	 * @return string
+	 */
 	public function put_Scalar($value){
 		switch(true){
 			case is_int($value):
@@ -427,7 +439,8 @@ class main_old2{
 				return $this->getInt($value);
 			case is_string($value);
 				return $this->getString($value);
-
+			default:
+				throw new \RuntimeException('put_Scalar: "'.$value.'" is unprocessed.');
 		}
 	}
 
