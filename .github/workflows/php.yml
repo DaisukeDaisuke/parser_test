@@ -9,7 +9,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    if: contains(github.event.head_commit.message, '[skip ci]') == false
     strategy:
       fail-fast: false
       matrix:
@@ -28,8 +27,6 @@ jobs:
         tools: composer, phpstan, phpunit:8.5.15
         ini-values: opcache.enable_cli=1, opcache.enable_cli=1, opcache.jit=${{ matrix.jit }}, opcache.jit_buffer_size=64M
         coverage: none
-    - name: test php -m
-      run: php -m
     - name: Validate composer.json and composer.lock
       run: composer validate --strict
 
