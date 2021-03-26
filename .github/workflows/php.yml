@@ -14,7 +14,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-           - php: "7.2.34"
+         - php: "7.2.34"
+           jit: 0
+         - php: "8.0.3"
+           jit: 1205
 
     steps:
     - uses: actions/checkout@v2
@@ -23,6 +26,7 @@ jobs:
       with:
         php-version: ${{ matrix.php }}
         tools: composer, phpstan, phpunit:8.5.15
+        ini-values: opcache.enable_cli=1, opcache.enable_cli=1, opcache.jit=${{ matrix.jit }}, opcache.jit_buffer_size=64M
         
     - name: Validate composer.json and composer.lock
       run: composer validate --strict
@@ -35,13 +39,12 @@ jobs:
         key: php-${{ hashFiles('**/composer.lock') }}
         restore-keys: |
           php-
+    
     - name: update autoload or Install dependencies
       run: (test -d vendor && composer dump-autoload) || composer install --no-dev --prefer-dist --no-progress --no-suggest
-
-    # Add a test script to composer.json, for instance: "test": "vendor/bin/phpunit"
-    # Docs: https://getcomposer.org/doc/articles/scripts.md
-
+      
     - name: Run phpstan test
-      run: phpstan
+      run: phpstan analyze --no-progress --memory-limit=2G
+      
     - name: Run phpunit test
       run: phpunit
