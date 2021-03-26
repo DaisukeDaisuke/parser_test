@@ -1,5 +1,7 @@
 <?php
 
+
+
 class code{
 	//metadata
 	const TYPE_BYTE = 1;

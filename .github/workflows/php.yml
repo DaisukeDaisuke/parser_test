@@ -11,8 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Validate composer.json and composer.lock
-      run: composer validate --strict
+    #- name: Validate composer.json and composer.lock
+    #  run: composer validate --strict
     - name: Restore Composer packages Cache
       id: composer-cache
       uses: actions/cache@v2
@@ -52,8 +52,8 @@ jobs:
         tools: composer, phpunit:8.5.15
         ini-values: opcache.enable_cli=1, opcache.enable_cli=1, opcache.jit=${{ matrix.jit }}, opcache.jit_buffer_size=64M
 
-    - name: Validate composer.json and composer.lock
-      run: composer validate --strict
+    #- name: Validate composer.json and composer.lock
+    #  run: composer validate --strict
 
     - name: Cache Composer packages
       id: composer-cache
