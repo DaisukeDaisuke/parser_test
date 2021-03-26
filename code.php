@@ -23,9 +23,6 @@ class code{
 	//const DOUBLE = "\xC4";
 	//const READV = "\x00";
 
-	const READVAR = "\x91";//readv $a(0)
-	const WRITEVAR = "\x92";//writevar name int size 1
-
 	//binaryOP
 	const ADD = "\x02";//add 80 1000 $a
 	const MUL = "\x03";

@@ -1,12 +1,22 @@
 <?php
 include __DIR__."/vendor/autoload.php";
 
+error_reporting(E_ALL);
+
 use PhpParser\NodeDumper;
 use PhpParser\ParserFactory;
 
 ini_set('xdebug.var_display_max_children', -1);
 ini_set('xdebug.var_display_max_data', -1);
 ini_set('xdebug.var_display_max_depth', -1);
+
+function hexentities($str){
+	$return = '';
+	for($i = 0, $iMax = strlen($str); $i < $iMax; $i++){
+		$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+	}
+	return $return;
+}
 
 
 //$code = 'echo true === false;';
@@ -47,7 +57,7 @@ if(1+2===3){
 /*else{
 	echo "0";
 }*/
-/*$code = 'if(1+2===3){
+$code = 'if(1+2===3){
 	echo "test print";
 }elseif(1===1){
 	echo "a";
@@ -55,7 +65,7 @@ if(1+2===3){
 	echo "b";
 }else{
 	echo "c";
-}';*/
+}';
 /*$code = 'if(2===2){
 	echo "test print";
 }elseif(1===3){
@@ -77,18 +87,15 @@ if(true){
 	echo "2";
 }
 echo "3";';*/
-$code = 'if(1+2===3){
+/*$code = 'if(1+2===3){
 	echo "true";
 }else{
 	echo "false";
-}';
+}';*/
 /*
 $code = "echo 1 xor 1;";
 */
-/*
-$code = '
-$i = 100;
-$$$i = 100+200+300;
+/*$code = '
 for($i = 1; $i <= 10; $i++){
 	echo $i;
 }';*/
@@ -96,7 +103,6 @@ for($i = 1; $i <= 10; $i++){
 true;
 false;
 */
-var_dump(2 >> 1);
 $parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7);
 $stmts = $parser->parse("<?php\n".$code);
 
@@ -106,7 +112,7 @@ echo $dumper->dump($stmts, "<?php\n".$code);
 $main_old = new main_old2();
 $output = $main_old->execStmts($stmts);
 
-var_dump($code, $main_old->hexentities($output),$main_old->hexentities1($output));
+var_dump(opcode_dumper::hexentities($output),opcode_dumper::hexentities1($output));
 
 ob_start();
 $decoder = new decoder();

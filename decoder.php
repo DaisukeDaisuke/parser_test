@@ -4,6 +4,8 @@
 use pocketmine\utils\Binary;
 use pocketmine\utils\BinaryStream;
 
+error_reporting(E_ALL);
+
 class decoder{
 	/** @var BinaryStream $stream */
 	public $stream;
@@ -27,6 +29,7 @@ class decoder{
 		$values = [];
 		while(!$this->feof()){
 			$opcode = $this->getByte();//......!!!!!!!!!!
+			$test = bin2hex($opcode);
 			//binaryOP
 			if($opcode >= code::ADD&&$opcode <= code::ABC){
 				$this->decodebinaryop_array($opcode);
@@ -45,8 +48,7 @@ class decoder{
 		if($opcode === code::CONCAT){
 			//var_dump("!!");
 		}
-		$output = $this->getInt();
-		var_dump($output);
+		$output = $this->getAddress();
 		$var1 = $this->decodeScalar();//
 		$var2 = $this->decodeScalar();
 		//var_dump([$output, $var1, $var2]);
@@ -183,7 +185,7 @@ class decoder{
 		}
 		//var_dump([ord($opcode),$this->stream->getOffset()]);
 		if($opcode === code::READV){
-			return $this->getvalue();
+			return $this->getvalue();//$this->getAddress();//$this->getvalue();
 		}
 		if($opcode === code::INT){
 			return $this->getInt();
@@ -193,7 +195,7 @@ class decoder{
 			return $this->get($this->getInt());
 		}
 		if($opcode === code::WRITEV){
-			$output = $this->getInt();
+			$output = $this->getAddress();
 			$var = $this->decodeScalar();
 			$this->setvalue($output, $var);
 			return null;
@@ -242,6 +244,14 @@ class decoder{
 		return ord($this->getByte());
 	}
 
+	public function getShort(): string{
+		return $this->stream->getShort();
+	}
+
+	public function getAddress(){
+		return $this->getShort();
+	}
+
 	public function offset_seek($jmp){
 		$this->stream->setOffset($this->getOffset()+$jmp);
 	}
@@ -259,7 +269,7 @@ class decoder{
 	}
 
 	public function getvalue(){
-		$byte = $this->getInt();
+		$byte = $this->getAddress();
 		$value = $this->values[$byte];
 		unset($this->values[$byte]);
 		return $value;

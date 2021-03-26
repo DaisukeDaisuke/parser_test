@@ -1,6 +1,7 @@
 {
   "name": "daisukedaisuke/parser_test",
   "description": "",
+  "license": "MIT",
   "require": {
       "php": "~7.2 || 8.*",
     "nikic/php-parser": "^4.10",
