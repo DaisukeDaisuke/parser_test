@@ -1,0 +1,84 @@
+name: PHP Composer
+
+on:
+#  push:
+#    branches: [ master ]
+#  pull_request:
+#    branches: [ master ]
+
+
+
+jobs:
+  composer cache setup:
+    runs-on: ubuntu-latest
+    steps:
+    - run: echo Build1
+    - name: Cache Composer packages
+      id: composer-cache
+      uses: actions/cache@v2
+      with:
+        path: vendor
+        key: php-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php-
+    - name: Clone php-build repository
+      if: steps.php-${{ hashFiles('**/composer.lock') }}.outputs.cache-hit != 'true'
+      uses: actions/checkout@v2
+      with:
+        repository: php-build/php-build
+        path: php-build
+
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        include:
+           - php: "7.1.33"
+             phpunit: ":7.5.20"
+             jit: 0
+           - php: "7.2.34"
+             phpunit: ":8.5.15"
+             jit: 0
+           - php: "7.3"
+             phpunit: ""
+             jit: 0
+           - php: "7.4"
+             phpunit: ""
+             jit: 0
+           - php: "8.0.3"
+             phpunit: ""
+             jit: 0
+           - php: "8.0.3"
+             phpunit: ""
+             jit: 1205
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ matrix.php }}
+        tools: composer, phpunit${{ matrix.tools }}
+        ini-values: opcache.enable_cli=1, opcache.enable_cli=1, opcache.jit=${{ matrix.jit }}, opcache.jit_buffer_size=64M
+
+    - name: Validate composer.json and composer.lock
+      run: composer validate --strict
+
+    - name: Cache Composer packages
+      id: composer-cache
+      uses: actions/cache@v2
+      with:
+        path: vendor
+        key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php-
+
+    - name: Install dependencies
+      run: composer install --no-dev --prefer-dist --no-progress --no-suggest
+
+    # Add a test script to composer.json, for instance: "test": "vendor/bin/phpunit"
+    # Docs: https://getcomposer.org/doc/articles/scripts.md
+
+    - name: Run test suite
+      run: composer run-script tes
