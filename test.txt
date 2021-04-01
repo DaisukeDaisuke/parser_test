@@ -594,6 +594,10 @@ var:0e; JMP:a1; INT:93; size:01; 79:4f;
 
 :00; IDENTICAL?:10; output:00; output:07; INT:93; size:01; 1:01; INT:93; size:01; 1:01; JMPZ:a2; READV:91; var:00; var:07; INT:93; size:01; 16:10; WRITEV:92; output:00; output:08; STRING:94; INT:93; size:01; 1:01; a:61; PRINT:a0; READV:91; var:00; var:08; JMP:a1; INT:93; size:01; 46:2e; :00; IDENTICAL?:10; output:00; output:0b; INT:93; size:01; 1:01; INT:93; size:01; 1:01; JMPZ:a2; READV:91; var:00; var:0b; INT:93; size:01; 16:10; WRITEV:92; output:00; output:0c; STRING:94; INT:93; size:01; 1:01; b:62; PRINT:a0; READV:91; var:00; var:0c; JMP:a1; INT:93; size:01; 13:0d; :00; WRITEV:92; output:00; output:0d; STRING:94; INT:93; size:01; 1:01; c:63; PRINT:a0; READV:91; var:00; var:0d;"
 
+ADD?:02; output:00; output:02; INT:93; size:01; 100:64; INT:93; size:02; :c8; :00; :00; :00; ADD?:02; output:00; output:04; READV:91; var:00; var:02; INT:93; size:01; 100:64; PRINT:a0; READV:91; var:00; var:04; :00; :00; ADD?:02; output:00; output:07; READV:91; var:00; var:05; INT:93; size:02; :c8; :00; PRINT:a0; READV:91; var:00; var:07;"
+
+
+
 
 
 

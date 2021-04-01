@@ -104,8 +104,16 @@ for($i = 1; $i <= 10; $i++){
 }';*/
 
 $code = '
-$i=100+200;
-echo $i;';
+echo "test print";
+echo 100+200;
+/*if(false){
+	echo 100+200;
+}else{
+	echo 300+300;
+}*/
+$i="test";
+//echo $i;
+//echo $i+200;';
 
 /*
 true;
@@ -120,6 +128,10 @@ echo $dumper->dump($stmts, "<?php\n".$code);
 $main_old = new main_old2();
 $output = $main_old->execStmts($stmts);
 
+var_dump($main_old);
+
+file_put_contents(".\\output.bin", $output);
+
 var_dump(opcode_dumper::hexentities($output),opcode_dumper::hexentities1($output));
 
 ob_start();
@@ -127,3 +139,4 @@ $decoder = new decoder();
 $decoder->decode($output);
 $log = ob_get_clean();
 var_dump($log);
+
