@@ -3,15 +3,16 @@
 namespace purser;
 
 class CodeBlock{
+	/** @var int[] $ids */
 	public $ids = [];
-	public $values = [];
-	public $nowvaluesid = 0;
+	//public $values = [];
+	//public $nowvaluesid = 0;
 
-
+	/** @var int $block */
 	public $block;
 
-	public function __construct($block){
-		$this->block = $block;
+	public function __construct(int $blockid){
+		$this->block = $blockid;
 	}
 
 	public function getBlock(): int{
@@ -19,7 +20,7 @@ class CodeBlock{
 	}
 
 	//return id
-	function get(string $value,int &$ifcount){
+	function get(string $value,int &$ifcount): int{
 		if(!isset($this->ids[$value])){
 			$this->ids[$value] = $ifcount;//!!
 		}

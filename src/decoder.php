@@ -4,28 +4,35 @@ namespace purser;
 
 use pocketmine\utils\Binary;
 use pocketmine\utils\BinaryStream;
+use RuntimeException;
 
 error_reporting(E_ALL);
 
 class decoder{
 	/** @var BinaryStream $stream */
 	public $stream;
-
 	/** @var int $len */
 	public $len;
-
+	/** @var mixed[] $values */
 	public $values = [];
 
 	public function __construct(){
 		//none
 	}
 
+	/**
+	 * @param string $opcode
+	 * @return void
+	 */
 	public function decode(string $opcode){
 		$this->len = strlen($opcode);
 		$this->stream = new BinaryStream($opcode);
 		$this->decodeopcode();
 	}
 
+	/**
+	 * @return void
+	 */
 	public function decodeopcode(){
 		$values = [];
 		while(!$this->feof()){
@@ -45,7 +52,11 @@ class decoder{
 		//var_dump($values);
 	}
 
-	public function decodebinaryop_array($opcode){
+	/**
+	 * @param string $opcode
+	 * @return void
+	 */
+	public function decodebinaryop_array(string $opcode){
 		if($opcode === code::CONCAT){
 			//var_dump("!!");
 		}
@@ -144,7 +155,12 @@ class decoder{
 	}
 
 
-	public function decodeStmt_array($opcode){
+	/**
+	 * @param string $opcode
+	 * @return void
+	 * @throws RuntimeException
+	 */
+	public function decodeStmt_array(string $opcode){
 		//$opcode = $this->get(1);
 		//$var1 = $this->value($this->decodeScalar());
 		$return1 = 0;
@@ -173,9 +189,13 @@ class decoder{
 				$this->setOffset($jmp);
 				return;
 		}
-		throw new \RuntimeException("Stmt ".bin2hex($opcode)." not found");
+		throw new RuntimeException("Stmt ".bin2hex($opcode)." not found");
 	}
 
+	/**
+	 * @param string|null $opcode
+	 * @return float|int|mixed|string|null
+	 */
 	function decodeScalar(?string $opcode = null){
 		if($opcode === null){
 			$opcode = $this->get(1);
@@ -189,7 +209,7 @@ class decoder{
 		}
 		if($opcode === code::STRING){
 			$this->getByte();//remove code::INT
-			return $this->get($this->getInt());
+			return $this->get((int) $this->getInt());
 		}
 		if($opcode === code::WRITEV){
 			$output = $this->getAddress();
@@ -197,9 +217,12 @@ class decoder{
 			$this->setvalue($output, $var);
 			return null;
 		}
-		throw new \RuntimeException("Scalar ".bin2hex($opcode)." not found");
+		throw new RuntimeException("Scalar ".bin2hex($opcode)." not found");
 	}
 
+	/**
+	 * @return float|int
+	 */
 	function getInt(){
 		$size = $this->getByteInt();
 		switch($size){
@@ -214,26 +237,26 @@ class decoder{
 			case code::TYPE_DOUBLE:
 				return Binary::readLDouble($this->get(code::TYPE_SIZE_DOUBLE));
 		}
-		throw new \RuntimeException("int or Double not found");
+		throw new RuntimeException("int or Double not found");
 	}
 
 	public function getBinaryStream(): ?BinaryStream{
 		return $this->stream;
 	}
 
-	public function feof(): bool{
+	public function feof() : bool{
 		return $this->stream->feof();
 	}
 
-	public function getlen(){
+	public function getlen() : int{
 		return $this->len;
 	}
 
-	public function get($len){
+	public function get(int $len) : string{
 		return $this->stream->get($len);
 	}
 
-	public function getByte(){
+	public function getByte() : string{
 		return $this->get(1);
 	}
 
@@ -245,11 +268,15 @@ class decoder{
 		return $this->stream->getShort();
 	}
 
-	public function getAddress(){
+	public function getAddress(): int{
 		return $this->getShort();
 	}
 
-	public function offset_seek($jmp){
+	/**
+	 * @param int $jmp
+	 * @return void
+	 */
+	public function offset_seek(int $jmp){
 		$this->stream->setOffset($this->getOffset()+$jmp);
 	}
 
@@ -257,14 +284,26 @@ class decoder{
 		return $this->stream->getOffset();
 	}
 
+	/**
+	 * @param int $offset
+	 * @return void
+	 */
 	public function setOffset(int $offset){
 		$this->stream->setOffset($offset);
 	}
 
-	public function setvalue($name, $var){
+	/**
+	 * @param int $name
+	 * @param mixed $var
+	 * @return void
+	 */
+	public function setvalue(int $name, $var){
 		$this->values[$name] = $var;
 	}
 
+	/**
+	 * @return mixed
+	 */
 	public function getvalue(){
 		$byte = $this->getAddress();
 		$value = $this->values[$byte];
@@ -272,7 +311,11 @@ class decoder{
 		return $value;
 	}
 
-	public function value($name){
+	/**
+	 * @param int $name
+	 * @return mixed
+	 */
+	public function value(int $name){
 		return $this->values[$name];
 	}
 }

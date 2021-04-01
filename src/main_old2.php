@@ -48,28 +48,34 @@ use pocketmine\utils\Binary;
 
 error_reporting(E_ALL);
 
-ini_set('xdebug.var_display_max_children', -1);
-ini_set('xdebug.var_display_max_data', -1);
-ini_set('xdebug.var_display_max_depth', -1);
+ini_set('xdebug.var_display_max_children', "-1");
+ini_set('xdebug.var_display_max_data', "-1");
+ini_set('xdebug.var_display_max_depth', "-1");
 
 var_dump(code::WRITEV);
 var_dump(Binary::writeByte(0));
 
 class main_old2{
+	/** @var int $count */
 	public $count = 1;
+	/** @var int $label_count */
 	public $label_count = 0;
-	public $label = [];
+	//public $label = [];
 
-	/** @var int */
+	/** @var int $blockid */
 	public $blockid = 1;
-	/** @var CodeBlock[] */
+	/** @var CodeBlock[] $block */
 	public $block = [];
 
 	public function __construct(){
 		$this->block[$this->blockid] = new CodeBlock($this->blockid);
 	}
 
-	public function execStmt(Stmt $node){
+	/**
+	 * @param Stmt $node
+	 * @return string
+	 */
+	public function execStmt(Stmt $node): string{
 		$return = "";
 		switch(get_class($node)){
 			case Echo_::class:
@@ -102,9 +108,16 @@ class main_old2{
 			case Expression::class:
 				return $this->execExpr($node->expr);
 		}
+		return "";//code::nop
 	}
 
-	public function execExpr($expr, &$recursion = false, &$is_var = false){//array...?
+	/**
+	 * @param Expr $expr
+	 * @param bool $recursion
+	 * @param bool $is_var
+	 * @return string
+	 */
+	public function execExpr(Expr $expr,bool &$recursion = false,?bool &$is_var = false){//array...?
 		switch(true){
 			case $expr instanceof BinaryOp:
 				$recursion = true;
@@ -154,9 +167,9 @@ class main_old2{
 			}else{//binaryop...? //$i+100...?
 
 			}
+			return "";//!!
 		}
-		$var = $this->write_varId($this->getValualueId($node->name));
-		return $var;
+		return $this->write_varId($this->getValualueId($node->name));
 	}
 
 	public function solveLabel(string $exec, int $label): string{
@@ -279,12 +292,15 @@ class main_old2{
 		return $exec;
 	}
 
-	public function execStmts(array $nodes, $array = false){
-		/** @var string|string[] $return */
+	/**
+	 * @param Stmt[]|Expr[] $nodes
+	 * @return string
+	 */
+	public function execStmts(array $nodes){//,bool $array = false
 		$return = "";
-		if($array === true){
+		/*if($array === true){
 			$return = [];
-		}
+		}*/
 
 		foreach($nodes as $node){
 			if($node instanceof Expr){
@@ -299,18 +315,17 @@ class main_old2{
 				if($node instanceof Nop){
 					continue;
 				}
-				if($array === true){
-					/** @var string[] $return */
-					$return[] = $this->execStmt($node);
-				}else{
+				//if($array === true){
+					//$return[] = $this->execStmt($node);
+				//}else{
 					$return .= ($this->execStmt($node) ?? "");//.$return;
-				}
+				//}
 			}
 		}
 		return $return;
 	}
 
-	public function encode_opcode_array(array $binaryOp){
+	/*public function encode_opcode_array(array $binaryOp){
 		$binary = "";
 		foreach($binaryOp as $value){
 			foreach($value as $code){
@@ -318,9 +333,14 @@ class main_old2{
 			}
 		}
 		return $binary;
-	}
+	}*/
 
-	public function execBinaryOp($node, $count = 0): string{//output //add 10 10 1
+	/**
+	 * @param BinaryOp $node
+	 * @return string
+	 * @throws \RuntimeException
+	 */
+	public function execBinaryOp(BinaryOp $node): string{//output //add 10 10 1 $count = 0
 		switch(get_class($node)){
 			case Plus::class:
 				return $this->execbinaryplus($node, code::ADD);
@@ -380,7 +400,12 @@ class main_old2{
 		throw new \RuntimeException('BinaryOp "'.get_class($node).'" is unprocessed.');
 	}
 
-	public function execbinaryplus($node, $id): string{
+	/**
+	 * @param BinaryOp $node
+	 * @param string $id
+	 * @return string
+	 */
+	public function execbinaryplus(BinaryOp $node,string $id): string{
 		$recursionLeft = false;
 		$recursionRight = false;
 
@@ -441,9 +466,9 @@ class main_old2{
 	 * @see exec_var
 	 *
 	 * @param string $value
-	 * @return string
+	 * @return int
 	 */
-	public function getValualueId(string $value): string{
+	public function getValualueId(string $value): int{
 		return $this->block[$this->blockid]->get($value,$this->count);//$this->write_varId();
 	}
 
@@ -482,27 +507,40 @@ class main_old2{
 		}
 	}
 
+	/**
+	 * @param float|int $value
+	 * @return string
+	 */
 	public function getInt($value): string{
 		return code::INT.$this->putRawInt($value);
 	}
 
+	/**
+	 * @param float|int $value
+	 * @return string
+	 */
 	function putRawInt($value): string{
 		$size = $this->checkIntSize($value);
 		$return = chr($size);
 		switch($size){
 			case code::TYPE_BYTE://byte 1-byte
+				/** @var int $value */
 				$return .= Binary::writeByte($value);//Binary::readSignedByte($value);
 				break;
 			case code::TYPE_SHORT:// 2-byte
+				/** @var int $value */
 				$return .= Binary::writeLShort($value);
 				break;
 			case code::TYPE_INT://int 4-byte
+				/** @var int $value */
 				$return .= Binary::writeInt($value);
 				break;
 			case code::TYPE_LONG://long 8-byte
+				/** @var int $value */
 				$return .= Binary::writeLong($value);
 				break;
 			case code::TYPE_DOUBLE://Double 8-byte
+				/** @var float $value */
 				$return .= Binary::writeLDouble($value);
 				break;
 		}
@@ -514,6 +552,11 @@ class main_old2{
 	}
 
 
+	/**
+	 * @param float|int $value
+	 * @return int
+	 * @throws \RuntimeException
+	 */
 	public function checkIntSize($value){
 		if(is_float($value)){
 			return code::TYPE_DOUBLE;
@@ -529,27 +572,29 @@ class main_old2{
 			case $value <= 0x7FFFFFFFFFFFFFFF&&$value >= -0x7FFFFFFFFFFFFFFF://long
 				return code::TYPE_LONG;
 		}
+		throw new \RuntimeException("checkIntSize overflow [".$value."]");
 	}
 
-	public function putjmpz(string $var, ?string $stmts = null, ?string $target = null){//0 => jmp
+	public function putjmpz(int $var, string $stmts, ?string $target = null): string{//0 => jmp
 		if($target !== null){
 			return code::JMPZ.$this->put_var($var).$this->getInt(strlen($target)).$stmts;
 		}
 		return code::JMPZ.$this->put_var($var).$this->getInt(strlen($stmts)).$stmts;
 	}
 
-	public function putjmp(string $stmts, $skip = false){
+	public function putjmp(string $stmts,bool $skip = false): string{
 		if($skip === true){
 			return code::JMP.$this->getInt(strlen($stmts));
 		}
 		return code::JMP.$this->getInt(strlen($stmts)).$stmts;
 	}
 
-	public function putGotoLabel($label){
+	public function putGotoLabel(int $label): string{
 		return code::LGOTO.$this->getInt($label);
 	}
 
-	public function putLabel($label){
+
+	public function putLabel(int $label): string{
 		return code::LABEL.$this->getInt($label);
 	}
 }
