@@ -52,8 +52,11 @@ ini_set('xdebug.var_display_max_children', -1);
 ini_set('xdebug.var_display_max_data', -1);
 ini_set('xdebug.var_display_max_depth', -1);
 
+var_dump(code::WRITEV);
+var_dump(Binary::writeByte(0));
+
 class main_old2{
-	public $count = 0;
+	public $count = 1;
 	public $label_count = 0;
 	public $label = [];
 
@@ -99,6 +102,61 @@ class main_old2{
 			case Expression::class:
 				return $this->execExpr($node->expr);
 		}
+	}
+
+	public function execExpr($expr, &$recursion = false, &$is_var = false){//array...?
+		switch(true){
+			case $expr instanceof BinaryOp:
+				$recursion = true;
+				return $this->execBinaryOp($expr);
+			case $expr instanceof ConstFetch:
+				$recursion = true;
+				$value = $expr->name->parts[0];
+				//$return = $this->put_Scalar();
+				if($value === "false"){
+					return $this->write_var($this->count, 0);
+				}
+
+				if($value === "true"){
+					return $this->write_var($this->count, 1);
+				}
+
+				return $expr->name->parts[0];//read const id(global...?)
+			case $expr instanceof Scalar:
+				return $this->execScalar($expr);
+			case $expr instanceof Variable:
+				$recursion = true;//!!!!!!!!!
+				$is_var = true;
+				return $this->exec_var($expr);
+			case $expr instanceof Assign:
+				var_dump("!!!!!!!!!!!!!!!!!");
+
+				$id = $this->execExpr($expr->var);
+				$content = $this->execExpr($expr->expr);
+				//$count = $this->count++;
+				var_dump(opcode_dumper::hexentities($content));//割り当て... copy //.code::WRITEV.$this->put_Scalar($count).$this->put_var($this->count))
+				var_dump($id,$content);
+				return $content;//.$this->put_Scalar($count).$this->put_var($this->count);//$id
+			case $expr instanceof Expr:
+				var_dump(get_class($expr));
+				$recursion = true;
+				return $this->execExpr($expr);//再帰...?
+
+		}
+		throw new \RuntimeException('execExpr "'.get_class($expr).'" not found');
+	}
+
+	public function exec_var(Variable $node): string{//変数処理...
+		if($node->name instanceof Expr){
+			var_dump("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+			if($node->name instanceof Variable){
+				return "";//$$b
+			}else{//binaryop...? //$i+100...?
+
+			}
+		}
+		$var = $this->write_varId($this->getValualueId($node->name));
+		return $var;
 	}
 
 	public function solveLabel(string $exec, int $label): string{
@@ -326,15 +384,17 @@ class main_old2{
 		$recursionLeft = false;
 		$recursionRight = false;
 
-		$left = $this->execExpr($node->left, $recursionLeft);
+		$left = $this->execExpr($node->left, $recursionLeft,$is_varleft);
 		$basecount1 = $this->count++;
 
-		$right = $this->execExpr($node->right, $recursionRight);
+		$right = $this->execExpr($node->right, $recursionRight, $is_varright);
 		$basecount2 = $this->count++;
 
 		$count1 = $this->count;
 
 		// id output Read_v.id Read_v.id
+
+		//!!
 
 		$return = "";
 		if($recursionLeft&&$recursionRight){
@@ -350,53 +410,6 @@ class main_old2{
 			$return .= $id.$this->write_varId($count1).$left.$right;
 		}
 		return $return;
-	}
-
-	public function execExpr($expr, &$recursion = false){//array...?
-		switch(true){
-			case $expr instanceof BinaryOp:
-				$recursion = true;
-				return $this->execBinaryOp($expr);
-			case $expr instanceof ConstFetch:
-				$recursion = true;
-				$value = $expr->name->parts[0];
-				//$return = $this->put_Scalar();
-				if($value === "false"){
-					return $this->write_var($this->count, 0);
-				}
-
-				if($value === "true"){
-					return $this->write_var($this->count, 1);
-				}
-
-				return $expr->name->parts[0];//read const id(global...?)
-			case $expr instanceof Scalar:
-				return $this->execScalar($expr);
-			case $expr instanceof Variable:
-				return $this->exec_var($expr);
-			case $expr instanceof Assign:
-				var_dump("!!!!!!!!!!!!!!!!!");
-				$id = $this->execExpr($expr->var);
-				$count = $this->count++;
-
-				$content = $this->execExpr($expr->expr);
-				var_dump(opcode_dumper::hexentities($content));//割り当て... copy //.code::WRITEV.$this->put_Scalar($count).$this->put_var($this->count))
-				var_dump($id,$content);
-				return $content;//.$this->put_Scalar($count).$this->put_var($this->count);//$id
-			case $expr instanceof Expr:
-				var_dump(get_class($expr));
-				$recursion = true;
-				return $this->execExpr($expr);//再帰...?
-
-		}
-	}
-
-
-	public function exec_var(Variable $node): string{//変数処理...
-		if($node->name instanceof Expr){
-			return "";//$$b
-		}
-		return $this->getValualueId($node->name);
 	}
 
 	/**
@@ -431,7 +444,7 @@ class main_old2{
 	 * @return string
 	 */
 	public function getValualueId(string $value): string{
-		return $this->put_var($this->block[$this->blockid]->get($value,$this->count));
+		return $this->block[$this->blockid]->get($value,$this->count);//$this->write_varId();
 	}
 
 	public function execScalar(Scalar $node): string{
