@@ -9,14 +9,14 @@ use purser\decoder;
 use purser\main_old2;
 use purser\opcode_dumper;
 
-ini_set('xdebug.var_display_max_children', -1);
-ini_set('xdebug.var_display_max_data', -1);
-ini_set('xdebug.var_display_max_depth', -1);
+ini_set('xdebug.var_display_max_children', "-1");
+ini_set('xdebug.var_display_max_data', "-1");
+ini_set('xdebug.var_display_max_depth', "-1");
 
-function hexentities($str){
+function hexentities(string $str): string{
 	$return = '';
 	for($i = 0, $iMax = strlen($str); $i < $iMax; $i++){
-		$return .= ' :'.bin2hex(substr($str, $i, 1)).';';
+		$return .= ' :'.bin2hex($str[$i]).';';
 	}
 	return $return;
 }
@@ -121,6 +121,10 @@ false;
 */
 $parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7);
 $stmts = $parser->parse("<?php\n".$code);
+
+if($stmts === null){
+	throw new \RuntimeException("phpParser crashed");
+}
 
 $dumper = new NodeDumper(['dumpComments' => true,]);
 echo $dumper->dump($stmts, "<?php\n".$code);
