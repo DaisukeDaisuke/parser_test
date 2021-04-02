@@ -102,19 +102,31 @@ $code = "echo 1 xor 1;";
 for($i = 1; $i <= 10; $i++){
 	echo $i;
 }';*/
-
+/*
 $code = '
 echo "test print";
 echo 100+200;
-/*if(false){
-	echo 100+200;
-}else{
-	echo 300+300;
-}*/
-$i="test";
+//if(false){
+//	echo 100+200;
+//}else{
+//	echo 300+300;
+//}
+//$i="test";
 //echo $i;
-//echo $i+200;';
+//echo $i+200;';*/
 
+/*$code='
+echo "100","_","200";
+';*/
+
+/*$code = '
+echo ((100+100+100)+200),"_",(50+50);
+';*/
+$code='
+$i = print "test";
+$i = 12;
+echo $i;
+';
 /*
 true;
 false;

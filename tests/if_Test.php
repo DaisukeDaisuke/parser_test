@@ -275,6 +275,36 @@ class if_Test extends TestCase{
 				echo 200-(100/10*20)*(100*200%50);',
 				"6_200"
 			],
+			[
+				'
+				echo "1_";
+				echo (200+300)."_";
+				if(false){
+					echo "1";
+				}elseif(200+300 !== 500){
+					echo "2";
+				}elseif(false){
+					echo "3";
+				}elseif(false){
+					echo "3";
+				}elseif(false){
+					echo "3";
+				}elseif(false){
+					echo "3";
+				}elseif(false){
+					echo "3";
+				}elseif(false){
+					echo "3";
+				}elseif(false){
+					echo "3";
+				}else{
+					echo "6_";
+					echo "12_";
+				}
+				echo "12_";
+				echo "12";',
+				'1_500_6_12_12_12',
+			],
 		];
 
 	}

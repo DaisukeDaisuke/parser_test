@@ -1,11 +1,12 @@
 <?php
 
+
 use PhpParser\ParserFactory;
 use PHPUnit\Framework\TestCase;
 use purser\decoder;
 use purser\main_old2;
 
-class echoTest extends TestCase{
+class printTest extends TestCase{
 	/**
 	 * (selectedBettingTable)->isInsideHangingBox();
 	 * 関数に関します、テストにてございます...
@@ -34,56 +35,53 @@ class echoTest extends TestCase{
 	public function providetestisInsideHangingBox(): array{
 		return [
 			[
-				'echo "test print";',
+				'print "test print";',
 				'test print',
 			],
 			[
-				'echo ((2*1+1)+(2/1+3));',
+				'print ((2*1+1)+(2/1+3));',
 				'8',
 			],
 			[
-				'echo ((2*1+1)*(2/1+3));',
+				'print ((2*1+1)*(2/1+3));',
 				'15',
 			],
 			[
-				'echo ((2*1+1000000)*(2/1+3));',
+				'print ((2*1+1000000)*(2/1+3));',
 				'5000010',
 			],
 			[
-				'echo ((2*1+1)+(2/1+3))."_test";',
+				'print ((2*1+1)+(2/1+3))."_test";',
 				'8_test',
 			],
 			/*[
-				'echo 1 === 0;',
+				'print 1 === 0;',
 				'false',
 			],
 			[
-				'echo 1 === 1;',
+				'print 1 === 1;',
 				'true',
 			],
 			[
-				'echo true === false;',
+				'print true === false;',
 				'false',
 			],
 			[
-				'echo true === true;',
+				'print true === true;',
 				'true',
 			],*/
 			[
-				"echo ((2*1+1)+(2/1+3)-(2/(5*6+20)*(5*(6/2))))+7.4;",
+				"print ((2*1+1)+(2/1+3)-(2/(5*6+20)*(5*(6/2))))+7.4;",
 				"14.8"
 			],
 			[
-				'echo "100","_","200";',
-				"100_200"
+				'echo (print "100_");',
+				"100_1"
 			],
 			[
-				'echo (50+50),"_",((100+100+100)+200);',
-				"100_500"
-			],
-			[
-				'echo ((100+100+100)+200),"_",(50+50);',
-				"500_100"
+				'$i = print "100_";
+				print $i;',
+				"100_1"
 			],
 		];
 	}

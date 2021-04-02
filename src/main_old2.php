@@ -33,6 +33,7 @@ use PhpParser\Node\Expr\BinaryOp\Smaller;
 use PhpParser\Node\Expr\BinaryOp\SmallerOrEqual;
 use PhpParser\Node\Expr\BinaryOp\Spaceship;
 use PhpParser\Node\Expr\ConstFetch;
+use PhpParser\Node\Expr\Print_;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Scalar;
 use PhpParser\Node\Scalar\DNumber;
@@ -79,7 +80,16 @@ class main_old2{
 		$return = "";
 		switch(get_class($node)){
 			case Echo_::class:
-				return $this->execStmts($node->exprs).code::PRINT.$this->put_var($this->count++);
+				if(!is_array($node->exprs)){
+					return $this->execStmts($node->exprs).code::PRINT.$this->put_var($this->count++);
+				}
+				$result = "";
+				foreach($node->exprs as $expr){
+					$return .= $this->execStmts([$expr]);
+					$result .= code::PRINT.$this->put_var($this->count++);
+				}
+				$return .= $result;
+				return $return;
 			case If_::class://...?
 				//ConstFetch
 				$return = "";
@@ -150,6 +160,8 @@ class main_old2{
 				var_dump(opcode_dumper::hexentities($content));//割り当て... copy //.code::WRITEV.$this->put_Scalar($count).$this->put_var($this->count))
 				var_dump($id,$content);
 				return $content;//.$this->put_Scalar($count).$this->put_var($this->count);//$id
+			case $expr instanceof Print_:
+				return $this->execStmts([$expr->expr]).code::PRINT.$this->put_var($this->count++).$this->write_var($this->count,1);
 			case $expr instanceof Expr:
 				var_dump(get_class($expr));
 				$recursion = true;
