@@ -19,7 +19,7 @@ jobs:
           path: vendor
           key: php-${{ hashFiles('**/composer.lock') }}
           restore-keys: |
-            php-
+            php-${{ hashFiles('**/composer.lock') }}
       - name: update autoload or Install dependencies
         run: (test -d vendor && (composer dump-autoload)) || (composer install --no-dev --prefer-dist --no-progress --no-suggest)
      
@@ -56,7 +56,7 @@ jobs:
         path: vendor
         key: php-${{ hashFiles('**/composer.lock') }}
         restore-keys: |
-          php-
+          php-${{ hashFiles('**/composer.lock') }}
     
     - name: update autoload or Install dependencies
       run: (test -d vendor && (composer dump-autoload)) || (composer install --no-dev --prefer-dist --no-progress --no-suggest)
