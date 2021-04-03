@@ -122,15 +122,27 @@ echo "100","_","200";
 /*$code = '
 echo ((100+100+100)+200),"_",(50+50);
 ';*/
-$code='
+/*$code='
 $i = print "test";
 $i = 12;
 echo $i;
-';
+';*/
+/*$code='
+$i = print "test";
+$i = 12;
+$i = 13;
+echo $i;
+';*/
+$code='$i = ((200+300)*2);
+$i = ((200+300)*6);
+$i = ((200+300)*12);
+print $i;';
 /*
 true;
 false;
 */
+$time_start = microtime(true);
+
 $parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7);
 $stmts = $parser->parse("<?php\n".$code);
 
@@ -143,6 +155,9 @@ echo $dumper->dump($stmts, "<?php\n".$code);
 
 $main_old = new main_old2();
 $output = $main_old->execStmts($stmts);
+
+$time = microtime(true) - $time_start;
+echo $time." 秒";
 
 var_dump($main_old);
 

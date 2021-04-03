@@ -20,20 +20,13 @@ class decoder{
 		//none
 	}
 
-	/**
-	 * @param string $opcode
-	 * @return void
-	 */
-	public function decode(string $opcode){
+	public function decode(string $opcode): void{
 		$this->len = strlen($opcode);
 		$this->stream = new BinaryStream($opcode);
 		$this->decodeopcode();
 	}
 
-	/**
-	 * @return void
-	 */
-	public function decodeopcode(){
+	public function decodeopcode(): void{
 		$values = [];
 		while(!$this->feof()){
 			$opcode = $this->getByte();//......!!!!!!!!!!
@@ -52,11 +45,7 @@ class decoder{
 		//var_dump($values);
 	}
 
-	/**
-	 * @param string $opcode
-	 * @return void
-	 */
-	public function decodebinaryop_array(string $opcode){
+	public function decodebinaryop_array(string $opcode): void{
 		if($opcode === code::CONCAT){
 			//var_dump("!!");
 		}
@@ -160,7 +149,7 @@ class decoder{
 	 * @return void
 	 * @throws RuntimeException
 	 */
-	public function decodeStmt_array(string $opcode){
+	public function decodeStmt_array(string $opcode): void{
 		//$opcode = $this->get(1);
 		//$var1 = $this->value($this->decodeScalar());
 		$return1 = 0;
@@ -272,11 +261,7 @@ class decoder{
 		return $this->getShort();
 	}
 
-	/**
-	 * @param int $jmp
-	 * @return void
-	 */
-	public function offset_seek(int $jmp){
+	public function offset_seek(int $jmp): void{
 		$this->stream->setOffset($this->getOffset()+$jmp);
 	}
 
@@ -284,11 +269,7 @@ class decoder{
 		return $this->stream->getOffset();
 	}
 
-	/**
-	 * @param int $offset
-	 * @return void
-	 */
-	public function setOffset(int $offset){
+	public function setOffset(int $offset): void{
 		$this->stream->setOffset($offset);
 	}
 
@@ -297,7 +278,7 @@ class decoder{
 	 * @param mixed $var
 	 * @return void
 	 */
-	public function setvalue(int $name, $var){
+	public function setvalue(int $name, $var): void{
 		$this->values[$name] = $var;
 	}
 

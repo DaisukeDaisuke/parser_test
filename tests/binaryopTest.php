@@ -11,11 +11,17 @@ class binaryopTest extends TestCase{
 	 * 関数に関します、テストにてございます...
 	 *
 	 * @dataProvider providetestisInsideHangingBox
+	 * @param string $code
+	 * @param string $output1
 	 * @return void
 	 */
-	public function testisInsideHangingBox($code,$output1){
+	public function testisInsideHangingBox(string $code, string $output1){
 		$parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7);
 		$stmts = $parser->parse("<?php\n".$code);
+
+		if($stmts === null){
+			throw new \RuntimeException("phpParser crashed");
+		}
 		$main_old = new main_old2();
 		$output = $main_old->execStmts($stmts);
 
@@ -26,11 +32,18 @@ class binaryopTest extends TestCase{
 		$decoder->decode($output);
 		$log = ob_get_clean();
 
+		if($log === false){
+			throw new \RuntimeException("The output is empty.");
+		}
+
 		//var_dump($code,$stmts,$output,$log);
 
-		self::assertEquals(trim($output1),trim($log));
+		self::assertEquals(trim($output1), trim($log));
 	}
 
+	/**
+	 * @return string[][]
+	 */
 	public function providetestisInsideHangingBox(): array{
 		return [
 			[

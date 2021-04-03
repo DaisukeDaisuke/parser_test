@@ -3,13 +3,16 @@
   "description": "",
   "license": "MIT",
   "require": {
-      "php": "^7.2 || ^8.0",
+    "php": "^7.2 || ^8.0",
+    "php-64bit": "*",
     "nikic/php-parser": "^4.10",
     "pocketmine/binaryutils": "^0.1.13"
   },
   "autoload": {
     "psr-4": {
-      "purser\\": ["src/"]
+      "purser\\": [
+        "src/"
+      ]
     }
   },
   "require-dev": {

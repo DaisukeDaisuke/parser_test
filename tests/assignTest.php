@@ -6,7 +6,7 @@ use PHPUnit\Framework\TestCase;
 use purser\decoder;
 use purser\main_old2;
 
-class printTest extends TestCase{
+class assignTest extends TestCase{
 	/**
 	 * (selectedBettingTable)->isInsideHangingBox();
 	 * 関数に関します、テストにてございます...
@@ -49,53 +49,63 @@ class printTest extends TestCase{
 	public function providetestisInsideHangingBox(): array{
 		return [
 			[
-				'print "test print";',
-				'test print',
+				'$i = print "test_";
+				echo $i;',
+				'test_1',
 			],
 			[
-				'print ((2*1+1)+(2/1+3));',
-				'8',
+				'$i = print "test_";
+				$i = 12;
+				echo $i;',
+				'test_12',
 			],
 			[
-				'print ((2*1+1)*(2/1+3));',
-				'15',
+				'$i = print "test_";
+				$i = 12;
+				$i = 13;
+				echo $i;',
+				'test_13',
 			],
 			[
-				'print ((2*1+1000000)*(2/1+3));',
-				'5000010',
+				'$i = ((200+300)*2);
+				echo $i;',
+				'1000',
 			],
 			[
-				'print ((2*1+1)+(2/1+3))."_test";',
-				'8_test',
-			],
-			/*[
-				'print 1 === 0;',
-				'false',
-			],
-			[
-				'print 1 === 1;',
-				'true',
-			],
-			[
-				'print true === false;',
-				'false',
-			],
-			[
-				'print true === true;',
-				'true',
-			],*/
-			[
-				"print ((2*1+1)+(2/1+3)-(2/(5*6+20)*(5*(6/2))))+7.4;",
-				"14.8"
-			],
-			[
-				'echo (print "100_");',
-				"100_1"
-			],
-			[
-				'$i = print "100_";
+				'$i = ((200+300)*2);
 				print $i;',
-				"100_1"
+				'1000',
+			],
+			[
+				'$i = ((200+300)*2);
+				$i = $i . "_1";
+				echo $i;',
+				'1000_1',
+			],
+			[
+				'$i = ((200+300)*2);
+				$i = $i . "_1";
+				print $i;',
+				'1000_1',
+			],
+			[
+				'$i = ((200+300)*2);
+				$i = $i + 1000;
+				echo $i;',
+				'2000',
+			],
+			[
+				'$i = ((200+300)*2);
+				$i = $i + 1000;
+				print $i;',
+				'2000',
+			],
+			[
+				'$i = ((200+300)*2);
+				$i = ((200+300)*6);
+				$i = ((200+300)*12);
+				print $i;',
+				'6000',
 			],
 		];
 	}

@@ -53,9 +53,6 @@ ini_set('xdebug.var_display_max_children', "-1");
 ini_set('xdebug.var_display_max_data', "-1");
 ini_set('xdebug.var_display_max_depth', "-1");
 
-var_dump(code::WRITEV);
-var_dump(Binary::writeByte(0));
-
 class main_old2{
 	/** @var int $count */
 	public $count = 1;
@@ -152,18 +149,22 @@ class main_old2{
 				$is_var = true;
 				return $this->exec_var($expr);
 			case $expr instanceof Assign:
-				var_dump("!!!!!!!!!!!!!!!!!");
+				//var_dump("!!!!!!!!!!!!!!!!!");
 
 				$id = $this->execExpr($expr->var);
-				$content = $this->execExpr($expr->expr);
+				$content = $this->execExpr($expr->expr,$recursion);
+				if($recursion === false){
+					$content = code::WRITEV.$this->write_varId($this->count).$content;
+				}
 				//$count = $this->count++;
-				var_dump(opcode_dumper::hexentities($content));//割り当て... copy //.code::WRITEV.$this->put_Scalar($count).$this->put_var($this->count))
-				var_dump($id,$content);
+				//var_dump(opcode_dumper::hexentities($content));//割り当て... copy //.code::WRITEV.$this->put_Scalar($count).$this->put_var($this->count))
+				//var_dump($id,$content);
 				return $content;//.$this->put_Scalar($count).$this->put_var($this->count);//$id
 			case $expr instanceof Print_:
+				$recursion = true;//
 				return $this->execStmts([$expr->expr]).code::PRINT.$this->put_var($this->count++).$this->write_var($this->count,1);
 			case $expr instanceof Expr:
-				var_dump(get_class($expr));
+				//var_dump(get_class($expr));
 				$recursion = true;
 				return $this->execExpr($expr);//再帰...?
 
@@ -173,7 +174,7 @@ class main_old2{
 
 	public function exec_var(Variable $node): string{//変数処理...
 		if($node->name instanceof Expr){
-			var_dump("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+			//var_dump("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 			if($node->name instanceof Variable){
 				return "";//$$b
 			}else{//binaryop...? //$i+100...?
@@ -297,6 +298,7 @@ class main_old2{
 		foreach(array_reverse($array) as $value){
 			[$start, $len1, $end] = $value; //$skip_replace
 			$new = code::JMP.$this->getInt($len - ($end + 0));
+			/** @var string $exec */
 			$exec = substr_replace($exec, '', $start, $len1);
 			$exec = substr_replace($exec, $new, $start, 0);
 			$len = strlen($exec);
