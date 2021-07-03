@@ -33,6 +33,9 @@ use PhpParser\Node\Expr\BinaryOp\Smaller;
 use PhpParser\Node\Expr\BinaryOp\SmallerOrEqual;
 use PhpParser\Node\Expr\BinaryOp\Spaceship;
 use PhpParser\Node\Expr\ConstFetch;
+use PhpParser\Node\Expr\PostDec;
+use PhpParser\Node\Expr\PreDec;
+use PhpParser\Node\Expr\PreInc;
 use PhpParser\Node\Expr\Print_;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Scalar;
@@ -82,10 +85,12 @@ class main_old2{
 				}
 				$result = "";
 				foreach($node->exprs as $expr){
-					$return .= $this->execStmts([$expr]);
+					$return .= $this->execStmts([$expr]);//
 					$result .= code::PRINT.$this->put_var($this->count++);
 				}
+				var_dump(opcode_dumper::hexentities($return));
 				$return .= $result;
+
 				return $return;
 			case If_::class://...?
 				//ConstFetch
@@ -124,7 +129,7 @@ class main_old2{
 	 * @param bool $is_var
 	 * @return string
 	 */
-	public function execExpr(Expr $expr,bool &$recursion = false,?bool &$is_var = false){//array...?
+	public function execExpr(Expr $expr, bool &$recursion = false, ?bool &$is_var = false){//array...?
 		switch(true){
 			case $expr instanceof BinaryOp:
 				$recursion = true;
@@ -148,11 +153,22 @@ class main_old2{
 				$recursion = true;//!!!!!!!!!
 				$is_var = true;
 				return $this->exec_var($expr);
+			case $expr instanceof PreInc://++$i;
+				$recursion = true;//!!!!!!!!!
+				$is_var = true;
+				//$var = $expr->var;
+				$var = $this->execExpr($expr->var);
+				return code::ADD.$var.code::READV.$var.code::INT.$this->putRawInt(1);
+			case $expr instanceof PreDec://++$i;
+				$recursion = true;//!!!!!!!!!
+				$is_var = true;
+				$var = $this->execExpr($expr->var);
+				return code::MINUS.$var.code::READV.$var.code::INT.$this->putRawInt(1);
 			case $expr instanceof Assign:
 				//var_dump("!!!!!!!!!!!!!!!!!");
 
 				$id = $this->execExpr($expr->var);
-				$content = $this->execExpr($expr->expr,$recursion);
+				$content = $this->execExpr($expr->expr, $recursion);
 				if($recursion === false){
 					$content = code::WRITEV.$this->write_varId($this->count).$content;
 				}
@@ -182,7 +198,7 @@ class main_old2{
 			}
 			return "";//!!
 		}
-		return $this->write_varId($this->getValualueId($node->name));
+		return code::VALUE.$this->write_varId($this->getValualueId($node->name));//
 	}
 
 	public function solveLabel(string $exec, int $label): string{
@@ -330,9 +346,9 @@ class main_old2{
 					continue;
 				}
 				//if($array === true){
-					//$return[] = $this->execStmt($node);
+				//$return[] = $this->execStmt($node);
 				//}else{
-					$return .= ($this->execStmt($node) ?? "");//.$return;
+				$return .= ($this->execStmt($node) ?? "");//.$return;
 				//}
 			}
 		}
@@ -416,14 +432,14 @@ class main_old2{
 
 	/**
 	 * @param BinaryOp $node
-	 * @param string $id
+	 * @param string $opcode binaryid
 	 * @return string
 	 */
-	public function execbinaryplus(BinaryOp $node,string $id): string{
+	public function execbinaryplus(BinaryOp $node, string $opcode): string{
 		$recursionLeft = false;
 		$recursionRight = false;
 
-		$left = $this->execExpr($node->left, $recursionLeft,$is_varleft);
+		$left = $this->execExpr($node->left, $recursionLeft, $is_varleft);
 		$basecount1 = $this->count++;
 
 		$right = $this->execExpr($node->right, $recursionRight, $is_varright);
@@ -439,14 +455,14 @@ class main_old2{
 		if($recursionLeft&&$recursionRight){
 			//$count2 = ++$this->count;
 			$return = $left.$right;
-			$return .= $id.$this->write_varId($count1).$this->put_var($basecount1).$this->put_var($basecount2);//$left,$right
+			$return .= $opcode.$this->write_varId($count1).$this->put_var($basecount1).$this->put_var($basecount2);//$left,$right
 		}elseif($recursionLeft){
 			//$return = $left;
-			$return .= $left.$id.$this->write_varId($count1).$this->put_var($basecount1).$right;
+			$return .= $left.$opcode.$this->write_varId($count1).$this->put_var($basecount1).$right;
 		}elseif($recursionRight){
-			$return .= $right.$id.$this->write_varId($count1).$left.$this->put_var($basecount2);
+			$return .= $right.$opcode.$this->write_varId($count1).$left.$this->put_var($basecount2);
 		}else{
-			$return .= $id.$this->write_varId($count1).$left.$right;
+			$return .= $opcode.$this->write_varId($count1).$left.$right;
 		}
 		return $return;
 	}
@@ -477,13 +493,13 @@ class main_old2{
 	}
 
 	/**
-	 * @see exec_var
-	 *
 	 * @param string $value
 	 * @return int
+	 * @see exec_var
+	 *
 	 */
 	public function getValualueId(string $value): int{
-		return $this->block[$this->blockid]->get($value,$this->count);//$this->write_varId();
+		return $this->block[$this->blockid]->get($value, $this->count);//$this->write_varId();
 	}
 
 	public function execScalar(Scalar $node): string{
@@ -498,10 +514,10 @@ class main_old2{
 	}
 
 	/**
-	 * @see execScalar
-	 *
 	 * @param mixed $value
 	 * @return string
+	 * @see execScalar
+	 *
 	 */
 	public function put_Scalar($value){
 		if(is_object($value)){
@@ -596,7 +612,7 @@ class main_old2{
 		return code::JMPZ.$this->put_var($var).$this->getInt(strlen($stmts)).$stmts;
 	}
 
-	public function putjmp(string $stmts,bool $skip = false): string{
+	public function putjmp(string $stmts, bool $skip = false): string{
 		if($skip === true){
 			return code::JMP.$this->getInt(strlen($stmts));
 		}

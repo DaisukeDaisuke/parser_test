@@ -22,6 +22,7 @@ class code{
 	public const WRITEV = "\x92";//writev output int size 1
 	public const INT = "\x93";
 	public const STRING = "\x94";
+	public const VALUE = "\x95";
 	//public const DOUBLE = "\xC4";
 	//public const READV = "\x00";
 

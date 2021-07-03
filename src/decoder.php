@@ -34,13 +34,17 @@ class decoder{
 			//binaryOP
 			if($opcode >= code::ADD&&$opcode <= code::ABC){
 				$this->decodebinaryop_array($opcode);
+				continue;
 			}
 			if($opcode >= code::PRINT){
 				$this->decodeStmt_array($opcode);
+				continue;
 			}
-			if($opcode >= code::READV&&$opcode <= code::STRING){
+			if($opcode >= code::READV&&$opcode <= code::VALUE){
 				$this->decodeScalar($opcode);
+				continue;
 			}
+			throw new \RuntimeException("Unprocessed opcode ".ord($opcode));
 		}
 		//var_dump($values);
 	}
@@ -193,6 +197,9 @@ class decoder{
 		if($opcode === code::READV){
 			return $this->getvalue();//$this->getAddress();//$this->getvalue();
 		}
+		if($opcode === code::VALUE){
+			return $this->getvalue(false);
+		}
 		if($opcode === code::INT){
 			return $this->getInt();
 		}
@@ -285,10 +292,12 @@ class decoder{
 	/**
 	 * @return mixed
 	 */
-	public function getvalue(){
+	public function getvalue(bool $unset = true){
 		$byte = $this->getAddress();
 		$value = $this->values[$byte];
-		unset($this->values[$byte]);
+		if($unset === true){
+			unset($this->values[$byte]);
+		}
 		return $value;
 	}
 

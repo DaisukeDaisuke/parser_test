@@ -123,6 +123,11 @@ class opcode_dumper{
 					}
 					$i--;
 					break;
+				case code::VALUE:
+					$return .= ' VALUE:'.bin2hex($str[$i++]).';';
+					$return .= ' var:'.bin2hex($str[$i++]).';';
+					$return .= ' var:'.bin2hex($str[$i]).';';
+					break;
 				case code::ADD:
 					$return .= ' ADD?:'.bin2hex($str[$i++]).';';
 					$return .= ' output:'.bin2hex($str[$i++]).';';
