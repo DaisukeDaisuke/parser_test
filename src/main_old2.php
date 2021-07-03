@@ -33,7 +33,6 @@ use PhpParser\Node\Expr\BinaryOp\Smaller;
 use PhpParser\Node\Expr\BinaryOp\SmallerOrEqual;
 use PhpParser\Node\Expr\BinaryOp\Spaceship;
 use PhpParser\Node\Expr\ConstFetch;
-use PhpParser\Node\Expr\PostDec;
 use PhpParser\Node\Expr\PreDec;
 use PhpParser\Node\Expr\PreInc;
 use PhpParser\Node\Expr\Print_;
@@ -76,7 +75,7 @@ class main_old2{
 	 * @param Stmt $node
 	 * @return string
 	 */
-	public function execStmt(Stmt $node): string{
+	public function execStmt(Stmt $node) : string{
 		$return = "";
 		switch(get_class($node)){
 			case Echo_::class:
@@ -85,10 +84,13 @@ class main_old2{
 				}
 				$result = "";
 				foreach($node->exprs as $expr){
+					if($expr instanceof Variable){
+						$result .= code::PRINT.$this->exec_variable($expr);
+						continue;
+					}
 					$return .= $this->execStmts([$expr]);//
 					$result .= code::PRINT.$this->put_var($this->count++);
 				}
-				var_dump(opcode_dumper::hexentities($return));
 				$return .= $result;
 
 				return $return;
@@ -150,25 +152,30 @@ class main_old2{
 			case $expr instanceof Scalar:
 				return $this->execScalar($expr);
 			case $expr instanceof Variable:
-				$recursion = true;//!!!!!!!!!
+				//$recursion = true;//!!!!!!!!!
 				$is_var = true;
-				return $this->exec_var($expr);
+
+				$id = $this->exec_variable($expr);
+				return $id;
 			case $expr instanceof PreInc://++$i;
 				$recursion = true;//!!!!!!!!!
-				$is_var = true;
+				//$is_var = true;
 				//$var = $expr->var;
 				$var = $this->execExpr($expr->var);
 				return code::ADD.$var.code::READV.$var.code::INT.$this->putRawInt(1);
 			case $expr instanceof PreDec://++$i;
 				$recursion = true;//!!!!!!!!!
-				$is_var = true;
+				//$is_var = true;
 				$var = $this->execExpr($expr->var);
 				return code::MINUS.$var.code::READV.$var.code::INT.$this->putRawInt(1);
 			case $expr instanceof Assign:
 				//var_dump("!!!!!!!!!!!!!!!!!");
 
-				$id = $this->execExpr($expr->var);
+				//$id = $this->execExpr($expr->var);
+				/** @var Variable $value */
+				$value = $expr->var;
 				$content = $this->execExpr($expr->expr, $recursion);
+				$id = $this->exec_variable($value, true);
 				if($recursion === false){
 					$content = code::WRITEV.$this->write_varId($this->count).$content;
 				}
@@ -178,7 +185,10 @@ class main_old2{
 				return $content;//.$this->put_Scalar($count).$this->put_var($this->count);//$id
 			case $expr instanceof Print_:
 				$recursion = true;//
-				return $this->execStmts([$expr->expr]).code::PRINT.$this->put_var($this->count++).$this->write_var($this->count,1);
+				if($expr->expr instanceof Variable){
+					return code::PRINT.$this->exec_variable($expr->expr);
+				}
+				return $this->execStmts([$expr->expr]).code::PRINT.$this->put_var($this->count++).$this->write_var($this->count, 1);
 			case $expr instanceof Expr:
 				//var_dump(get_class($expr));
 				$recursion = true;
@@ -188,7 +198,7 @@ class main_old2{
 		throw new \RuntimeException('execExpr "'.get_class($expr).'" not found');
 	}
 
-	public function exec_var(Variable $node): string{//変数処理...
+	public function exec_variable(Variable $node, bool $force = false) : string{//変数処理...
 		if($node->name instanceof Expr){
 			//var_dump("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 			if($node->name instanceof Variable){
@@ -198,10 +208,15 @@ class main_old2{
 			}
 			return "";//!!
 		}
-		return code::VALUE.$this->write_varId($this->getValualueId($node->name));//
+		//return $this->write_variableId($this->count);
+		return $this->write_variableId($this->getValualueId($node->name, $force));//code::VALUE
 	}
 
-	public function solveLabel(string $exec, int $label): string{
+	public function write_variableId(int $node) : string{//変数処理...
+		return code::VALUE.$this->write_varId($node);//code::VALUE
+	}
+
+	public function solveLabel(string $exec, int $label) : string{
 		//return $exec;
 		$array = [];
 		$len = strlen($exec);
@@ -370,7 +385,7 @@ class main_old2{
 	 * @return string
 	 * @throws \RuntimeException
 	 */
-	public function execBinaryOp(BinaryOp $node): string{//output //add 10 10 1 $count = 0
+	public function execBinaryOp(BinaryOp $node) : string{//output //add 10 10 1 $count = 0
 		switch(get_class($node)){
 			case Plus::class:
 				return $this->execbinaryplus($node, code::ADD);
@@ -435,7 +450,7 @@ class main_old2{
 	 * @param string $opcode binaryid
 	 * @return string
 	 */
-	public function execbinaryplus(BinaryOp $node, string $opcode): string{
+	public function execbinaryplus(BinaryOp $node, string $opcode) : string{
 		$recursionLeft = false;
 		$recursionRight = false;
 
@@ -453,9 +468,18 @@ class main_old2{
 
 		$return = "";
 		if($recursionLeft&&$recursionRight){
-			//$count2 = ++$this->count;
+			/*if($is_varleft&&$is_varright){
+				$return .= $opcode.$this->write_varId($count1).$this->write_variableId($basecount1).$this->write_variableId($basecount2);
+			}elseif($is_varleft&&!$is_varright){
+				$return .= $opcode.$this->write_varId($count1).$this->write_variableId($basecount1).$this->write_variableId($basecount2);
+			}elseif(!$is_varleft&&$is_varright){
+				$return .= $opcode.$this->write_varId($count1).$this->write_variableId($basecount1).$this->write_variableId($basecount2);
+			}else{*/
 			$return = $left.$right;
 			$return .= $opcode.$this->write_varId($count1).$this->put_var($basecount1).$this->put_var($basecount2);//$left,$right
+			//}
+			//$count2 = ++$this->count;
+
 		}elseif($recursionLeft){
 			//$return = $left;
 			$return .= $left.$opcode.$this->write_varId($count1).$this->put_var($basecount1).$right;
@@ -474,11 +498,12 @@ class main_old2{
 	 * @param mixed $value
 	 * @return string
 	 */
-	public function write_var(int $var, $value): string{
+	public function write_var(int $var, $value) : string{
 		return code::WRITEV.$this->write_varId($var).$this->put_Scalar($value);
 	}
 
-	public function write_varId(int $var): string{
+	public function write_varId(int $var) : string{
+
 		return Binary::writeShort($var);
 	}
 
@@ -488,21 +513,21 @@ class main_old2{
 	 *
 	 * 指定したidの変数を読みます...
 	 */
-	public function put_var(int $var): string{
+	public function put_var(int $var) : string{
 		return code::READV.$this->write_varId($var);
 	}
 
 	/**
 	 * @param string $value
+	 * @param bool $force
 	 * @return int
 	 * @see exec_var
-	 *
 	 */
-	public function getValualueId(string $value): int{
-		return $this->block[$this->blockid]->get($value, $this->count);//$this->write_varId();
+	public function getValualueId(string $value, bool $force) : int{
+		return $this->block[$this->blockid]->get($value, $this->count, $force);//$this->write_varId();
 	}
 
-	public function execScalar(Scalar $node): string{
+	public function execScalar(Scalar $node) : string{
 		switch(true){
 			case $node instanceof LNumber:
 			case $node instanceof DNumber:
@@ -541,7 +566,7 @@ class main_old2{
 	 * @param float|int $value
 	 * @return string
 	 */
-	public function getInt($value): string{
+	public function getInt($value) : string{
 		return code::INT.$this->putRawInt($value);
 	}
 
@@ -549,7 +574,7 @@ class main_old2{
 	 * @param float|int $value
 	 * @return string
 	 */
-	function putRawInt($value): string{
+	function putRawInt($value) : string{
 		$size = $this->checkIntSize($value);
 		$return = chr($size);
 		switch($size){
@@ -577,7 +602,7 @@ class main_old2{
 		return $return;
 	}
 
-	public function getString(string $value): string{
+	public function getString(string $value) : string{
 		return code::STRING.$this->getInt(strlen($value)).$value;//string_op int_op size int... string
 	}
 
@@ -605,26 +630,26 @@ class main_old2{
 		throw new \RuntimeException("checkIntSize overflow [".$value."]");
 	}
 
-	public function putjmpz(int $var, string $stmts, ?string $target = null): string{//0 => jmp
+	public function putjmpz(int $var, string $stmts, ?string $target = null) : string{//0 => jmp
 		if($target !== null){
 			return code::JMPZ.$this->put_var($var).$this->getInt(strlen($target)).$stmts;
 		}
 		return code::JMPZ.$this->put_var($var).$this->getInt(strlen($stmts)).$stmts;
 	}
 
-	public function putjmp(string $stmts, bool $skip = false): string{
+	public function putjmp(string $stmts, bool $skip = false) : string{
 		if($skip === true){
 			return code::JMP.$this->getInt(strlen($stmts));
 		}
 		return code::JMP.$this->getInt(strlen($stmts)).$stmts;
 	}
 
-	public function putGotoLabel(int $label): string{
+	public function putGotoLabel(int $label) : string{
 		return code::LGOTO.$this->getInt($label);
 	}
 
 
-	public function putLabel(int $label): string{
+	public function putLabel(int $label) : string{
 		return code::LABEL.$this->getInt($label);
 	}
 }

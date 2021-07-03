@@ -133,10 +133,19 @@ $i = 12;
 $i = 13;
 echo $i;
 ';*/
-$code='$i = ((200+300)*2);
-$i = ((200+300)*6);
-$i = ((200+300)*12);
+$code='$i = 200;
+print $i;
+$i = $i+300;
+print $i;
+$i = 500+$i;
+print $i;
 print $i;';
+$i = 200;
+$i = $i+$i+$i+$i;
+echo $i;
+print $i;
+/*$code = '$i = print "test_";
+echo $i;';*/
 /*
 true;
 false;

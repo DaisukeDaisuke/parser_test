@@ -32,6 +32,9 @@ class decoder{
 			$opcode = $this->getByte();//......!!!!!!!!!!
 			$test = bin2hex($opcode);
 			//binaryOP
+			/*if($opcode === code::NOP){
+				continue;
+			}*/
 			if($opcode >= code::ADD&&$opcode <= code::ABC){
 				$this->decodebinaryop_array($opcode);
 				continue;
@@ -44,7 +47,7 @@ class decoder{
 				$this->decodeScalar($opcode);
 				continue;
 			}
-			throw new \RuntimeException("Unprocessed opcode ".ord($opcode));
+			//throw new \RuntimeException("Unprocessed opcode ".ord($opcode));
 		}
 		//var_dump($values);
 	}
