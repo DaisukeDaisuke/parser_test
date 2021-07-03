@@ -137,8 +137,16 @@ echo $i;';*/
 /*$code = '$i = print "test_";
 echo $i;';*/
 //$code = '$i=100;$k=200;echo $k,",",$i;';
-$code = '$i=100;$k=200;echo 100,",",$i;';
+/*$code = '$i=100;$k=200;echo 100,",",$i;';*/
+/*$code='$i=100;$k=200;echo ",",$k,",",$i;';*/
+/*$code='$i = 100;
+$j=200;
+$k=$i-$j;
+echo $k;';*/
+$code='$i=100;$k=200;echo $k,",",$i;';;
 $i=100;$k=200;echo $k,",",$i;
+
+
 /*
 true;
 false;
@@ -163,7 +171,7 @@ echo $time." 秒";
 
 var_dump($main_old);
 
-file_put_contents(".\\output.bin", $output);
+//file_put_contents(".\\output.bin", $output);
 
 var_dump(opcode_dumper::hexentities($output),opcode_dumper::hexentities1($output));
 

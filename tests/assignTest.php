@@ -181,6 +181,11 @@ class assignTest extends TestCase{
 				'100'
 			],
 			[
+				'$k = $j = $i = 100;
+				echo $k;',
+				'100'
+			],
+			[
 				'echo $j = $i = 100;',
 				'100'
 			],
@@ -192,14 +197,14 @@ class assignTest extends TestCase{
 				'$i=100;echo $i,100+100,$i;',
 				'100200100',
 			],
-			/*[
+			[
 				'echo print $k = print $j = $i = 100,",",$k,",",$i;',
 				'10011,1,100'
-			],*/
-			/*[
-				'$i=100;$k=200;echo ",",$k,",",$i;',
+			],
+			[
+				'$i=100;$k=200;echo $k,",",$i;',
 				'200,100'
-			],*/
+			],
 		];
 	}
 }

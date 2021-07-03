@@ -85,12 +85,13 @@ class main_old2{
 				$result = "";
 				foreach($node->exprs as $expr){
 					if($expr instanceof Variable){
-						$result .= code::PRINT.$this->exec_variable($expr);
+						$result .= code::PRINT.$this->exec_variable($expr,$this->count);
 						$this->count++;//!!!!!!!!!
 						continue;
 					}
 					if($expr instanceof Assign){//echo $i = 100;
-						$result .= $this->execExpr($expr).code::PRINT.$this->put_var($this->count);
+						$result .= $this->execExpr($expr).code::PRINT.$this->put_var($this->count++);
+						//$this->count++;
 						continue;
 					}
 					$return .= $this->execStmts([$expr]);//
@@ -160,7 +161,7 @@ class main_old2{
 				//$recursion = true;//!!!!!!!!!
 				$is_var = true;
 
-				$id = $this->exec_variable($expr);
+				$id = $this->exec_variable($expr,$this->count);
 				return $id;
 			case $expr instanceof PreInc://++$i;
 				$recursion = true;//!!!!!!!!!
@@ -177,18 +178,22 @@ class main_old2{
 				//var_dump("!!!!!!!!!!!!!!!!!");
 
 				//$id = $this->execExpr($expr->var);
-				$this->count++;
+				;
 				/** @var Variable $value */
 				$value = $expr->var;
 
 				$content = $this->execExpr($expr->expr, $recursion);
+				//$baseid = $this->count++;
+				$baseid = $this->count;
+
 				if($expr->expr instanceof Assign){//$i = $j = 100;
-					$this->count++;
+						//$this->count++;
 				}
-				$id = $this->exec_variable($value, true);
+				$id1 = $this->exec_variable($value, $baseid,true);
 
 				if($recursion === false){
-					$content = code::WRITEV.$this->write_varId($this->count).$content;
+					$content = code::WRITEV.$this->write_varId($baseid).$content;
+					//$this->count++;
 				}
 				//$this->count++;
 				//$count = $this->count++;
@@ -198,7 +203,7 @@ class main_old2{
 			case $expr instanceof Print_:
 				$recursion = true;//
 				if($expr->expr instanceof Variable){
-					return code::PRINT.$this->exec_variable($expr->expr).$this->write_var($this->count, 1);
+					return code::PRINT.$this->exec_variable($expr->expr, $this->count).$this->write_var($this->count, 1);
 				}
 				if($expr->expr instanceof Assign){//print $i = 100;
 					return $this->execExpr($expr->expr).code::PRINT.$this->put_var($this->count).$this->write_var($this->count, 1);;
@@ -213,7 +218,7 @@ class main_old2{
 		throw new \RuntimeException('execExpr "'.get_class($expr).'" not found');
 	}
 
-	public function exec_variable(Variable $node, bool $force = false) : string{//変数処理...
+	public function exec_variable(Variable $node, int $id, bool $force = false) : string{//変数処理...
 		if($node->name instanceof Expr){
 			//var_dump("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 			if($node->name instanceof Variable){
@@ -224,7 +229,7 @@ class main_old2{
 			return "";//!!
 		}
 		//return $this->write_variableId($this->count);
-		return $this->write_variableId($this->getValualueId($node->name, $force));//code::VALUE
+		return $this->write_variableId($this->getValualueId($node->name, $force, $id));//code::VALUE
 	}
 
 	public function write_variableId(int $node) : string{//変数処理...
@@ -535,11 +540,12 @@ class main_old2{
 	/**
 	 * @param string $value
 	 * @param bool $force
+	 * @param int $id
 	 * @return int
 	 * @see exec_var
 	 */
-	public function getValualueId(string $value, bool $force) : int{
-		return $this->block[$this->blockid]->get($value, $this->count, $force);//$this->write_varId();
+	public function getValualueId(string $value, bool $force,int $id) : int{
+		return $this->block[$this->blockid]->get($value, $id, $force);//$this->write_varId();
 	}
 
 	public function execScalar(Scalar $node) : string{
