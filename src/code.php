@@ -23,7 +23,6 @@ class code{
 	public const INT = "\x93";
 	public const STRING = "\x94";
 	public const VALUE = "\x95";//WRITEV
-	public const UNSET = "\x96";//UNSET varid
 	//public const DOUBLE = "\xC4";
 	//public const READV = "\x00";
 
@@ -71,5 +70,6 @@ class code{
 	public const LABEL = "\xA3";//LABEL INT 1 1
 	public const LGOTO = "\xA4";//GOTOL INT 1 1
 	public const JMPA = "\xA5";//JMPA INT 1 255
+	public const UNSET = "\xA6";//UNSET varid
 
 }

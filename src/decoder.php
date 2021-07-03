@@ -20,13 +20,13 @@ class decoder{
 		//none
 	}
 
-	public function decode(string $opcode): void{
+	public function decode(string $opcode) : void{
 		$this->len = strlen($opcode);
 		$this->stream = new BinaryStream($opcode);
 		$this->decodeopcode();
 	}
 
-	public function decodeopcode(): void{
+	public function decodeopcode() : void{
 		$values = [];
 		while(!$this->feof()){
 			$opcode = $this->getByte();//......!!!!!!!!!!
@@ -52,7 +52,7 @@ class decoder{
 		//var_dump($values);
 	}
 
-	public function decodebinaryop_array(string $opcode): void{
+	public function decodebinaryop_array(string $opcode) : void{
 		if($opcode === code::CONCAT){
 			//var_dump("!!");
 		}
@@ -156,7 +156,7 @@ class decoder{
 	 * @return void
 	 * @throws RuntimeException
 	 */
-	public function decodeStmt_array(string $opcode): void{
+	public function decodeStmt_array(string $opcode) : void{
 		//$opcode = $this->get(1);
 		//$var1 = $this->value($this->decodeScalar());
 		$return1 = 0;
@@ -183,6 +183,10 @@ class decoder{
 			case code::JMPA:
 				$jmp = $this->decodeScalar();
 				$this->setOffset($jmp);
+				return;
+			case code::UNSET:
+				$unset = $this->getAddress();
+				$this->unsetValue($unset);
 				return;
 		}
 		throw new RuntimeException("Stmt ".bin2hex($opcode)." not found");
@@ -216,10 +220,6 @@ class decoder{
 			$this->setvalue($output, $var);
 			return null;
 		}
-		if($opcode === code::UNSET){
-			$unset = $this->getAddress();
-			$this->unsetValue($unset);
-		}
 		throw new RuntimeException("Scalar ".bin2hex($opcode)." not found");
 	}
 
@@ -243,7 +243,7 @@ class decoder{
 		throw new RuntimeException("int or Double not found");
 	}
 
-	public function getBinaryStream(): ?BinaryStream{
+	public function getBinaryStream() : ?BinaryStream{
 		return $this->stream;
 	}
 
@@ -263,27 +263,27 @@ class decoder{
 		return $this->get(1);
 	}
 
-	public function getByteInt(): int{
+	public function getByteInt() : int{
 		return ord($this->getByte());
 	}
 
-	public function getShort(): int{
+	public function getShort() : int{
 		return $this->stream->getShort();
 	}
 
-	public function getAddress(): int{
+	public function getAddress() : int{
 		return $this->getShort();
 	}
 
-	public function offset_seek(int $jmp): void{
-		$this->stream->setOffset($this->getOffset()+$jmp);
+	public function offset_seek(int $jmp) : void{
+		$this->stream->setOffset($this->getOffset() + $jmp);
 	}
 
-	public function getOffset(): int{
+	public function getOffset() : int{
 		return $this->stream->getOffset();
 	}
 
-	public function setOffset(int $offset): void{
+	public function setOffset(int $offset) : void{
 		$this->stream->setOffset($offset);
 	}
 
@@ -292,7 +292,7 @@ class decoder{
 	 * @param mixed $var
 	 * @return void
 	 */
-	public function setvalue(int $name, $var): void{
+	public function setvalue(int $name, $var) : void{
 		$this->values[$name] = $var;
 	}
 

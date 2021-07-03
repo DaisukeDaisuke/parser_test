@@ -175,7 +175,7 @@ class main_old2{
 				$unset = "";
 				/** @var Variable $value */
 				$value = $expr->var;
-				//$unset = $this->write_unset($value);
+				$unset = $this->write_unset($value);
 				$content = $this->execExpr($expr->expr, $recursion);
 				$id = $this->exec_variable($value, true);
 				if($recursion === false){
@@ -235,7 +235,7 @@ class main_old2{
 			}
 			return "";//!!
 		}
-		return $node->name.$this->write_variableId($this->getValualueId($node->name, $force));//code::VALUE
+		return $this->write_variableId($this->getValualueId($node->name, $force));//code::VALUE//code::VALUE
 	}
 
 	public function write_variableId(int $node) : string{//変数処理...
@@ -532,6 +532,10 @@ class main_old2{
 		return Binary::writeShort($var);
 	}
 
+	/**
+	 * @param Variable $node
+	 * @return string
+	 */
 	public function write_unset(Variable $node){
 		if($node->name instanceof Expr){
 			//var_dump("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
