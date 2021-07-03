@@ -172,8 +172,10 @@ class main_old2{
 				//var_dump("!!!!!!!!!!!!!!!!!");
 
 				//$id = $this->execExpr($expr->var);
+				$unset = "";
 				/** @var Variable $value */
 				$value = $expr->var;
+				//$unset = $this->write_unset($value);
 				$content = $this->execExpr($expr->expr, $recursion);
 				$id = $this->exec_variable($value, true);
 				if($recursion === false){
@@ -182,7 +184,7 @@ class main_old2{
 				//$count = $this->count++;
 				//var_dump(opcode_dumper::hexentities($content));//割り当て... copy //.code::WRITEV.$this->put_Scalar($count).$this->put_var($this->count))
 				//var_dump($id,$content);
-				return $content;//.$this->put_Scalar($count).$this->put_var($this->count);//$id
+				return $content.$unset;//.$this->put_Scalar($count).$this->put_var($this->count);//$id
 			case $expr instanceof Print_:
 				$recursion = true;//
 				if($expr->expr instanceof Variable){
@@ -198,7 +200,12 @@ class main_old2{
 		throw new \RuntimeException('execExpr "'.get_class($expr).'" not found');
 	}
 
-	public function exec_variable(Variable $node, bool $force = false) : string{//変数処理...
+	/**
+	 * @param Variable $node
+	 * @param string $code
+	 * @return Expr|string
+	 */
+	public function solveVariable(Variable $node,string &$code = ""){
 		if($node->name instanceof Expr){
 			//var_dump("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 			if($node->name instanceof Variable){
@@ -208,8 +215,27 @@ class main_old2{
 			}
 			return "";//!!
 		}
+		return $node->name;
+	}
+
+	/**
+	 * @param Variable $node
+	 * @param bool $force
+	 * @return string
+	 */
+	public function exec_variable(Variable $node, bool $force = false) : string{//変数処理...
+		//$name = $this->solveVariable($node,$code);
 		//return $this->write_variableId($this->count);
-		return $this->write_variableId($this->getValualueId($node->name, $force));//code::VALUE
+		if($node->name instanceof Expr){
+			//var_dump("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+			if($node->name instanceof Variable){
+				return "";//$$b
+			}else{//binaryop...? //$i+100...?
+
+			}
+			return "";//!!
+		}
+		return $node->name.$this->write_variableId($this->getValualueId($node->name, $force));//code::VALUE
 	}
 
 	public function write_variableId(int $node) : string{//変数処理...
@@ -503,8 +529,28 @@ class main_old2{
 	}
 
 	public function write_varId(int $var) : string{
-
 		return Binary::writeShort($var);
+	}
+
+	public function write_unset(Variable $node){
+		if($node->name instanceof Expr){
+			//var_dump("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+			if($node->name instanceof Variable){
+				return "";//$$b
+			}else{//binaryop...? //$i+100...?
+
+			}
+			return "";//!!
+		}
+		$id = $this->getValualueIdNonNew($node->name);
+		if($id === null){
+			return "";//throw new \RuntimeException("The non-existent variable \"".$node->name."\" cannot be destroyed.");//
+		}
+		return $this->put_unset($id);
+	}
+
+	public function put_unset(int $str) : string{
+		return code::UNSET.$this->write_varId($str);
 	}
 
 	/**
@@ -515,6 +561,16 @@ class main_old2{
 	 */
 	public function put_var(int $var) : string{
 		return code::READV.$this->write_varId($var);
+	}
+
+	/**
+	 * @param string $value
+	 * @return ?int
+	 * @see exec_var
+	 * @see getValualueId
+	 */
+	public function getValualueIdNonNew(string $value) : ?int{
+		return $this->block[$this->blockid]->getnonNew($value);
 	}
 
 	/**

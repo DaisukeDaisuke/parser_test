@@ -43,7 +43,7 @@ class decoder{
 				$this->decodeStmt_array($opcode);
 				continue;
 			}
-			if($opcode >= code::READV&&$opcode <= code::VALUE){
+			if($opcode >= code::READV&&$opcode <= code::UNSET){
 				$this->decodeScalar($opcode);
 				continue;
 			}
@@ -216,6 +216,10 @@ class decoder{
 			$this->setvalue($output, $var);
 			return null;
 		}
+		if($opcode === code::UNSET){
+			$unset = $this->getAddress();
+			$this->unsetValue($unset);
+		}
 		throw new RuntimeException("Scalar ".bin2hex($opcode)." not found");
 	}
 
@@ -299,9 +303,13 @@ class decoder{
 		$byte = $this->getAddress();
 		$value = $this->values[$byte];
 		if($unset === true){
-			unset($this->values[$byte]);
+			$this->unsetValue($byte);
 		}
 		return $value;
+	}
+
+	public function unsetValue(int $byte) : void{
+		unset($this->values[$byte]);
 	}
 
 	/**

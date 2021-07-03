@@ -27,6 +27,10 @@ class CodeBlock{
 		return $this->ids[$value];//debug
 	}
 
+	function getnonNew(string $value): ?int{
+		return $this->ids[$value] ?? null;//debug
+	}
+
 	/*function add($value){//変数名
 		if(isset($this->values[$this->nowvaluesid + 1])){
 			$this->values[++$this->nowvaluesid] = [];
