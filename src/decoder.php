@@ -214,7 +214,8 @@ class decoder{
 			$output = $this->getAddress();
 			$var = $this->decodeScalar();
 			$this->setvalue($output, $var);
-			return null;
+			return $var;
+			//return null;
 		}
 		throw new RuntimeException("Scalar ".bin2hex($opcode)." not found");
 	}

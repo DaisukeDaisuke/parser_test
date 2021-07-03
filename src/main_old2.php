@@ -86,6 +86,11 @@ class main_old2{
 				foreach($node->exprs as $expr){
 					if($expr instanceof Variable){
 						$result .= code::PRINT.$this->exec_variable($expr);
+						$this->count++;//!!!!!!!!!
+						continue;
+					}
+					if($expr instanceof Assign){//echo $i = 100;
+						$result .= $this->execExpr($expr).code::PRINT.$this->put_var($this->count);
 						continue;
 					}
 					$return .= $this->execStmts([$expr]);//
@@ -172,13 +177,20 @@ class main_old2{
 				//var_dump("!!!!!!!!!!!!!!!!!");
 
 				//$id = $this->execExpr($expr->var);
+				$this->count++;
 				/** @var Variable $value */
 				$value = $expr->var;
+
 				$content = $this->execExpr($expr->expr, $recursion);
+				if($expr->expr instanceof Assign){//$i = $j = 100;
+					$this->count++;
+				}
 				$id = $this->exec_variable($value, true);
+
 				if($recursion === false){
 					$content = code::WRITEV.$this->write_varId($this->count).$content;
 				}
+				//$this->count++;
 				//$count = $this->count++;
 				//var_dump(opcode_dumper::hexentities($content));//割り当て... copy //.code::WRITEV.$this->put_Scalar($count).$this->put_var($this->count))
 				//var_dump($id,$content);
@@ -186,7 +198,10 @@ class main_old2{
 			case $expr instanceof Print_:
 				$recursion = true;//
 				if($expr->expr instanceof Variable){
-					return code::PRINT.$this->exec_variable($expr->expr);
+					return code::PRINT.$this->exec_variable($expr->expr).$this->write_var($this->count, 1);
+				}
+				if($expr->expr instanceof Assign){//print $i = 100;
+					return $this->execExpr($expr->expr).code::PRINT.$this->put_var($this->count).$this->write_var($this->count, 1);;
 				}
 				return $this->execStmts([$expr->expr]).code::PRINT.$this->put_var($this->count++).$this->write_var($this->count, 1);
 			case $expr instanceof Expr:

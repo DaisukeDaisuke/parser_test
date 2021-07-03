@@ -21,7 +21,6 @@ function hexentities(string $str): string{
 	return $return;
 }
 
-
 //$code = 'echo true === false;';
 //$code = "echo ((2*1+1)+(2/1+3)-(2/(5*6+20)*(5*(6/2))))+7.4;";
 /*$code = '
@@ -133,19 +132,13 @@ $i = 12;
 $i = 13;
 echo $i;
 ';*/
-$code='$i = 200;
-print $i;
-$i = $i+300;
-print $i;
-$i = 500+$i;
-print $i;
-print $i;';
-$i = 200;
-$i = $i+$i+$i+$i;
-echo $i;
-print $i;
+/*$code='$i=-200;
+echo $i;';*/
 /*$code = '$i = print "test_";
 echo $i;';*/
+//$code = '$i=100;$k=200;echo $k,",",$i;';
+$code = '$i=100;$k=200;echo 100,",",$i;';
+$i=100;$k=200;echo $k,",",$i;
 /*
 true;
 false;

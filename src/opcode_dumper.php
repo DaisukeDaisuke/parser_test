@@ -8,6 +8,7 @@ class opcode_dumper{
 	public static function hexentities(string $str): string{
 		$return = '';
 		for($i = 0, $iMax = strlen($str); $i < $iMax; $i++){
+			$return .= PHP_EOL;
 			switch($str[$i]){
 				case code::READV:
 					$return .= ' READV:'.bin2hex($str[$i++]).';';
