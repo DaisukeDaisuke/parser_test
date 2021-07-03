@@ -5,7 +5,6 @@ namespace purser;
 class CodeBlock{
 	/** @var int[] $ids */
 	public $ids = [];
-	public $list = [];
 	//public $values = [];
 	//public $nowvaluesid = 0;
 
