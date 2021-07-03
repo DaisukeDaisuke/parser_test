@@ -46,7 +46,7 @@ class assignTest extends TestCase{
 	/**
 	 * @return string[][]
 	 */
-	public function providetestisInsideHangingBox(): array{
+	public function providetestisInsideHangingBox() : array{
 		return [
 			[
 				'$i = print "test_";
@@ -106,6 +106,33 @@ class assignTest extends TestCase{
 				$i = ((200+300)*12);
 				print $i;',
 				'6000',
+			],
+			[
+				'$i = 200;
+				$i = $i+300;
+				$i = 500+$i;
+				echo $i;
+				print $i;',
+				'10001000',
+			],
+			[
+				'$i = 200;
+				$i = $i+$i+$i+$i;
+				echo $i;
+				print $i;',
+				'800800',
+			],
+			[
+				'$i = 100;
+				echo $i;
+				print $i;
+				$i = 200;
+				echo $i;
+				print $i;
+				$i = 300;
+				echo $i;
+				print $i;',
+				'100100200200300300',
 			],
 		];
 	}
