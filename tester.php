@@ -143,8 +143,13 @@ echo $i;';*/
 $j=200;
 $k=$i-$j;
 echo $k;';*/
-$code='$i=100;$k=200;echo $k,",",$i;';;
-$i=100;$k=200;echo $k,",",$i;
+//$code='$i=100;$k=200;echo $k,",",$i;';
+/*$code='print $j=200;';*/
+/*$code='$i = 100;
+$j=200;
+$k=$i-$j;
+echo $k;';*/
+$code='echo print $k = print $j = $i = 100;';
 
 
 /*

@@ -90,7 +90,7 @@ class main_old2{
 						continue;
 					}
 					if($expr instanceof Assign){//echo $i = 100;
-						$result .= $this->execExpr($expr).code::PRINT.$this->put_var($this->count++);
+						$result .= $this->execStmts([$expr]).code::PRINT.$this->put_var($this->count);
 						//$this->count++;
 						continue;
 					}
@@ -182,13 +182,16 @@ class main_old2{
 				/** @var Variable $value */
 				$value = $expr->var;
 
-				$content = $this->execExpr($expr->expr, $recursion);
 				//$baseid = $this->count++;
-				$baseid = $this->count;
 
-				if($expr->expr instanceof Assign){//$i = $j = 100;
-						//$this->count++;
-				}
+				/*if($expr->expr instanceof Assign){//$i = $j = 100;
+					$baseid = $this->count;
+				}*/
+				$content = $this->execExpr($expr->expr, $recursion);
+
+				//$baseid = $this->count;
+
+				$baseid = $this->count++;
 				$id1 = $this->exec_variable($value, $baseid,true);
 
 				if($recursion === false){
@@ -203,10 +206,10 @@ class main_old2{
 			case $expr instanceof Print_:
 				$recursion = true;//
 				if($expr->expr instanceof Variable){
-					return code::PRINT.$this->exec_variable($expr->expr, $this->count).$this->write_var($this->count, 1);
+					return code::PRINT.$this->exec_variable($expr->expr, $this->count++).$this->write_var($this->count, 1);
 				}
 				if($expr->expr instanceof Assign){//print $i = 100;
-					return $this->execExpr($expr->expr).code::PRINT.$this->put_var($this->count).$this->write_var($this->count, 1);;
+					return  $this->execStmts([$expr->expr]).code::PRINT.$this->put_var($this->count++).$this->write_var($this->count, 1);;
 				}
 				return $this->execStmts([$expr->expr]).code::PRINT.$this->put_var($this->count++).$this->write_var($this->count, 1);
 			case $expr instanceof Expr:
