@@ -86,7 +86,7 @@ class main_old2{
 				foreach($node->exprs as $expr){
 					if($expr instanceof Variable){
 						$result .= code::PRINT.$this->exec_variable($expr,$this->count);
-						$this->count++;//!!!!!!!!!
+						//$this->count++;//!!!!!!!!!
 						continue;
 					}
 					if($expr instanceof Assign){//echo $i = 100;
