@@ -303,4 +303,13 @@ class opcode_dumper{
 		}
 		return $return;
 	}
+
+	/**
+	 * @param ...$value mixed
+	 * @return mixed
+	 */
+	public static function dump($value){
+		var_dump($value);
+		return $value;
+	}
 }

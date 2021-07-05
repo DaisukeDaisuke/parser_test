@@ -277,7 +277,7 @@ class main_old2{
 							$return1 = Binary::readSignedByte($exec[$i++]);
 							break;
 						case code::TYPE_SHORT://short
-							$return1 = Binary::readLShort(substr($exec, $i, 2));
+							$return1 = Binary::readSignedShort(substr($exec, $i, 2));
 							$i += 2;
 							break;
 						case code::TYPE_INT://int
@@ -608,7 +608,7 @@ class main_old2{
 				break;
 			case code::TYPE_SHORT:// 2-byte
 				/** @var int $value */
-				$return .= Binary::writeLShort($value);
+				$return .= Binary::writeShort($value);
 				break;
 			case code::TYPE_INT://int 4-byte
 				/** @var int $value */

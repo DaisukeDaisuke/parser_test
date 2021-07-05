@@ -149,8 +149,33 @@ echo $k;';*/
 $j=200;
 $k=$i-$j;
 echo $k;';*/
-$code='echo print $k = print $j = $i = 100;';
-
+/*$code='echo print $k = print $j = $i = 100;';*/
+$code='echo "1_";
+				echo (200+300)."_";
+				if(false){
+					echo "1";
+				}elseif(200+300 !== 500){
+					echo "2";
+				}elseif(false){
+					echo "3";
+				}elseif(false){
+					echo "3";
+				}elseif(false){
+					echo "3";
+				}elseif(false){
+					echo "3";
+				}elseif(false){
+					echo "3";
+				}elseif(false){
+					echo "3";
+				}elseif(false){
+					echo "3";
+				}else{
+					echo "6_";
+					echo "12_";
+				}
+				//echo "12_";
+				//echo "12";';
 
 /*
 true;

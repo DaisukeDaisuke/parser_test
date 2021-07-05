@@ -32,9 +32,10 @@ class decoder{
 			$opcode = $this->getByte();//......!!!!!!!!!!
 			$test = bin2hex($opcode);
 			//binaryOP
-			/*if($opcode === code::NOP){
+			if($opcode === code::NOP){
+				echo "「nop: ".$this->getOffset()."」";
 				continue;
-			}*/
+			}
 			if($opcode >= code::ADD&&$opcode <= code::ABC){
 				$this->decodebinaryop_array($opcode);
 				continue;
@@ -229,7 +230,7 @@ class decoder{
 			case code::TYPE_BYTE://byte
 				return Binary::readSignedByte($this->getByte());
 			case code::TYPE_SHORT://short
-				return Binary::readLShort($this->get(code::TYPE_SHORT));
+				return Binary::readSignedShort($this->get(code::TYPE_SHORT));
 			case code::TYPE_INT://int
 				return Binary::readInt($this->get(code::TYPE_INT));
 			case code::TYPE_LONG://long
@@ -265,7 +266,7 @@ class decoder{
 	}
 
 	public function getShort(): int{
-		return $this->stream->getShort();
+		return $this->stream->getSignedShort();
 	}
 
 	public function getAddress(): int{
