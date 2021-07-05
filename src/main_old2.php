@@ -45,6 +45,7 @@ use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Echo_;
 use PhpParser\Node\Stmt\Else_;
 use PhpParser\Node\Stmt\Expression;
+use PhpParser\Node\Stmt\For_;
 use PhpParser\Node\Stmt\If_;
 use PhpParser\Node\Stmt\Nop;
 use pocketmine\utils\Binary;
@@ -80,7 +81,7 @@ class main_old2{
 		switch(get_class($node)){
 			case Echo_::class:
 				if(!is_array($node->exprs)){
-					return $this->execStmts($node->exprs).code::PRINT.$this->put_var($this->count++);
+					return $this->execStmts([$node->exprs]).code::PRINT.$this->put_var($this->count++);
 				}
 				$result = "";
 				foreach($node->exprs as $expr){
@@ -90,7 +91,7 @@ class main_old2{
 						continue;
 					}
 					if($expr instanceof Assign){//echo $i = 100;
-						$result .= $this->execStmts([$expr]).code::PRINT.$this->put_var($this->count);
+						$result .= $this->execExpr($expr).code::PRINT.$this->put_var($this->count);
 						//$this->count++;
 						continue;
 					}
@@ -127,6 +128,23 @@ class main_old2{
 				return $this->execStmts($node->stmts);//JMPZ
 			case Expression::class:
 				return $this->execExpr($node->expr);
+			case For_::class:
+				$output = "";
+				var_dump($node->init);
+				foreach($node->init as $value){
+					$output .= $this->execExpr($value);
+					//var_dump(opcode_dumper::hexentities($this->execExpr($value)));//no execStmts double WRITEV
+				}
+				var_dump(opcode_dumper::hexentities($output));
+
+				$initlen = strlen($output);
+
+
+
+
+				//$this->putGotoLabel();
+
+				break;
 		}
 		return "";//code::nop
 	}
@@ -194,6 +212,8 @@ class main_old2{
 				$baseid = $this->count++;
 				$id1 = $this->exec_variable($value, $baseid,true);
 
+				//var_dump(opcode_dumper::hexentities($content));
+
 				if($recursion === false){
 					$content = code::WRITEV.$this->write_varId($baseid).$content;
 					//$this->count++;
@@ -209,7 +229,7 @@ class main_old2{
 					return code::PRINT.$this->exec_variable($expr->expr, $this->count++).$this->write_var($this->count, 1);
 				}
 				if($expr->expr instanceof Assign){//print $i = 100;
-					return  $this->execStmts([$expr->expr]).code::PRINT.$this->put_var($this->count++).$this->write_var($this->count, 1);;
+					return  $this->execExpr($expr->expr).code::PRINT.$this->write_variableId($this->count).$this->write_var($this->count++, 1);;
 				}
 				return $this->execStmts([$expr->expr]).code::PRINT.$this->put_var($this->count++).$this->write_var($this->count, 1);
 			case $expr instanceof Expr:
@@ -277,7 +297,7 @@ class main_old2{
 							$return1 = Binary::readSignedByte($exec[$i++]);
 							break;
 						case code::TYPE_SHORT://short
-							$return1 = Binary::readLShort(substr($exec, $i, 2));
+							$return1 = Binary::readSignedShort(substr($exec, $i, 2));
 							$i += 2;
 							break;
 						case code::TYPE_INT://int
@@ -334,6 +354,7 @@ class main_old2{
 				case code::JMPZ:
 				case code::LABEL:
 				case code::JMPA:
+				case code::NOP:
 					$i++;
 					break;
 				case code::LGOTO:
@@ -608,7 +629,7 @@ class main_old2{
 				break;
 			case code::TYPE_SHORT:// 2-byte
 				/** @var int $value */
-				$return .= Binary::writeLShort($value);
+				$return .= Binary::writeShort($value);
 				break;
 			case code::TYPE_INT://int 4-byte
 				/** @var int $value */
