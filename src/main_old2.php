@@ -90,7 +90,9 @@ class main_old2{
 						continue;
 					}
 					if($expr instanceof Assign){//echo $i = 100;
-						$result .= $this->execStmts([$expr]).code::PRINT.$this->put_var($this->count);
+						/** @var Variable $var */
+						$var = $expr->var;
+						$result .= $this->execExpr($expr).code::PRINT.$this->exec_variable($var,$this->count);
 						//$this->count++;
 						continue;
 					}
@@ -133,11 +135,12 @@ class main_old2{
 
 	/**
 	 * @param Expr $expr
+	 * @param int|null $outputid
 	 * @param bool $recursion
-	 * @param bool $is_var
+	 * @param ?int $is_var
 	 * @return string
 	 */
-	public function execExpr(Expr $expr, bool &$recursion = false, ?bool &$is_var = false){//array...?
+	public function execExpr(Expr $expr,?int $outputid = null, bool &$recursion = false, ?int &$is_var = null){//array...?
 		switch(true){
 			case $expr instanceof BinaryOp:
 				$recursion = true;
@@ -159,7 +162,7 @@ class main_old2{
 				return $this->execScalar($expr);
 			case $expr instanceof Variable:
 				//$recursion = true;//!!!!!!!!!
-				$is_var = true;
+				//$is_var = true;
 
 				$id = $this->exec_variable($expr,$this->count);
 				return $id;
@@ -184,18 +187,35 @@ class main_old2{
 
 				//$baseid = $this->count++;
 
-				/*if($expr->expr instanceof Assign){//$i = $j = 100;
-					$baseid = $this->count;
-				}*/
-				$content = $this->execExpr($expr->expr, $recursion);
+
+				$oldid1 = $this->count;
+
 
 				//$baseid = $this->count;
 
-				$baseid = $this->count++;
-				$id1 = $this->exec_variable($value, $baseid,true);
+				$baseid = $this->count;
+				//$this->count++;
+				$id1 = $this->exec_variable($value, $baseid,false,$is_var);
 
-				if($recursion === false){
-					$content = code::WRITEV.$this->write_varId($baseid).$content;
+				$recursion1 = false;
+				if($expr->expr instanceof BinaryOp){
+					$recursion1 = true;
+					$content = $this->execBinaryOp($expr->expr, $is_var ?? $baseid);
+				}else{
+					$this->count++;
+					$content = $this->execExpr($expr->expr,$is_var ?? $baseid, $recursion);
+				}
+
+
+				/*$content1 = "";
+				if($is_var !== null){
+					$content1 .= code::WRITEV.$this->write_varId($is_var).code::READV.$this->write_varId($baseid);
+				}*/
+				//var_dump([$oldid1,$is_var,$baseid]);
+
+
+				if($recursion === false&&$recursion1 === false){
+					$content = code::WRITEV.$this->write_varId($is_var ?? $baseid).$content;
 					//$this->count++;
 				}
 				//$this->count++;
@@ -209,9 +229,11 @@ class main_old2{
 					return code::PRINT.$this->exec_variable($expr->expr, $this->count++).$this->write_var($this->count, 1);
 				}
 				if($expr->expr instanceof Assign){//print $i = 100;
-					return  $this->execStmts([$expr->expr]).code::PRINT.$this->put_var($this->count++).$this->write_var($this->count, 1);;
+					/** @var Variable $var */
+					$var = $expr->expr->var;
+					return $this->execExpr($expr->expr).code::PRINT.$this->exec_variable($var,$this->count).$this->write_var($outputid ?? $this->count, 1);;
 				}
-				return $this->execStmts([$expr->expr]).code::PRINT.$this->put_var($this->count++).$this->write_var($this->count, 1);
+				return $this->execStmts([$expr->expr]).code::PRINT.$this->put_var($this->count++).$this->write_var($outputid ?? $this->count, 1);
 			case $expr instanceof Expr:
 				//var_dump(get_class($expr));
 				$recursion = true;
@@ -221,7 +243,7 @@ class main_old2{
 		throw new \RuntimeException('execExpr "'.get_class($expr).'" not found');
 	}
 
-	public function exec_variable(Variable $node, int $id, bool $force = false) : string{//変数処理...
+	public function exec_variable(Variable $node, int $id, bool $force = false,?int &$oldid = null) : string{//変数処理...
 		if($node->name instanceof Expr){
 			//var_dump("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 			if($node->name instanceof Variable){
@@ -232,7 +254,7 @@ class main_old2{
 			return "";//!!
 		}
 		//return $this->write_variableId($this->count);
-		return $this->write_variableId($this->getValualueId($node->name, $force, $id));//code::VALUE
+		return $this->write_variableId($this->getValualueId($node->name, $force, $id, $oldid));//code::VALUE
 	}
 
 	public function write_variableId(int $node) : string{//変数処理...
@@ -373,7 +395,7 @@ class main_old2{
 		foreach($nodes as $node){
 			if($node instanceof Expr){
 				$root = false;
-				$return1 = $this->execExpr($node, $root) ?? "";
+				$return1 = $this->execExpr($node,null, $root) ?? "";
 				if($root === false){
 					$return1 = code::WRITEV.$this->write_varId($this->count).$return1;
 				}
@@ -408,62 +430,62 @@ class main_old2{
 	 * @return string
 	 * @throws \RuntimeException
 	 */
-	public function execBinaryOp(BinaryOp $node) : string{//output //add 10 10 1 $count = 0
+	public function execBinaryOp(BinaryOp $node,?int $outputid = null) : string{//output //add 10 10 1 $count = 0
 		switch(get_class($node)){
 			case Plus::class:
-				return $this->execbinaryplus($node, code::ADD);
+				return $this->execbinaryplus($node, code::ADD,$outputid);
 			case Mul::class:
-				return $this->execbinaryplus($node, code::MUL);
+				return $this->execbinaryplus($node, code::MUL,$outputid);
 			case Div::class:
-				return $this->execbinaryplus($node, code::DIV);
+				return $this->execbinaryplus($node, code::DIV,$outputid);
 			case Minus::class:
-				return $this->execbinaryplus($node, code::MINUS);
+				return $this->execbinaryplus($node, code::MINUS,$outputid);
 			case BitwiseAnd::class:
-				return $this->execbinaryplus($node, code::B_AND);
+				return $this->execbinaryplus($node, code::B_AND,$outputid);
 			case BitwiseOr::class:
-				return $this->execbinaryplus($node, code::B_OR);
+				return $this->execbinaryplus($node, code::B_OR,$outputid);
 			case BooleanAnd::class:
-				return $this->execbinaryplus($node, code::BOOL_AND);
+				return $this->execbinaryplus($node, code::BOOL_AND,$outputid);
 			case BooleanOr::class:
-				return $this->execbinaryplus($node, code::BOOL_OR);
+				return $this->execbinaryplus($node, code::BOOL_OR,$outputid);
 			case Coalesce::class:
-				return $this->execbinaryplus($node, code::COALESCE);
+				return $this->execbinaryplus($node, code::COALESCE,$outputid);
 			case Concat::class:
-				return $this->execbinaryplus($node, code::CONCAT);
+				return $this->execbinaryplus($node, code::CONCAT,$outputid);
 			case Equal::class:
-				return $this->execbinaryplus($node, code::EQUAL);
+				return $this->execbinaryplus($node, code::EQUAL,$outputid);
 			case Greater::class:
-				return $this->execbinaryplus($node, code::GREATER);
+				return $this->execbinaryplus($node, code::GREATER,$outputid);
 			case GreaterOrEqual::class:
-				return $this->execbinaryplus($node, code::GREATEROREQUAL);
+				return $this->execbinaryplus($node, code::GREATEROREQUAL,$outputid);
 			case Identical::class:
-				return $this->execbinaryplus($node, code::IDENTICAL);
+				return $this->execbinaryplus($node, code::IDENTICAL,$outputid);
 			case LogicalAnd::class:
-				return $this->execbinaryplus($node, code::L_AND);
+				return $this->execbinaryplus($node, code::L_AND,$outputid);
 			case LogicalOr::class:
-				return $this->execbinaryplus($node, code::L_OR);
+				return $this->execbinaryplus($node, code::L_OR,$outputid);
 			case LogicalXor::class:
-				return $this->execbinaryplus($node, code::L_XOR);
+				return $this->execbinaryplus($node, code::L_XOR,$outputid);
 			case Mod::class:
-				return $this->execbinaryplus($node, code::MOD);
+				return $this->execbinaryplus($node, code::MOD,$outputid);
 			case NotEqual::class:
-				return $this->execbinaryplus($node, code::NOTEQUAL);
+				return $this->execbinaryplus($node, code::NOTEQUAL,$outputid);
 			case NotIdentical::class:
-				return $this->execbinaryplus($node, code::NOTIDENTICAL);
+				return $this->execbinaryplus($node, code::NOTIDENTICAL,$outputid);
 			case Pow::class:
-				return $this->execbinaryplus($node, code::POW);
+				return $this->execbinaryplus($node, code::POW,$outputid);
 			case ShiftLeft::class:
-				return $this->execbinaryplus($node, code::SHIFTLEFT);
+				return $this->execbinaryplus($node, code::SHIFTLEFT,$outputid);
 			case ShiftRight::class:
-				return $this->execbinaryplus($node, code::SHIFTRIGHT);
+				return $this->execbinaryplus($node, code::SHIFTRIGHT,$outputid);
 			case Smaller::class:
-				return $this->execbinaryplus($node, code::SMALLER);
+				return $this->execbinaryplus($node, code::SMALLER,$outputid);
 			case SmallerOrEqual::class:
-				return $this->execbinaryplus($node, code::SMALLEROREQUAL);
+				return $this->execbinaryplus($node, code::SMALLEROREQUAL,$outputid);
 			case Spaceship::class:
-				return $this->execbinaryplus($node, code::SPACESHIP);
+				return $this->execbinaryplus($node, code::SPACESHIP,$outputid);
 			case BitwiseXor::class:
-				return $this->execbinaryplus($node, code::B_XOR);
+				return $this->execbinaryplus($node, code::B_XOR,$outputid);
 		}
 		throw new \RuntimeException('BinaryOp "'.get_class($node).'" is unprocessed.');
 	}
@@ -473,17 +495,20 @@ class main_old2{
 	 * @param string $opcode binaryid
 	 * @return string
 	 */
-	public function execbinaryplus(BinaryOp $node, string $opcode) : string{
+	public function execbinaryplus(BinaryOp $node, string $opcode,?int $outputid = null) : string{
 		$recursionLeft = false;
 		$recursionRight = false;
 
-		$left = $this->execExpr($node->left, $recursionLeft, $is_varleft);
+		$left = $this->execExpr($node->left,null, $recursionLeft, $is_varleft);
 		$basecount1 = $this->count++;
 
-		$right = $this->execExpr($node->right, $recursionRight, $is_varright);
+		$right = $this->execExpr($node->right,null, $recursionRight, $is_varright);
 		$basecount2 = $this->count++;
 
-		$count1 = $this->count;
+		//var_dump([$is_varleft,$is_varright]);
+
+
+		$count1 = $outputid ?? $this->count;
 
 		// id output Read_v.id Read_v.id
 
@@ -544,11 +569,12 @@ class main_old2{
 	 * @param string $value
 	 * @param bool $force
 	 * @param int $id
+	 * @param int|null $oldid
 	 * @return int
 	 * @see exec_var
 	 */
-	public function getValualueId(string $value, bool $force,int $id) : int{
-		return $this->block[$this->blockid]->get($value, $id, $force);//$this->write_varId();
+	public function getValualueId(string $value, bool $force,int $id, ?int &$oldid) : int{
+		return $this->block[$this->blockid]->get($value, $id, $force, $oldid);//$this->write_varId();
 	}
 
 	public function execScalar(Scalar $node) : string{

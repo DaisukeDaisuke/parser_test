@@ -305,7 +305,7 @@ class opcode_dumper{
 	}
 
 	/**
-	 * @param ...$value mixed
+	 * @param mixed $value
 	 * @return mixed
 	 */
 	public static function dump($value){

@@ -320,6 +320,35 @@ class if_Test extends TestCase{
 				echo "12";',
 				'1_500_6_12_12_12',
 			],
+			[
+				'if(false){
+					
+				}elseif(false){
+					
+				}elseif(false){
+					
+				}elseif(false){
+					
+				}elseif(false){
+					
+				}elseif(false){
+					
+				}elseif(false){
+					
+				}elseif(false){
+					
+				}elseif(false){
+					
+				}elseif(false){
+					
+				}elseif(false){
+					
+				}else{
+					echo "6_";
+					echo "12_";
+				}',
+				'6_12_'
+			],
 		];
 
 	}
