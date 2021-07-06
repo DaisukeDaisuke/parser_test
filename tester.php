@@ -155,8 +155,38 @@ $code='$i = 100;$i = 200;';*/
 /*$code = '$i = 100;
 				$j=200;
 				$k=$i-$j;
-				echo $k;';*/
-$code= '$i = print "test_";echo $i;';
+				echo $k;'*/;
+/*$code= '$i = print "test_";echo $i;';*/
+
+$code='
+for($i=0; $i<101; $i++){
+    if($i%15 === 0){
+        echo "FizzBuzz";
+    }else if($i%3 === 0){
+        echo "Fizz";
+    }else if($i%5 === 0){
+        echo "Buzz";
+    }else{
+        echo $i;
+    }
+    echo "\n";
+}';
+
+for($i=0; $i<101; $i++){
+	if($i%15 === 0){
+		echo "FizzBuzz";
+	}else if($i%3 === 0){
+		echo "Fizz";
+	}else if($i%5 === 0){
+		echo "Buzz";
+	}else{
+		echo $i;
+	}
+	echo "\n";
+}
+/*$code='$i=100;echo $i--;echo $i--;echo $i--;';*/
+/*$code='$i=100;
+print ++$i;';*/
 $time_start = microtime(true);
 
 $parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7);
@@ -181,9 +211,17 @@ var_dump($main_old);
 
 var_dump(opcode_dumper::hexentities($output),opcode_dumper::hexentities1($output));
 
-ob_start();
+//ob_start();
 $decoder = new decoder();
 $decoder->decode($output);
-$log = ob_get_clean();
-var_dump($log);
+//$log = ob_get_clean();
+//var_dump($log);
+$binaryStream = $decoder->getBinaryStream();
+if(isset($binaryStream)){
+	if(strlen($output) !== $binaryStream->getOffset()){
+		throw new \RuntimeException("A program overrun has been detected. Expected: ".strlen($output).", Actual: ".$decoder->getBinaryStream()->getOffset());
+	}
+}else{
+	var_dump("!!");
+}
 

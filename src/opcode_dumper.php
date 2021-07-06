@@ -32,7 +32,7 @@ class opcode_dumper{
 
 							break;
 						case code::TYPE_SHORT://short
-							$return1 = Binary::readLShort(substr($str, $i, 2));
+							$return1 = Binary::readSignedShort(substr($str, $i, 2));
 							$return .= ' :'.bin2hex($str[$i++]).';';
 							$return .= ' :'.bin2hex($str[$i]).';';
 							break;
