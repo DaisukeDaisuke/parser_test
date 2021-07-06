@@ -147,29 +147,14 @@ class main_old2{
 				$stmts = $this->execStmts($node->stmts);
 				$output = $stmts.$loop;
 
-
-
 				$cond = "";
-				$debugcond = [];
 				foreach(array_reverse($node->cond) as $value){
 					$tmp = $this->execExpr($value);
-					$condlen = strlen($cond);//0
-					$debugcond[] = $this->count;
-					$cond = $tmp.$this->putjmpz($this->count++,"",$output.$cond,8);
-					$debugcond[] = opcode_dumper::hexentities($cond);
-
-					//$cond .= $this->putjmpz($this->label_count++);//
+					$cond = $tmp.$this->putjmpz($this->count++,"",$output.$cond,7);//8
 				}
 
-				$output = code::NOP.$cond.code::NOP.$output;
-				var_dump(strlen($output),strlen($output)+strlen($init));
+				$output = $cond.$output;
 				$output = $init.$this->putunjmp($output);
-				var_dump(opcode_dumper::hexentities($init));
-				var_dump($debugcond);
-				var_dump(opcode_dumper::hexentities($loop));
-				var_dump($node->stmts);
-				var_dump(opcode_dumper::hexentities($stmts));
-				var_dump(opcode_dumper::hexentities($output));
 				return $output;
 		}
 		return "";//code::nop
@@ -467,7 +452,6 @@ class main_old2{
 				if($root === false){
 					$return1 = code::WRITEV.$this->write_varId($targetid ?? $this->count).$return1;
 				}
-				var_dump([$node,opcode_dumper::hexentities($return1)]);
 				$return .= $return1;
 			}
 			if($node instanceof Stmt){

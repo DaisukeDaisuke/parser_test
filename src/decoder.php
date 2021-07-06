@@ -158,17 +158,9 @@ class decoder{
 	 * @throws RuntimeException
 	 */
 	public function decodeStmt_array(string $opcode): void{
-		//$opcode = $this->get(1);
-		//$var1 = $this->value($this->decodeScalar());
-		$return1 = 0;
-
 		switch($opcode){
 			case code::PRINT:
-				//var_dump($this->values);
-				$var1 = $this->decodeScalar();
-
-				echo $var1;
-				//$return1 = 1;
+				echo $this->decodeScalar();
 				return;
 			case code::JMP:
 				$jmp = $this->decodeScalar();
@@ -186,7 +178,7 @@ class decoder{
 				$this->setOffset($jmp);
 				return;
 		}
-		throw new RuntimeException("Stmt off:".$this->getOffset().", op:".bin2hex($opcode)." not found");
+		throw new RuntimeException("Unexpected Stmt: off:".$this->getOffset().", op:".bin2hex($opcode)." not found");
 	}
 
 	/**

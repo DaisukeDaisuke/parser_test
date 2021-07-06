@@ -172,18 +172,6 @@ for($i=0; $i<101; $i++){
     echo "\n";
 }';
 
-for($i=0; $i<101; $i++){
-	if($i%15 === 0){
-		echo "FizzBuzz";
-	}else if($i%3 === 0){
-		echo "Fizz";
-	}else if($i%5 === 0){
-		echo "Buzz";
-	}else{
-		echo $i;
-	}
-	echo "\n";
-}
 /*$code='$i=100;echo $i--;echo $i--;echo $i--;';*/
 /*$code='$i=100;
 print ++$i;';*/
@@ -219,7 +207,7 @@ $decoder->decode($output);
 $binaryStream = $decoder->getBinaryStream();
 if(isset($binaryStream)){
 	if(strlen($output) !== $binaryStream->getOffset()){
-		throw new \RuntimeException("A program overrun has been detected. Expected: ".strlen($output).", Actual: ".$decoder->getBinaryStream()->getOffset());
+		throw new \RuntimeException("A program overrun has been detected. Expected: ".strlen($output).", Actual: ".$binaryStream->getOffset());
 	}
 }else{
 	var_dump("!!");
