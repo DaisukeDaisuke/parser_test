@@ -33,7 +33,7 @@ class decoder{
 			$test = bin2hex($opcode);
 			//binaryOP
 			if($opcode === code::NOP){
-				echo "「nop: ".$this->getOffset()."」";
+				//echo "「nop: ".$this->getOffset()."」";
 				continue;
 			}
 			if($opcode >= code::ADD&&$opcode <= code::ABC){
@@ -186,7 +186,7 @@ class decoder{
 				$this->setOffset($jmp);
 				return;
 		}
-		throw new RuntimeException("Stmt ".bin2hex($opcode)." not found");
+		throw new RuntimeException("Stmt off:".$this->getOffset().", op:".bin2hex($opcode)." not found");
 	}
 
 	/**

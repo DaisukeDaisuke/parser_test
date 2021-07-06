@@ -656,9 +656,9 @@ class main_old2{
 
 	public function putjmpz(int $var, string $stmts, ?string $target = null) : string{//0 => jmp
 		if($target !== null){
-			return code::JMPZ.$this->put_var($var).$this->getInt(strlen($target)).$stmts;
+			return code::JMPZ.$this->put_var($var).$this->getInt(strlen($target)).$stmts;//
 		}
-		return code::JMPZ.$this->put_var($var).$this->getInt(strlen($stmts)).$stmts;
+		return code::JMPZ.$this->put_var($var).$this->getInt(strlen($stmts)+1).$stmts;
 	}
 
 	public function putjmp(string $stmts, bool $skip = false) : string{

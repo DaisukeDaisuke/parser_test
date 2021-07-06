@@ -150,7 +150,7 @@ $j=200;
 $k=$i-$j;
 echo $k;';*/
 /*$code='echo print $k = print $j = $i = 100;';*/
-$code='echo "1_";
+/*$code='echo "1_";
 				echo (200+300)."_";
 				if(false){
 					echo "1";
@@ -175,8 +175,36 @@ $code='echo "1_";
 					echo "12_";
 				}
 				//echo "12_";
+				//echo "12";';*/
+$code='
+				if(false){
+					
+				}elseif(false){
+					
+				}elseif(false){
+					
+				}elseif(false){
+					
+				}elseif(false){
+					
+				}elseif(false){
+					
+				}elseif(false){
+					
+				}elseif(false){
+					
+				}elseif(false){
+					
+				}elseif(false){
+					
+				}elseif(false){
+					
+				}else{
+					echo "6_";
+					echo "12_";
+				}
+				//echo "12_";
 				//echo "12";';
-
 /*
 true;
 false;
