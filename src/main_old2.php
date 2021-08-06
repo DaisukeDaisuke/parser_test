@@ -147,11 +147,15 @@ class main_old2{
 				$stmts = $this->execStmts($node->stmts);
 				$output = $stmts.$loop;
 
-				$cond = "";
+				//$cond = "";
+				$cond = $this->putjmp($output);
 				foreach(array_reverse($node->cond) as $value){
 					$tmp = $this->execExpr($value);
-					$cond = $tmp.$this->putjmpz($this->count++,"",$output.$cond,7);//8
+					$tmpjmp = $this->putjmp($cond,true, 0);//false
+					$cond = $tmp.$this->putjmpz($this->count++,"",$tmpjmp,0).$tmpjmp.$cond;//8//true
 				}
+				$cond = $cond.$this->putjmp($output);
+
 
 				$output = $cond.$output;
 				$output = $init.$this->putunjmp($output);
@@ -761,11 +765,11 @@ class main_old2{
 		return code::JMPZ.$this->put_var($var).$this->getInt(strlen($stmts) +$offset+ 1).$stmts;
 	}
 
-	public function putjmp(string $stmts, bool $skip = false) : string{
+	public function putjmp(string $stmts, bool $skip = false,$offset = 0) : string{
 		if($skip === true){
-			return code::JMP.$this->getInt(strlen($stmts));
+			return code::JMP.$this->getInt(strlen($stmts)+$offset);
 		}
-		return code::JMP.$this->getInt(strlen($stmts)).$stmts;
+		return code::JMP.$this->getInt(strlen($stmts)+$offset).$stmts;
 	}
 
 	public function putunjmp(string $stmts) : string{

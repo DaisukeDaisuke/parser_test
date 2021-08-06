@@ -68,6 +68,7 @@ class opcode_dumper{
 							$return .= ' :'.bin2hex($str[$i]).';';
 							break;
 					}
+					$return .= PHP_EOL;
 
 					break;
 				case code::STRING:
