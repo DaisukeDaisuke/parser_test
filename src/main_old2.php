@@ -148,17 +148,20 @@ class main_old2{
 				$output = $stmts.$loop;
 
 				//$cond = "";
-				$cond = $this->putjmp($output);
+
+				$cond = $this->putjmp($output,true,7);//7 = putunjmp len
 				foreach(array_reverse($node->cond) as $value){
 					$tmp = $this->execExpr($value);
 					$tmpjmp = $this->putjmp($cond,true, 0);//false
 					$cond = $tmp.$this->putjmpz($this->count++,"",$tmpjmp,0).$tmpjmp.$cond;//8//true
 				}
-				$cond = $cond.$this->putjmp($output);
-
+				//$cond = $cond;
 
 				$output = $cond.$output;
-				$output = $init.$this->putunjmp($output);
+				//$output = $init.$this->putunjmp($output);
+				//$output = $init.$cond.$this->putunjmp($output);
+				$unjmp = $this->putunjmp($output);
+				$output = $init.$unjmp;
 				return $output;
 		}
 		return "";//code::nop

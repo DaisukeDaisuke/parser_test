@@ -173,10 +173,13 @@ for($i=0; $i<101; $i++){
 }';
 
 
-$code='
-for(; false,false;){
+/*$code='
+for(; false,false,false,false,false;){
 echo 1;
-}';
+}echo 0;';*/
+$code='for($i = 1; $i <= 10; $i++){
+					echo $i;
+				}';
 
 
 /*$code='$i=100;echo $i--;echo $i--;echo $i--;';*/
@@ -206,7 +209,7 @@ var_dump($main_old);
 
 var_dump(opcode_dumper::hexentities($output),opcode_dumper::hexentities1($output));
 
-/*
+
 //ob_start();
 $decoder = new decoder();
 $decoder->decode($output);
@@ -219,5 +222,5 @@ if(isset($binaryStream)){
 	}
 }else{
 	var_dump("!!");
-}*/
+}
 
