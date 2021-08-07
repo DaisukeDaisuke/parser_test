@@ -4,6 +4,7 @@
 use PhpParser\ParserFactory;
 use PHPUnit\Framework\TestCase;
 use purser\decoder;
+use purser\Logger;
 use purser\main_old2;
 
 class assignTest extends TestCase{

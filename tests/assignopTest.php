@@ -3,6 +3,7 @@
 use PhpParser\ParserFactory;
 use PHPUnit\Framework\TestCase;
 use purser\decoder;
+use purser\Logger;
 use purser\main_old2;
 
 class assignopTest extends TestCase{
@@ -13,18 +14,26 @@ class assignopTest extends TestCase{
 	 * @dataProvider providetestisInsideHangingBox
 	 * @param string $code
 	 * @param string $output1
+	 * @param string[] $errors
 	 * @return void
 	 */
-	public function testisInsideHangingBox(string $code, string $output1){
+	public function testisInsideHangingBox(string $code, string $output1, array $errors = []){
 		$parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7);
 		$stmts = $parser->parse("<?php\n".$code);
 
 		if($stmts === null){
 			throw new \RuntimeException("phpParser crashed");
 		}
-		$main_old = new main_old2();
+		$main_old = new main_old2(true);
 		$output = $main_old->execStmts($stmts);
-
+		foreach($main_old->getLogger()->getLogs() as $key => $array){
+			if($array[Logger::TYPE_LEVEL] === Logger::WARNING){
+				self::assertEquals(true, isset($errors[$key]),"key ".$key." not found");
+				var_dump($array[Logger::TYPE_MESSAGE]);
+				self::assertEquals(true, $errors[$key] === $array[Logger::TYPE_MESSAGE]);
+			}
+		}
+		//self::assertEquals(count($errors), count($main_old->getLogger()->getLogs()));
 		//var_dump($code, $main_old->hexentities($output));
 
 		ob_start();
@@ -42,7 +51,7 @@ class assignopTest extends TestCase{
 	}
 
 	/**
-	 * @return string[][]
+	 * @return string[][]|string[][][]
 	 */
 	public function providetestisInsideHangingBox(): array{
 		return [
@@ -117,6 +126,63 @@ class assignopTest extends TestCase{
 				$a **= (1+1);
 				echo $a;',
 				'100',
+			],
+			[
+				'$a += 0;
+				echo $a;',
+				'0',
+				[
+					'php compiler warning: Undefined variable $a. opcode(+= etc): 02. (writeAssignOp)'
+				],
+			],
+			[
+				'$b += 0;
+				echo $b;',
+				'0',
+				[
+					'php compiler warning: Undefined variable $b. opcode(+= etc): 02. (writeAssignOp)'
+				],
+			],
+			[
+				'$b += 2;
+				echo $b;',
+				'2',
+				[
+					'php compiler warning: Undefined variable $b. opcode(+= etc): 02. (writeAssignOp)'
+				],
+			],
+			[
+				'$b -= 2;
+				echo $b;',
+				'-2',
+				[
+					'php compiler warning: Undefined variable $b. opcode(+= etc): 05. (writeAssignOp)'
+				],
+			],
+			[
+				'$a += 0;
+				$b += 0;
+				echo $a,",",$b;',
+				'0,0',
+				[
+					'php compiler warning: Undefined variable $a. opcode(+= etc): 02. (writeAssignOp)',
+					'php compiler warning: Undefined variable $b. opcode(+= etc): 02. (writeAssignOp)'
+				],
+			],
+			[
+				'@$a += 0;
+				$b += 0;
+				echo $a,",",$b;',
+				'0,0',
+				[
+					'php compiler warning: Undefined variable $b. opcode(+= etc): 02. (writeAssignOp)'
+				],
+			],
+			[
+				'@$a += 0;
+				@$b += 0;
+				echo $a,",",$b;',
+				'0,0',
 			],
 		];
 	}

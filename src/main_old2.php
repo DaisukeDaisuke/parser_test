@@ -47,6 +47,7 @@ use PhpParser\Node\Expr\BinaryOp\Smaller;
 use PhpParser\Node\Expr\BinaryOp\SmallerOrEqual;
 use PhpParser\Node\Expr\BinaryOp\Spaceship;
 use PhpParser\Node\Expr\ConstFetch;
+use PhpParser\Node\Expr\ErrorSuppress;
 use PhpParser\Node\Expr\PostDec;
 use PhpParser\Node\Expr\PostInc;
 use PhpParser\Node\Expr\PreDec;
@@ -84,9 +85,12 @@ class main_old2{
 	public $blockid = 1;
 	/** @var CodeBlock[] $block */
 	public $block = [];
+	/** @var Logger $logger */
+	public $logger;
 
-	public function __construct(){
+	public function __construct(bool $is_phpunit = false){
 		$this->block[$this->blockid] = new CodeBlock($this->blockid);
+		$this->logger = new Logger($is_phpunit);
 	}
 
 	/**
@@ -307,6 +311,11 @@ class main_old2{
 				return $this->execStmts([$expr->expr], $targetid).code::PRINT.$this->put_var($targetid ?? $this->count++).$this->write_var($outputid ?? $this->count, 1);
 			case $expr instanceof AssignOp:
 				return $this->execAssignOp($expr);
+			case $expr instanceof ErrorSuppress:
+				$this->getLogger()->setErrorSuppress(true);
+				$result = $this->execExpr($expr->expr);
+				$this->getLogger()->setErrorSuppress(false);
+				return $result;
 			case $expr instanceof Expr:
 				//var_dump(get_class($expr));
 				$recursion = true;
@@ -358,18 +367,21 @@ class main_old2{
 		/** @var Variable $varnode */
 		$varnode = $node->var;
 		$tmp = null;
-		$var1 = $this->exec_variable($varnode, $this->count, false, $tmp, true);
-		var_dump($tmp);
+		$solvedName = null;
+		$var1 = $this->exec_variable($varnode, $this->count, false, $tmp, true,$solvedName);
+		$result1 = "";
 		if($tmp === null){
-			echo 'compile: PHP Warning:  Undefined variable $j in ?????? on line ?\n';
+			$result1 = $this->write_var($this->count,0).$result;
+			$this->logger->warning('Undefined variable $'.$solvedName.'. opcode(+= etc): '.bin2hex($opcode).'. (writeAssignOp)');// in ?????? on line ?
+			$this->count++;
 		}
 		if($recursion){
-			return $result.$opcode.$var1.code::VALUE.$var1.$this->put_var($basecount);
+			return $result1.$result.$opcode.$var1.code::VALUE.$var1.$this->put_var($basecount);
 		}
-		return $opcode.$var1.code::VALUE.$var1.$result;
+		return $result1.$opcode.$var1.code::VALUE.$var1.$result;
 	}
 
-	public function exec_variable(Variable $node, int $id, bool $force = false, ?int &$oldid = null, bool $raw = false): string{//変数処理...
+	public function exec_variable(Variable $node, int $id, bool $force = false, ?int &$oldid = null, bool $raw = false,?string &$solvedName = null): string{//変数処理...
 		if($node->name instanceof Expr){
 			//var_dump("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 			if($node->name instanceof Variable){
@@ -381,9 +393,11 @@ class main_old2{
 		}
 		//return $this->write_variableId($this->count);
 		if($raw === true){
-			return $this->write_varId($this->getValualueId($node->name, $force, $id, $oldid));
+			$solvedName = $node->name;
+			return $this->write_varId($this->getValualueId($solvedName, $force, $id, $oldid));
 		}
-		return $this->write_variableId($this->getValualueId($node->name, $force, $id, $oldid));//code::VALUE
+		$solvedName = $node->name;
+		return $this->write_variableId($this->getValualueId($solvedName, $force, $id, $oldid));//code::VALUE
 	}
 
 	public function write_variableId(int $node): string{//変数処理...
@@ -857,5 +871,9 @@ class main_old2{
 
 	public function putLabel(int $label): string{
 		return code::LABEL.$this->getInt($label);
+	}
+
+	public function getLogger(): Logger{
+		return $this->logger;
 	}
 }
