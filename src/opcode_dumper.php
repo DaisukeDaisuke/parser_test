@@ -130,6 +130,21 @@ class opcode_dumper{
 					$return .= ' var:'.bin2hex($str[$i++]).';';
 					$return .= ' var:'.bin2hex($str[$i]).';';
 					break;
+				case code::BOOL:
+					$return .= ' BOOL:'.bin2hex($str[$i++]).';';
+					$return .= ' var:';
+
+					$bool = ord($str[$i++]);
+					var_dump($bool);
+					if($bool === code::TYPE_NULL){
+						$return .= "null";
+					}elseif($bool === code::TYPE_TRUE){
+						$return .= "true";
+					}elseif($bool === code::TYPE_FALSE){
+						$return .= "false";
+					}
+					$return .= ";";
+					break;
 				case code::ADD:
 					$return .= ' ADD?:'.bin2hex($str[$i++]).';';
 					$return .= ' output:'.bin2hex($str[$i++]).';';
@@ -289,6 +304,17 @@ class opcode_dumper{
 					break;
 				case code::JMPA:
 					$return .= ' JMPA:'.bin2hex($str[$i]).';';
+					break;
+				case code::FUN_INIT:
+					$return .= ' FUN_INIT:'.bin2hex($str[$i]).';';
+					break;
+				case code::FUN_SEND_ARGS://FUN_SUBMIT output
+					$return .= ' FUN_SEND_ARGS:'.bin2hex($str[$i]).';';
+					break;
+				case code::FUN_SUBMIT://FUN_SUBMIT output
+					$return .= ' FUN_SUBMIT:'.bin2hex($str[$i++]).';';
+					$return .= ' var:'.bin2hex($str[$i++]).';';
+					$return .= ' var:'.bin2hex($str[$i]).';';
 					break;
 				default:
 					$return .= ' :'.bin2hex($str[$i]).';';

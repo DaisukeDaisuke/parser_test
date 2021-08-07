@@ -6,6 +6,9 @@ use purser\decoder;
 use purser\main_old2;
 
 class binaryopTest extends TestCase{
+	public const TYPE_TRUE = "bool(true)";
+	public const TYPE_FALSE = "bool(false)";
+
 	/**
 	 * (selectedBettingTable)->isInsideHangingBox();
 	 * 関数に関します、テストにてございます...
@@ -47,263 +50,263 @@ class binaryopTest extends TestCase{
 	public function providetestisInsideHangingBox(): array{
 		return [
 			[
-				'echo 20 + 30;',
+				'var_dump(20 + 30);',
 				'50',
 			],
 			[
-				'echo 20 * 30;',
+				'var_dump(20 * 30);',
 				'600',
 			],
 			[
-				'echo 20 / 20;',
+				'var_dump(20 / 20);',
 				'1',
 			],
 			[
-				'echo 20 - 30;',
+				'var_dump(20 - 30);',
 				'-10',
 			],
 			[
-				'echo 1 & 2;',
+				'var_dump(1 & 2);',
 				'0',
 			],
 			[
-				'echo 1 | 2;',
+				'var_dump(1 | 2);',
 				'3',
 			],
 			[
-				'echo 1 ^ 2;',
+				'var_dump(1 ^ 2);',
 				'3',
 			],
 			[
-				'echo 1 && 1;',
+				'var_dump(1 && 1);',
 				'1',
 			],
 			[
-				'echo 1 && 0;',
-				'0',
+				'var_dump(1 && 0);',
+				self::TYPE_FALSE,
 			],
 			[
-				'echo 0 && 1;',
-				'0',
+				'var_dump(0 && 1);',
+				self::TYPE_FALSE,
 			],
 			[
-				'echo 0 && 0;',
-				'0',
+				'var_dump(0 && 0);',
+				self::TYPE_TRUE,
 			],
 			[
-				'echo 1 || 1;',
-				'1',
+				'var_dump(1 || 1);',
+				self::TYPE_TRUE,
 			],
 			[
-				'echo 1 || 0;',
-				'1',
+				'var_dump(1 || 0);',
+				self::TYPE_TRUE,
 			],
 			[
-				'echo 0 || 1;',
-				'1',
+				'var_dump(0 || 1);',
+				self::TYPE_TRUE,
 			],
 			[
-				'echo 0 || 0;',
-				'0',
+				'var_dump(0 || 0);',
+				self::TYPE_FALSE,
 			],
 			//code::COALESCE
 			[
-				'echo "1"."2";',
+				'var_dump("1"."2");',
 				'12',
 			],
 			[
-				'echo (1).(2);',
+				'var_dump((1).(2));',
 				'12',
 			],
 			[
-				'echo 1 == 2;',
-				'0',
+				'var_dump(1 == 2);',
+				self::TYPE_FALSE,
 			],
 			[
-				'echo 1 == 1;',
-				'1',
+				'var_dump(1 == 1);',
+				self::TYPE_TRUE,
 			],
 			[
-				'echo 1 == "1";',
-				'1',
+				'var_dump(1 == "1");',
+				self::TYPE_TRUE,
 			],
 			[
-				'echo 2 > 1;',
-				'1',
+				'var_dump(2 > 1);',
+				self::TYPE_TRUE,
 			],
 			[
-				'echo 1 > 2;',
-				'0',
+				'var_dump(1 > 2);',
+				self::TYPE_FALSE,
 			],
 			[
-				'echo 1 > 1;',
-				'0',
+				'var_dump(1 > 1);',
+				self::TYPE_FALSE,
 			],
 			[
-				'echo 2 >= 1;',
-				'1',
+				'var_dump(2 >= 1);',
+				self::TYPE_TRUE,
 			],
 			[
-				'echo 1 >= 2;',
-				'0',
+				'var_dump(1 >= 2);',
+				self::TYPE_FALSE,
 			],
 			[
-				'echo 1 >= 1;',
-				'1',
+				'var_dump(1 >= 1);',
+				self::TYPE_TRUE,
 			],
 			[
-				'echo 1 === 2;',
-				'0',
+				'var_dump(1 === 2);',
+				self::TYPE_FALSE,
 			],
 			[
-				'echo 1 === 1;',
-				'1',
+				'var_dump(1 === 1);',
+				self::TYPE_TRUE,
 			],
 			[
-				'echo 1 === "1";',
-				'0',
-			],
-
-			[
-				'echo 0 and 0;',
-				'0',
-			],
-			[
-				'echo 1 and 0;',
-				'0',
-			],
-			[
-				'echo 1 and 1;',
-				'1',
-			],
-			[
-				'echo 1 and "1";',
-				'1',
+				'var_dump(1 === "1");',
+				self::TYPE_FALSE,
 			],
 
 			[
-				'echo 0 or 0;',
-				'0',
+				'var_dump(0 and 0);',
+				self::TYPE_FALSE,
 			],
 			[
-				'echo 1 or 0;',
-				'1',
+				'var_dump(1 and 0);',
+				self::TYPE_FALSE,
 			],
 			[
-				'echo 0 or 1;',
-				'1',
+				'var_dump(1 and 1);',
+				self::TYPE_TRUE,
 			],
 			[
-				'echo 1 or 1;',
-				'1',
+				'var_dump(1 and "1");',
+				self::TYPE_TRUE,
+			],
+
+			[
+				'var_dump(0 or 0);',
+				self::TYPE_FALSE,
 			],
 			[
-				'echo 1 or "1";',
-				'1',
+				'var_dump(1 or 0);',
+				self::TYPE_TRUE,
 			],
 			[
-				'echo 1 or "1";',
-				'1',
+				'var_dump(0 or 1);',
+				self::TYPE_TRUE,
 			],
 			[
-				'echo 0 xor 0;',
-				'0'
+				'var_dump(1 or 1);',
+				self::TYPE_TRUE,
 			],
 			[
-				'echo 0 xor 1;',
-				'1'
+				'var_dump(1 or "1");',
+				self::TYPE_TRUE,
 			],
 			[
-				'echo 1 xor 0;',
-				'1'
+				'var_dump(1 or "1");',
+				self::TYPE_TRUE,
 			],
 			[
-				'echo 1 xor 1;',
-				'0'
+				'var_dump(0 xor 0);',
+				self::TYPE_FALSE
 			],
 			[
-				'echo 3 % 2;',
-				'1'
+				'var_dump(0 xor 1);',
+				self::TYPE_TRUE
 			],
 			[
-				'echo 1 != 2;',
-				'1'
+				'var_dump(1 xor 0);',
+				self::TYPE_TRUE
 			],
 			[
-				'echo 2 != 1;',
-				'1'
+				'var_dump(1 xor 1);',
+				self::TYPE_FALSE
 			],
 			[
-				'echo 1 != 1;',
-				'0'
+				'var_dump(3 % 2);',
+				self::TYPE_TRUE
 			],
 			[
-				'echo "1" != 1;',
-				'0'
+				'var_dump(1 != 2);',
+				self::TYPE_TRUE
 			],
 			[
-				'echo 1 !== 2;',
-				'1'
+				'var_dump(2 != 1);',
+				self::TYPE_TRUE
 			],
 			[
-				'echo 2 !== 1;',
-				'1'
+				'var_dump(1 != 1);',
+				self::TYPE_FALSE
 			],
 			[
-				'echo 1 !== 1;',
-				'0'
+				'var_dump("1" != 1);',
+				self::TYPE_FALSE
 			],
 			[
-				'echo "1" !== 1;',
-				'1'
+				'var_dump(1 !== 2);',
+				self::TYPE_TRUE
 			],
 			[
-				'echo 1 << 2;',
+				'var_dump(2 !== 1);',
+				self::TYPE_TRUE
+			],
+			[
+				'var_dump(1 !== 1);',
+				self::TYPE_FALSE
+			],
+			[
+				'var_dump("1" !== 1);',
+				self::TYPE_TRUE
+			],
+			[
+				'var_dump(1 << 2);',
 				'4'
 			],
 			[
-				'echo 2 ** 3;',
+				'var_dump(2 ** 3);',
 				'8'
 			],
 			[
-				'echo 2 >> 1;',
-				'1'
+				'var_dump(2 >> 1);',
+				self::TYPE_TRUE
 			],
 			[
-				'echo 1 < 2;',
-				'1'
+				'var_dump(1 < 2);',
+				self::TYPE_TRUE
 			],
 			[
-				'echo 1 < 1;',
-				'0'
+				'var_dump(1 < 1);',
+				self::TYPE_FALSE
 			],
 			[
-				'echo 2 < 1;',
-				'0'
+				'var_dump(2 < 1);',
+				self::TYPE_FALSE
 			],
 			[
-				'echo 1 <= 2;',
-				'1'
+				'var_dump(1 <= 2);',
+				self::TYPE_TRUE
 			],
 			[
-				'echo 1 <= 1;',
-				'1'
+				'var_dump(1 <= 1);',
+				self::TYPE_TRUE
 			],
 			[
-				'echo 2 <= 1;',
-				'0'
+				'var_dump(2 <= 1);',
+				self::TYPE_FALSE
 			],
 			[
-				'echo 1 <=> 2;',
+				'var_dump(1 <=> 2);',
 				'-1'
 			],
 			[
-				'echo 2 <=> 1;',
-				'1'
+				'var_dump(2 <=> 1);',
+				self::TYPE_TRUE
 			],
 			[
-				'echo 1 <=> 1;',
-				'0'
+				'var_dump(1 <=> 1);',
+				self::TYPE_FALSE
 			],
 		];
 	}

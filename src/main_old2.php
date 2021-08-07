@@ -48,12 +48,14 @@ use PhpParser\Node\Expr\BinaryOp\SmallerOrEqual;
 use PhpParser\Node\Expr\BinaryOp\Spaceship;
 use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Expr\ErrorSuppress;
+use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\PostDec;
 use PhpParser\Node\Expr\PostInc;
 use PhpParser\Node\Expr\PreDec;
 use PhpParser\Node\Expr\PreInc;
 use PhpParser\Node\Expr\Print_;
 use PhpParser\Node\Expr\Variable;
+use PhpParser\Node\Name;
 use PhpParser\Node\Scalar;
 use PhpParser\Node\Scalar\DNumber;
 use PhpParser\Node\Scalar\LNumber;
@@ -201,14 +203,17 @@ class main_old2{
 				return $this->execBinaryOp($expr);
 			case $expr instanceof ConstFetch:
 				$recursion = true;
-				$value = $expr->name->parts[0];
+				$value = strtoupper($expr->name->parts[0]);
 				//$return = $this->put_Scalar();
-				if($value === "false"){
-					return $this->write_var($this->count, 0);
+				if($value === "FALSE"){
+					return $this->write_var($this->count, false);
 				}
 
-				if($value === "true"){
-					return $this->write_var($this->count, 1);
+				if($value === "TRUE"){
+					return $this->write_var($this->count, true);
+				}
+				if($value === "NULL"){
+					return $this->write_var($this->count, null);
 				}
 
 				return $expr->name->parts[0];//read const id(global...?)
@@ -310,12 +315,43 @@ class main_old2{
 				}
 				return $this->execStmts([$expr->expr], $targetid).code::PRINT.$this->put_var($targetid ?? $this->count++).$this->write_var($outputid ?? $this->count, 1);
 			case $expr instanceof AssignOp:
+				$recursion = true;
 				return $this->execAssignOp($expr);
 			case $expr instanceof ErrorSuppress:
 				$this->getLogger()->setErrorSuppress(true);
-				$result = $this->execExpr($expr->expr);
+				$result2 = $this->execExpr($expr->expr);
 				$this->getLogger()->setErrorSuppress(false);
-				return $result;
+				return $result2;
+			case $expr instanceof FuncCall:
+				$recursion = true;//
+				$name = $expr->name;
+				if(!$name instanceof Name){
+					return "";
+				}
+				$result = code::FUN_INIT.$this->put_Scalar($name->parts[0]);
+				$result1 = "";
+				$result2 = "";
+				foreach($expr->args as $arg){
+					$targetid = null;
+					$tmprecursion = false;
+					$tmp = $this->execExpr($arg->value, null, $targetid, $tmprecursion);
+					if($tmprecursion){
+						$result2 .= $tmp;
+						$result1 .= code::FUN_SEND_ARGS.$this->put_var($this->count++);
+					}else{
+						$result1 .= code::FUN_SEND_ARGS.$tmp;
+					}
+					//var_dump(opcode_dumper::hexentities($result),opcode_dumper::hexentities($result1),opcode_dumper::hexentities($result2),$recursion);
+				}
+
+				if($outputid === null){
+					$result1 .= code::FUN_SUBMIT.$this->write_varId($this->count);
+				}else{
+					$result1 .= code::FUN_SUBMIT.$this->write_varId($outputid);
+				}
+				//var_dump(opcode_dumper::hexentities($result1));
+
+				return $result2.$result.$result1;
 			case $expr instanceof Expr:
 				//var_dump(get_class($expr));
 				$recursion = true;
@@ -368,10 +404,10 @@ class main_old2{
 		$varnode = $node->var;
 		$tmp = null;
 		$solvedName = null;
-		$var1 = $this->exec_variable($varnode, $this->count, false, $tmp, true,$solvedName);
+		$var1 = $this->exec_variable($varnode, $this->count, false, $tmp, true, $solvedName);
 		$result1 = "";
 		if($tmp === null){
-			$result1 = $this->write_var($this->count,0).$result;
+			$result1 = $this->write_var($this->count, 0).$result;
 			$this->logger->warning('Undefined variable $'.$solvedName.'. opcode(+= etc): '.bin2hex($opcode).'. (writeAssignOp)');// in ?????? on line ?
 			$this->count++;
 		}
@@ -381,7 +417,7 @@ class main_old2{
 		return $result1.$opcode.$var1.code::VALUE.$var1.$result;
 	}
 
-	public function exec_variable(Variable $node, int $id, bool $force = false, ?int &$oldid = null, bool $raw = false,?string &$solvedName = null): string{//変数処理...
+	public function exec_variable(Variable $node, int $id, bool $force = false, ?int &$oldid = null, bool $raw = false, ?string &$solvedName = null): string{//変数処理...
 		if($node->name instanceof Expr){
 			//var_dump("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 			if($node->name instanceof Variable){
@@ -734,16 +770,19 @@ class main_old2{
 	}
 
 	/**
-	 * @param mixed $value
+	 * @param null|bool|float|int|string $value
 	 * @return string
 	 * @see execScalar
 	 *
 	 */
 	public function put_Scalar($value){
-		if(is_object($value)){
+		/*if(is_object($value)){
 			throw new \RuntimeException('The function "put_Scalar" cannot accept the object "'.get_class($value).'".');
-		}
+		}*/
 		switch(true){
+			case is_null($value):
+			case is_bool($value):
+				return $this->getBool($value);
 			case is_int($value):
 			case is_float($value):
 				//$value = $node->value;
@@ -755,6 +794,16 @@ class main_old2{
 			default:
 				throw new \RuntimeException('put_Scalar: "'.$value.'" is unprocessed.');
 		}
+	}
+
+	public function getBool(?bool $value): string{
+		if($value === null){
+			return code::BOOL.chr(code::TYPE_NULL);
+		}
+		if($value === true){
+			return code::BOOL.chr(code::TYPE_TRUE);
+		}
+		return code::BOOL.chr(code::TYPE_FALSE);
 	}
 
 	/**

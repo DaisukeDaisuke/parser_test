@@ -15,6 +15,10 @@ class decoder{
 	public $len;
 	/** @var mixed[] $values */
 	public $values = [];
+	/** @var ?string $tmpfuncName */
+	public $tmpfuncName = null;
+	/** @var array $tmpfuncargs */
+	public $tmpfuncargs = [];
 
 	public function __construct(){
 		//none
@@ -87,10 +91,10 @@ class decoder{
 				$return1 = $var1 ^ $var2;
 				break;
 			case code::BOOL_AND:
-				$return1 = (int) ($var1&&$var2);
+				$return1 = ($var1&&$var2);
 				break;
 			case code::BOOL_OR:
-				$return1 = (int) ($var1||$var2);
+				$return1 = ($var1||$var2);
 				break;
 			case code::COALESCE:
 				//$return1 = $var1 ?? $var2;
@@ -99,34 +103,34 @@ class decoder{
 				$return1 = $var1.$var2;
 				break;
 			case code::EQUAL:
-				$return1 = (int) ($var1 == $var2);
+				$return1 = ($var1 == $var2);
 				break;
 			case code::GREATER:
-				$return1 = (int) ($var1 > $var2);
+				$return1 = ($var1 > $var2);
 				break;
 			case code::GREATEROREQUAL:
-				$return1 = (int) ($var1 >= $var2);
+				$return1 = ($var1 >= $var2);
 				break;
 			case code::IDENTICAL:
-				$return1 = (int) ($var1 === $var2);
+				$return1 = ($var1 === $var2);
 				break;
 			case code::L_AND:
-				$return1 = (int) ($var1 and $var2);
+				$return1 = ($var1 and $var2);
 				break;
 			case code::L_OR:
-				$return1 = (int) ($var1 or $var2);
+				$return1 = ($var1 or $var2);
 				break;
 			case code::L_XOR:
-				$return1 = (int) ($var1 xor $var2);
+				$return1 = ($var1 xor $var2);
 				break;
 			case code::MOD:
 				$return1 = $var1 % $var2;
 				break;
 			case code::NOTEQUAL:
-				$return1 = (int) ($var1 != $var2);
+				$return1 = ($var1 != $var2);
 				break;
 			case code::NOTIDENTICAL:
-				$return1 = (int) ($var1 !== $var2);
+				$return1 = ($var1 !== $var2);
 				break;
 			case code::SHIFTLEFT:
 				$return1 = $var1 << $var2;
@@ -138,10 +142,10 @@ class decoder{
 				$return1 = $var1 >> $var2;
 				break;
 			case code::SMALLER:
-				$return1 = (int) ($var1 < $var2);
+				$return1 = ($var1 < $var2);
 				break;
 			case code::SMALLEROREQUAL:
-				$return1 = (int) ($var1 <= $var2);
+				$return1 = ($var1 <= $var2);
 				break;
 			case code::SPACESHIP:
 				$return1 = ($var1 <=> $var2);
@@ -169,13 +173,48 @@ class decoder{
 			case code::JMPZ://JMPZ READV === 0 INT size offset ...
 				$target = $this->decodeScalar();
 				$jmp = $this->decodeScalar();
-				if($target === 0){
+				if($target == 0){
 					$this->offset_seek($jmp);
 				}
 				return;
 			case code::JMPA:
 				$jmp = $this->decodeScalar();
 				$this->setOffset($jmp);
+				return;
+			case code::FUN_INIT:
+				$this->tmpfuncName = $this->decodeScalar();
+				$this->tmpfuncargs = [];
+				return;
+			case code::FUN_SEND_ARGS:
+				if($this->tmpfuncName === null){
+					throw new \RuntimeException("Arguments cannot be sent before the function is initialized.");
+				}
+				$this->tmpfuncargs[] = $this->decodeScalar();
+				return;
+			case code::FUN_SUBMIT:
+				$output = $this->getAddress();
+				if($this->tmpfuncName === null){
+					throw new \RuntimeException("The function cannot be sent before the function is initialized.");
+				}
+				$func = $this->tmpfuncName;
+				if($func === "var_dump"){
+					$this->user_var_dump($this->tmpfuncargs);
+					return;
+				}
+				if(!function_exists($func)){
+					throw new \RuntimeException("function ".$func." not found.");
+				}
+				//var_dump($func, $this->tmpfuncargs);
+				try{
+					/** @phpstan-ignore-next-line */
+					$result = ($func)(...$this->tmpfuncargs);
+					$this->setvalue($output, $result);
+				}catch(\Throwable $e){
+					echo "FUN_SUBMIT: final: catch Throwable.";//
+					throw new $e;//
+				}
+				$this->tmpfuncName = null;
+				$this->tmpfuncargs = [];
 				return;
 		}
 		throw new RuntimeException("Unexpected Stmt: off:".$this->getOffset().", op:".bin2hex($opcode)." not found");
@@ -195,6 +234,9 @@ class decoder{
 		}
 		if($opcode === code::VALUE){
 			return $this->getvalue(false);
+		}
+		if($opcode === code::BOOL){
+			return $this->getBool();
 		}
 		if($opcode === code::INT){
 			return $this->getInt();
@@ -233,23 +275,43 @@ class decoder{
 		throw new RuntimeException("int or Double not found");
 	}
 
+	private function getBool(): ?bool{
+		$str = $this->getByteInt();
+		if($str === code::TYPE_NULL){
+			return null;
+		}
+		return (bool) $str;
+
+		/*if($str === self::NULL_ID){
+			return null;
+		}elseif($str === 1){//TYPE_TRUE
+			return true;
+		}
+		return false;*/
+
+		/*if($str === self::TYPE_NULL){
+			return 0;
+		}
+		return $str;*/
+	}
+
 	public function getBinaryStream(): ?BinaryStream{
 		return $this->stream;
 	}
 
-	public function feof() : bool{
+	public function feof(): bool{
 		return $this->stream->feof();
 	}
 
-	public function getlen() : int{
+	public function getlen(): int{
 		return $this->len;
 	}
 
-	public function get(int $len) : string{
+	public function get(int $len): string{
 		return $this->stream->get($len);
 	}
 
-	public function getByte() : string{
+	public function getByte(): string{
 		return $this->get(1);
 	}
 
@@ -266,7 +328,7 @@ class decoder{
 	}
 
 	public function offset_seek(int $jmp): void{
-		$this->stream->setOffset($this->getOffset()+$jmp);
+		$this->stream->setOffset($this->getOffset() + $jmp);
 	}
 
 	public function getOffset(): int{
@@ -305,4 +367,39 @@ class decoder{
 	public function value(int $name){
 		return $this->values[$name];
 	}
+
+	/**
+	 * @param array<int, mixed> $tmpfuncargs
+	 */
+	private function user_var_dump(array $tmpfuncargs): void{
+		foreach($tmpfuncargs as $arg){
+			switch(true){
+				case is_null($arg);
+					echo "NULL";
+					break;
+				case $arg === true;
+					echo "bool(true)";
+					break;
+				case $arg === false;
+					echo "bool(false)";
+					break;
+				case is_int($arg);
+					echo "int(".((string) $arg).")";
+					break;
+				case is_string($arg);
+					echo 'string('.strlen($arg).') "'.$arg.'"';
+					break;
+				//case is_array($arg);
+					//echo "array(0) {\n}";
+					//break;
+				default:
+					var_dump($arg);
+					throw new \RuntimeException("dump: Received an unsupported value.");
+			}
+			echo PHP_EOL;
+		}
+
+	}
+
+
 }

@@ -4,13 +4,17 @@ namespace purser;
 
 class code{
 	//metadata
+	//int
 	public const TYPE_BYTE = 1;
 	public const TYPE_SHORT = 2;
 	public const TYPE_INT = 4;
 	public const TYPE_LONG = 8;
 	public const TYPE_DOUBLE = 9;
-
 	public const TYPE_SIZE_DOUBLE = 8;
+	//bool
+	public const TYPE_FALSE = 0;
+	public const TYPE_TRUE = 1;
+	public const TYPE_NULL = 2;
 	//type bool
 
 	//opcode
@@ -23,6 +27,7 @@ class code{
 	public const INT = "\x93";
 	public const STRING = "\x94";
 	public const VALUE = "\x95";
+	public const BOOL = "\x96";
 	//public const DOUBLE = "\xC4";
 	//public const READV = "\x00";
 
@@ -71,4 +76,9 @@ class code{
 	public const LGOTO = "\xA4";//GOTOL INT 1 1
 	public const JMPA = "\xA5";//JMPA INT 1 255
 
+
+	public const FUN_INIT = "\xB0";//FUN_INIT string size ... target
+	public const FUN_SEND_ARGS = "\xB1";//FUN_SEND_ARGS scalar
+	public const FUN_SUBMIT = "\xB2";//FUN_SUBMIT output
+	//public const FUN_RECEIVE_RETURN = "\xB2";//FUN_RECEIVE_RETURN output
 }
