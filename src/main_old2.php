@@ -4,6 +4,20 @@ namespace purser;
 
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Assign;
+use PhpParser\Node\Expr\AssignOp;
+use PhpParser\Node\Expr\AssignOp\BitwiseAnd as AssignBitwiseAnd;
+use PhpParser\Node\Expr\AssignOp\BitwiseOr as AssignBitwiseOr;
+use PhpParser\Node\Expr\AssignOp\BitwiseXor as AssignBitwiseXor;
+use PhpParser\Node\Expr\AssignOp\Coalesce as AssignCoalesce;
+use PhpParser\Node\Expr\AssignOp\Concat as AssignConcat;
+use PhpParser\Node\Expr\AssignOp\Div as AssignDiv;
+use PhpParser\Node\Expr\AssignOp\Minus as AssignMinus;
+use PhpParser\Node\Expr\AssignOp\Mod as AssignMod;
+use PhpParser\Node\Expr\AssignOp\Mul as AssignMul;
+use PhpParser\Node\Expr\AssignOp\Plus as AssignPlus;
+use PhpParser\Node\Expr\AssignOp\Pow as AssignPow;
+use PhpParser\Node\Expr\AssignOp\ShiftLeft as AssignShiftLeft;
+use PhpParser\Node\Expr\AssignOp\ShiftRight as AssignShiftRight;
 use PhpParser\Node\Expr\BinaryOp;
 use PhpParser\Node\Expr\BinaryOp\BitwiseAnd;
 use PhpParser\Node\Expr\BinaryOp\BitwiseOr;
@@ -52,6 +66,7 @@ use PhpParser\Node\Stmt\If_;
 use PhpParser\Node\Stmt\Nop;
 use pocketmine\utils\Binary;
 
+
 error_reporting(E_ALL);
 
 ini_set('xdebug.var_display_max_children', "-1");
@@ -78,7 +93,7 @@ class main_old2{
 	 * @param Stmt $node
 	 * @return string
 	 */
-	public function execStmt(Stmt $node) : string{
+	public function execStmt(Stmt $node): string{
 		$return = "";
 		switch(get_class($node)){
 			case Echo_::class:
@@ -99,7 +114,7 @@ class main_old2{
 						//$this->count++;
 						continue;
 					}
-					$return .= $this->execStmts([$expr],$targetid);//
+					$return .= $this->execStmts([$expr], $targetid);//
 					$result .= code::PRINT.$this->put_var($targetid ?? $this->count++);
 				}
 				$return .= $result;
@@ -149,11 +164,11 @@ class main_old2{
 
 				//$cond = "";
 
-				$cond = $this->putjmp($output,true,7);//7 = putunjmp len
+				$cond = $this->putjmp($output, true, 7);//7 = putunjmp len
 				foreach(array_reverse($node->cond) as $value){
 					$tmp = $this->execExpr($value);
-					$tmpjmp = $this->putjmp($cond,true, 0);//false
-					$cond = $tmp.$this->putjmpz($this->count++,"",$tmpjmp,0).$tmpjmp.$cond;//8//true
+					$tmpjmp = $this->putjmp($cond, true, 0);//false
+					$cond = $tmp.$this->putjmpz($this->count++, "", $tmpjmp, 0).$tmpjmp.$cond;//8//true
 				}
 				//$cond = $cond;
 
@@ -170,6 +185,7 @@ class main_old2{
 	/**
 	 * @param Expr $expr
 	 * @param int|null $outputid
+	 * @param int|null $targetid
 	 * @param bool $recursion
 	 * @param ?int $is_var
 	 * @return string
@@ -288,7 +304,9 @@ class main_old2{
 					$var = $expr->expr->var;
 					return $this->execExpr($expr->expr).code::PRINT.$this->exec_variable($var, $this->count).$this->write_var($outputid ?? $this->count, 1);;
 				}
-				return $this->execStmts([$expr->expr],$targetid).code::PRINT.$this->put_var($targetid ?? $this->count++).$this->write_var($outputid ?? $this->count, 1);
+				return $this->execStmts([$expr->expr], $targetid).code::PRINT.$this->put_var($targetid ?? $this->count++).$this->write_var($outputid ?? $this->count, 1);
+			case $expr instanceof AssignOp:
+				return $this->execAssignOp($expr);
 			case $expr instanceof Expr:
 				//var_dump(get_class($expr));
 				$recursion = true;
@@ -299,7 +317,59 @@ class main_old2{
 		throw new \RuntimeException('execExpr "'.get_class($expr).'" not found');
 	}
 
-	public function exec_variable(Variable $node, int $id, bool $force = false, ?int &$oldid = null, bool $raw = false) : string{//変数処理...
+	public function execAssignOp(AssignOp $node): string{
+		switch(get_class($node)){
+			case AssignBitwiseAnd::class:
+				return $this->writeAssignOp($node, code::B_AND);
+			case AssignBitwiseOr::class:
+				return $this->writeAssignOp($node, code::B_OR);
+			case AssignBitwiseXor::class:
+				return $this->writeAssignOp($node, code::B_XOR);
+			case AssignCoalesce::class:
+				return $this->writeAssignOp($node, code::COALESCE);
+			case AssignConcat::class:
+				return $this->writeAssignOp($node, code::CONCAT);
+			case AssignDiv::class:
+				return $this->writeAssignOp($node, code::DIV);
+			case AssignMinus::class:
+				return $this->writeAssignOp($node, code::MINUS);
+			case AssignMod::class:
+				return $this->writeAssignOp($node, code::MOD);
+			case AssignMul::class:
+				return $this->writeAssignOp($node, code::MUL);
+			case AssignPlus::class:
+				return $this->writeAssignOp($node, code::ADD);
+			case AssignPow::class:
+				return $this->writeAssignOp($node, code::POW);
+			case AssignShiftLeft::class:
+				return $this->writeAssignOp($node, code::SHIFTLEFT);
+			case AssignShiftRight::class:
+				return $this->writeAssignOp($node, code::SHIFTRIGHT);
+		}
+		return "";
+	}
+
+	public function writeAssignOp(AssignOp $node, string $opcode): string{
+		$recursion = false;
+		$tmp = null;
+		$result = $this->execExpr($node->expr, null, $tmp, $recursion);
+		$basecount = $this->count++;
+
+		/** @var Variable $varnode */
+		$varnode = $node->var;
+		$tmp = null;
+		$var1 = $this->exec_variable($varnode, $this->count, false, $tmp, true);
+		var_dump($tmp);
+		if($tmp === null){
+			echo 'compile: PHP Warning:  Undefined variable $j in ?????? on line ?\n';
+		}
+		if($recursion){
+			return $result.$opcode.$var1.code::VALUE.$var1.$this->put_var($basecount);
+		}
+		return $opcode.$var1.code::VALUE.$var1.$result;
+	}
+
+	public function exec_variable(Variable $node, int $id, bool $force = false, ?int &$oldid = null, bool $raw = false): string{//変数処理...
 		if($node->name instanceof Expr){
 			//var_dump("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 			if($node->name instanceof Variable){
@@ -316,11 +386,11 @@ class main_old2{
 		return $this->write_variableId($this->getValualueId($node->name, $force, $id, $oldid));//code::VALUE
 	}
 
-	public function write_variableId(int $node) : string{//変数処理...
+	public function write_variableId(int $node): string{//変数処理...
 		return code::VALUE.$this->write_varId($node);//code::VALUE
 	}
 
-	public function solveLabel(string $exec, int $label) : string{
+	public function solveLabel(string $exec, int $label): string{
 		//return $exec;
 		$array = [];
 		$len = strlen($exec);
@@ -445,7 +515,7 @@ class main_old2{
 	 * @param Stmt[]|Expr[] $nodes
 	 * @return string
 	 */
-	public function execStmts(array $nodes,?int &$targetid = null){//,bool $array = false
+	public function execStmts(array $nodes, ?int &$targetid = null){//,bool $array = false
 		$return = "";
 		/*if($array === true){
 			$return = [];
@@ -490,7 +560,7 @@ class main_old2{
 	 * @return string
 	 * @throws \RuntimeException
 	 */
-	public function execBinaryOp(BinaryOp $node, ?int $outputid = null) : string{//output //add 10 10 1 $count = 0
+	public function execBinaryOp(BinaryOp $node, ?int $outputid = null): string{//output //add 10 10 1 $count = 0
 		switch(get_class($node)){
 			case Plus::class:
 				return $this->execbinaryplus($node, code::ADD, $outputid);
@@ -555,7 +625,7 @@ class main_old2{
 	 * @param string $opcode binaryid
 	 * @return string
 	 */
-	public function execbinaryplus(BinaryOp $node, string $opcode, ?int $outputid = null) : string{
+	public function execbinaryplus(BinaryOp $node, string $opcode, ?int $outputid = null): string{
 		$recursionLeft = false;
 		$recursionRight = false;
 
@@ -607,11 +677,11 @@ class main_old2{
 	 * @param mixed $value
 	 * @return string
 	 */
-	public function write_var(int $var, $value) : string{
+	public function write_var(int $var, $value): string{
 		return code::WRITEV.$this->write_varId($var).$this->put_Scalar($value);
 	}
 
-	public function write_varId(int $var) : string{
+	public function write_varId(int $var): string{
 
 		return Binary::writeShort($var);
 	}
@@ -622,7 +692,7 @@ class main_old2{
 	 *
 	 * 指定したidの変数を読みます...
 	 */
-	public function put_var(int $var) : string{
+	public function put_var(int $var): string{
 		return code::READV.$this->write_varId($var);
 	}
 
@@ -634,11 +704,11 @@ class main_old2{
 	 * @return int
 	 * @see exec_var
 	 */
-	public function getValualueId(string $value, bool $force, int $id, ?int &$oldid) : int{
+	public function getValualueId(string $value, bool $force, int $id, ?int &$oldid): int{
 		return $this->block[$this->blockid]->get($value, $id, $force, $oldid);//$this->write_varId();
 	}
 
-	public function execScalar(Scalar $node) : string{
+	public function execScalar(Scalar $node): string{
 		switch(true){
 			case $node instanceof LNumber:
 			case $node instanceof DNumber:
@@ -677,7 +747,7 @@ class main_old2{
 	 * @param float|int $value
 	 * @return string
 	 */
-	public function getInt($value) : string{
+	public function getInt($value): string{
 		return code::INT.$this->putRawInt($value);
 	}
 
@@ -685,7 +755,7 @@ class main_old2{
 	 * @param float|int $value
 	 * @return string
 	 */
-	function putRawInt($value) : string{
+	function putRawInt($value): string{
 		$size = $this->checkIntSize($value);
 		$return = chr($size);
 		switch($size){
@@ -733,7 +803,7 @@ class main_old2{
 		return $return;
 	}
 
-	public function getString(string $value) : string{
+	public function getString(string $value): string{
 		return code::STRING.$this->getInt(strlen($value)).$value;//string_op int_op size int... string
 	}
 
@@ -761,31 +831,31 @@ class main_old2{
 		throw new \RuntimeException("checkIntSize overflow [".$value."]");
 	}
 
-	public function putjmpz(int $var, string $stmts, ?string $target = null,$offset = 0) : string{//0 => jmp
+	public function putjmpz(int $var, string $stmts, ?string $target = null, $offset = 0): string{//0 => jmp
 		if($target !== null){
-			return code::JMPZ.$this->put_var($var).$this->getInt(strlen($target)+$offset).$stmts;//
+			return code::JMPZ.$this->put_var($var).$this->getInt(strlen($target) + $offset).$stmts;//
 		}
-		return code::JMPZ.$this->put_var($var).$this->getInt(strlen($stmts) +$offset+ 1).$stmts;
+		return code::JMPZ.$this->put_var($var).$this->getInt(strlen($stmts) + $offset + 1).$stmts;
 	}
 
-	public function putjmp(string $stmts, bool $skip = false,$offset = 0) : string{
+	public function putjmp(string $stmts, bool $skip = false, $offset = 0): string{
 		if($skip === true){
-			return code::JMP.$this->getInt(strlen($stmts)+$offset);
+			return code::JMP.$this->getInt(strlen($stmts) + $offset);
 		}
-		return code::JMP.$this->getInt(strlen($stmts)+$offset).$stmts;
+		return code::JMP.$this->getInt(strlen($stmts) + $offset).$stmts;
 	}
 
-	public function putunjmp(string $stmts) : string{
-		$tmp = -strlen($stmts.code::JMP.code::INT.Binary::writeByte(4).Binary::writeInt(-strlen($stmts)-1000));
+	public function putunjmp(string $stmts): string{
+		$tmp = -strlen($stmts.code::JMP.code::INT.Binary::writeByte(4).Binary::writeInt(-strlen($stmts) - 1000));
 		return $stmts.code::JMP.code::INT.Binary::writeByte(4).Binary::writeInt($tmp);//8
 	}
 
-	public function putGotoLabel(int $label) : string{
+	public function putGotoLabel(int $label): string{
 		return code::LGOTO.$this->getInt($label);
 	}
 
 
-	public function putLabel(int $label) : string{
+	public function putLabel(int $label): string{
 		return code::LABEL.$this->getInt($label);
 	}
 }

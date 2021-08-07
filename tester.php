@@ -177,10 +177,16 @@ for($i=0; $i<101; $i++){
 for(; false,false,false,false,false;){
 echo 1;
 }echo 0;';*/
-$code='for($i = 1; $i <= 10; $i++){
-					echo $i;
-				}';
-
+//for ($i = 1, $j = 0; $i <= 10; $j += $i, print $i, $i++);
+//$j=0;$j += (1+2);echo $j;
+//$code='$j += 1;echo $j;';
+$code='$j += 1;echo $j;';
+$a = 5;
+$a *= 2;
+echo $a;
+$code='$a = 5;
+				$a *= 2;
+				echo $a;';
 
 /*$code='$i=100;echo $i--;echo $i--;echo $i--;';*/
 /*$code='$i=100;
@@ -203,7 +209,7 @@ $output = $main_old->execStmts($stmts);
 $time = microtime(true) - $time_start;
 echo $time." 秒";
 
-var_dump($main_old);
+//var_dump($main_old);
 
 //file_put_contents(".\\output.bin", $output);
 

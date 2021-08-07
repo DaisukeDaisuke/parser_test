@@ -76,6 +76,10 @@ class for_Test extends TestCase{
 				'0',
 			],
 			[
+				'for ($i = 1, $j = 0; $i <= 10; $j += $i, print $i, $i++);',
+				'12345678910',
+			],
+			[
 				'for($i=0; $i<101; $i++){
 					if($i%15 === 0){
 					    echo "FizzBuzz";
