@@ -134,7 +134,7 @@ class opcode_dumper{
 					$return .= ' BOOL:'.bin2hex($str[$i++]).';';
 					$return .= ' var:';
 
-					$bool = ord($str[$i++]);
+					$bool = ord($str[$i]);
 					var_dump($bool);
 					if($bool === code::TYPE_NULL){
 						$return .= "null";
@@ -295,6 +295,9 @@ class opcode_dumper{
 					break;
 				case code::JMPZ:
 					$return .= ' JMPZ:'.bin2hex($str[$i]).';';
+					break;
+				case code::SJMP:
+					$return .= ' SJMP:'.bin2hex($str[$i]).';';
 					break;
 				case code::LABEL:
 					$return .= ' LABEL:'.bin2hex($str[$i]).';';

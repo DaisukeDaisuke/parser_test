@@ -173,10 +173,14 @@ for($i=0; $i<101; $i++){
 }';
 
 
-/*$code='
-for(; false,false,false,false,false;){
+$code='
+for(; true;){
+echo 0;
+if(true){
+	break;
+}
 echo 1;
-}echo 0;';*/
+}';
 //for ($i = 1, $j = 0; $i <= 10; $j += $i, print $i, $i++);
 //$j=0;$j += (1+2);echo $j;
 //$code='@$j += 1;echo $j;';
@@ -184,7 +188,7 @@ echo 1;
 //$code='$i=1;$b=var_dump(null,true,false,$i+1,2,2+3,"test");';
 //$code='$a="test";echo strlen(substr($a,1,2));';
 
-$code='$a="test";echo strlen($a,1,2);';//!!
+//$code='$a="test";echo strlen($a,1,2);';//!!
 
 //$code='for ($i = 1, $j = 0; $i <= 10; $j += $i, print $i, $i++);';
 
@@ -216,7 +220,7 @@ echo $time." 秒";
 var_dump(opcode_dumper::hexentities($output),opcode_dumper::hexentities1($output));
 
 
-//ob_start();
+/*//ob_start();
 $decoder = new decoder();
 $decoder->decode($output);
 //$log = ob_get_clean();
@@ -228,5 +232,5 @@ if(isset($binaryStream)){
 	}
 }else{
 	var_dump("!!");
-}
+}*/
 

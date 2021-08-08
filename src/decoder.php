@@ -167,6 +167,7 @@ class decoder{
 				echo $this->decodeScalar();
 				return;
 			case code::JMP:
+			case code::SJMP:
 				$jmp = $this->decodeScalar();
 				$this->offset_seek($jmp);
 				return;

@@ -6,12 +6,14 @@ class Logger{
 	public const TYPE_MESSAGE = 0;
 	public const TYPE_LEVEL = 1;
 
+
 	/**
 	 * @var bool $errorSuppress
 	 */
 	private $errorSuppress = false;
 
 	public const WARNING = 2;
+	public const FINAL = 3;
 	/**
 	 * @var array<int, array{string, int}> $logs
 	 */
@@ -34,7 +36,7 @@ class Logger{
 			case self::WARNING:
 				if($this->isErrorSuppress()) return;
 				$error = "php compiler warning: ".$message;
-				$this->echo($error. PHP_EOL);
+				$this->echo($error.PHP_EOL);
 				$this->logs[] = [$error, $level];
 				break;
 		}
@@ -63,5 +65,9 @@ class Logger{
 	 */
 	public function getLogs(): array{
 		return $this->logs;
+	}
+
+	public function final(\RuntimeException $exception): void{
+		$this->log("PHP Fatal error:".$exception->getMessage(), self::FINAL);
 	}
 }

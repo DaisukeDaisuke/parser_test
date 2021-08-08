@@ -67,21 +67,21 @@ class echoTest extends TestCase{
 				'echo ((2*1+1)+(2/1+3))."_test";',
 				'8_test',
 			],
-			/*[
-				'echo 1 === 0;',
-				'false',
+/*			[
+				'var_dump(1 === 0);',
+				'bool(false)',
 			],
 			[
-				'echo 1 === 1;',
-				'true',
+				'var_dump(1 === 1);',
+				'bool(true)',
 			],
 			[
-				'echo true === false;',
-				'false',
+				'var_dump(true === false);',
+				'bool(false)',
 			],
 			[
-				'echo true === true;',
-				'true',
+				'var_dump(true === true);',
+				'bool(true)',
 			],*/
 			[
 				"echo ((2*1+1)+(2/1+3)-(2/(5*6+20)*(5*(6/2))))+7.4;",

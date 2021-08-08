@@ -61,6 +61,7 @@ use PhpParser\Node\Scalar\DNumber;
 use PhpParser\Node\Scalar\LNumber;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt;
+use PhpParser\Node\Stmt\Break_;
 use PhpParser\Node\Stmt\Echo_;
 use PhpParser\Node\Stmt\Else_;
 use PhpParser\Node\Stmt\Expression;
@@ -89,6 +90,11 @@ class main_old2{
 	public $block = [];
 	/** @var Logger $logger */
 	public $logger;
+
+	/** @var array<int, scopenode> $forscope id, scopenode */
+	public $forscope = [];
+	/** @var ?int $currentlyScope */
+	public $currentlyScope = null;
 
 	public function __construct(bool $is_phpunit = false){
 		$this->block[$this->blockid] = new CodeBlock($this->blockid);
@@ -155,6 +161,10 @@ class main_old2{
 				return $this->execExpr($node->expr);
 			case For_::class:
 				/** @var For_ $node */
+				$scope = $this->label_count++;
+				$scopenode = new scopenode($this->currentlyScope, $scope);
+				$this->forscope[$scope] = $scopenode;
+				$this->currentlyScope = $scope;
 
 				$init = "";
 				foreach($node->init as $value){
@@ -182,7 +192,50 @@ class main_old2{
 				//$output = $init.$this->putunjmp($output);
 				//$output = $init.$cond.$this->putunjmp($output);
 				$unjmp = $this->putunjmp($output);
+				if($scopenode->isUsed()){
+					//$unjmp .= $this->putLabel($scope);
+					var_dump(opcode_dumper::hexentities($unjmp));
+					$unjmp = $this->solveLabel($unjmp, $scope);
+					var_dump(opcode_dumper::hexentities($unjmp));
+				}
+				unset($this->forscope[$scope]);
+				$this->currentlyScope = $scope;
+
 				return $init.$unjmp;
+			case break_::class;
+
+				if($this->currentlyScope === null){
+					throw new \RuntimeException("Internal error: Unexpected break. (execStmt)");
+				}
+				$scopenode = $this->forscope[$this->currentlyScope] ?? null;
+				if($scopenode === null){
+					throw new \RuntimeException("Internal error: scope ".$this->currentlyScope." not found. (execStmt)");
+				}
+				/** @var Expr|int|null $num */
+				/** @var break_ $node */
+				$num = $node->num;
+
+				if($num instanceof LNumber){
+					$num = $num->value;
+				}elseif($num instanceof Scalar){//$num instanceof Variable||$num instanceof ConstFetch||$num instanceof FuncCall
+					throw new phpFinalException("'break' operator accepts only positive integers");
+				}
+
+				if($num instanceof Expr||($num !== null&&$num < 1)){
+					throw new phpFinalException("'break' operator with non-integer operand is no longer supported");
+				}
+				//throw new \RuntimeException('The "break 1+2;" syntax is not supported.');
+				$id = $scopenode->getId();
+				$breaknum = $num ?? 1;
+				for($i = 1; $i <= $breaknum - 1; $i++){
+					$scopenode = $this->forscope[$scopenode->getParent()] ?? null;
+					if($scopenode === null){
+						throw new phpFinalException("Cannot 'break' ".$breaknum." levels");
+					}
+					$id = $scopenode->getId();
+				}
+				$scopenode->onUse();
+				return $this->putGotoLabel($id);
 		}
 		return "";//code::nop
 	}
@@ -325,8 +378,7 @@ class main_old2{
 				if(!$name instanceof Name){
 					return "";
 				}
-				$result = code::FUN_INIT.$this->put_Scalar($name->parts[0]);
-				$result1 = "";
+				$result1 = code::FUN_INIT.$this->put_Scalar($name->parts[0]);
 				$result2 = "";
 				foreach($expr->args as $arg){
 					$targetid = null;
@@ -338,7 +390,6 @@ class main_old2{
 					}else{
 						$result1 .= code::FUN_SEND_ARGS.$tmp;
 					}
-					//var_dump(opcode_dumper::hexentities($result),opcode_dumper::hexentities($result1),opcode_dumper::hexentities($result2),$recursion);
 				}
 
 				if($outputid === null){
@@ -346,9 +397,7 @@ class main_old2{
 				}else{
 					$result1 .= code::FUN_SUBMIT.$this->write_varId($outputid);
 				}
-				//var_dump(opcode_dumper::hexentities($result1));
-
-				return $result2.$result.$result1;
+				return $result2.$result1;
 			case $expr instanceof Expr:
 				//var_dump(get_class($expr));
 				$recursion = true;
@@ -524,13 +573,20 @@ class main_old2{
 				case code::SPACESHIP:
 				case code::NOTEQUAL:
 				case code::ABC:
+				case code::FUN_SUBMIT:
+				case code::VALUE:
 					$i += 3;
+					break;
+				case code::BOOL:
+					$i += 2;
 					break;
 				case code::PRINT:
 				case code::JMP:
 				case code::JMPZ:
 				case code::LABEL:
 				case code::JMPA:
+				case code::FUN_INIT:
+				case code::FUN_SEND_ARGS:
 					$i++;
 					break;
 				case code::LGOTO:
@@ -892,14 +948,14 @@ class main_old2{
 		throw new \RuntimeException("checkIntSize overflow [".$value."]");
 	}
 
-	public function putjmpz(int $var, string $stmts, ?string $target = null,int $offset = 0): string{//0 => jmp
+	public function putjmpz(int $var, string $stmts, ?string $target = null, int $offset = 0): string{//0 => jmp
 		if($target !== null){
 			return code::JMPZ.$this->put_var($var).$this->getInt(strlen($target) + $offset).$stmts;//
 		}
 		return code::JMPZ.$this->put_var($var).$this->getInt(strlen($stmts) + $offset + 1).$stmts;
 	}
 
-	public function putjmp(string $stmts, bool $skip = false,int $offset = 0): string{
+	public function putjmp(string $stmts, bool $skip = false, int $offset = 0): string{
 		if($skip === true){
 			return code::JMP.$this->getInt(strlen($stmts) + $offset);
 		}

@@ -71,6 +71,7 @@ class code{
 	public const PRINT = "\xA0";
 	public const JMP = "\xA1";//JMPZ int...? //relative
 	public const JMPZ = "\xA2";//JMPZ READV === 0 INT size offset ...
+	public const SJMP = "\xA4";//JMPZ int...? //relative
 
 	public const LABEL = "\xA3";//LABEL INT 1 1
 	public const LGOTO = "\xA4";//GOTOL INT 1 1
