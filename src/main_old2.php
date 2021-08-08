@@ -128,7 +128,7 @@ class main_old2{
 				return $return;
 			case If_::class://...?
 				//ConstFetch
-				$return = "";
+				//$return = "";
 				$label = $this->label_count;
 				$expr = $this->execExpr($node->cond);
 				$ifcount = $this->count++;
@@ -136,7 +136,7 @@ class main_old2{
 				$else = null;
 
 				if(isset($node->elseifs[0])){
-					$return6 = "";
+					//$return6 = "";
 					foreach($node->elseifs as $elseif){
 						$elseifs .= $this->execExpr($elseif->cond).$this->putjmpz($this->count++, $this->execStmts($elseif->stmts).$this->putGotoLabel($label));
 					}
@@ -182,8 +182,7 @@ class main_old2{
 				//$output = $init.$this->putunjmp($output);
 				//$output = $init.$cond.$this->putunjmp($output);
 				$unjmp = $this->putunjmp($output);
-				$output = $init.$unjmp;
-				return $output;
+				return $init.$unjmp;
 		}
 		return "";//code::nop
 	}
@@ -196,7 +195,7 @@ class main_old2{
 	 * @param ?int $is_var
 	 * @return string
 	 */
-	public function execExpr(Expr $expr, ?int $outputid = null, ?int &$targetid = null, bool &$recursion = false, ?int &$is_var = null){//array...?
+	public function execExpr(Expr $expr, ?int $outputid = null, ?int &$targetid = null, bool &$recursion = false, ?int &$is_var = null): string{//array...?
 		switch(true){
 			case $expr instanceof BinaryOp:
 				$recursion = true;
@@ -223,8 +222,7 @@ class main_old2{
 				//$recursion = true;//!!!!!!!!!
 				//$is_var = true;
 
-				$id = $this->exec_variable($expr, $this->count);
-				return $id;
+				return $this->exec_variable($expr, $this->count);
 			case $expr instanceof PreInc://++$i;
 				$recursion = true;//!!!!!!!!!
 				//$is_var = true;
@@ -261,7 +259,6 @@ class main_old2{
 				//var_dump("!!!!!!!!!!!!!!!!!");
 
 				//$id = $this->execExpr($expr->var);
-				;
 				/** @var Variable $value */
 				$value = $expr->var;
 
@@ -428,11 +425,10 @@ class main_old2{
 			return "";//!!
 		}
 		//return $this->write_variableId($this->count);
+		$solvedName = $node->name;
 		if($raw === true){
-			$solvedName = $node->name;
 			return $this->write_varId($this->getValualueId($solvedName, $force, $id, $oldid));
 		}
-		$solvedName = $node->name;
 		return $this->write_variableId($this->getValualueId($solvedName, $force, $id, $oldid));//code::VALUE
 	}
 
@@ -563,9 +559,10 @@ class main_old2{
 
 	/**
 	 * @param Stmt[]|Expr[] $nodes
+	 * @param int|null $targetid
 	 * @return string
 	 */
-	public function execStmts(array $nodes, ?int &$targetid = null){//,bool $array = false
+	public function execStmts(array $nodes, ?int &$targetid = null): string{//,bool $array = false
 		$return = "";
 		/*if($array === true){
 			$return = [];
@@ -607,8 +604,8 @@ class main_old2{
 
 	/**
 	 * @param BinaryOp $node
+	 * @param int|null $outputid
 	 * @return string
-	 * @throws \RuntimeException
 	 */
 	public function execBinaryOp(BinaryOp $node, ?int $outputid = null): string{//output //add 10 10 1 $count = 0
 		switch(get_class($node)){
@@ -673,6 +670,7 @@ class main_old2{
 	/**
 	 * @param BinaryOp $node
 	 * @param string $opcode binaryid
+	 * @param int|null $outputid
 	 * @return string
 	 */
 	public function execbinaryplus(BinaryOp $node, string $opcode, ?int $outputid = null): string{
@@ -775,7 +773,7 @@ class main_old2{
 	 * @see execScalar
 	 *
 	 */
-	public function put_Scalar($value){
+	public function put_Scalar($value): string{
 		/*if(is_object($value)){
 			throw new \RuntimeException('The function "put_Scalar" cannot accept the object "'.get_class($value).'".');
 		}*/
@@ -876,7 +874,7 @@ class main_old2{
 	 * @return int
 	 * @throws \RuntimeException
 	 */
-	public function checkIntSize($value){
+	public function checkIntSize($value): int{
 		if(is_float($value)){
 			return code::TYPE_DOUBLE;
 		}
