@@ -181,6 +181,7 @@ if(true){
 }
 echo 1;
 }';
+
 //for ($i = 1, $j = 0; $i <= 10; $j += $i, print $i, $i++);
 //$j=0;$j += (1+2);echo $j;
 //$code='@$j += 1;echo $j;';
@@ -220,7 +221,7 @@ echo $time." 秒";
 var_dump(opcode_dumper::hexentities($output),opcode_dumper::hexentities1($output));
 
 
-/*//ob_start();
+//ob_start();
 $decoder = new decoder();
 $decoder->decode($output);
 //$log = ob_get_clean();
@@ -232,5 +233,4 @@ if(isset($binaryStream)){
 	}
 }else{
 	var_dump("!!");
-}*/
-
+}

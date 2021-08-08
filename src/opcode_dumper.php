@@ -84,7 +84,7 @@ class opcode_dumper{
 							$return1 = Binary::readSignedByte($str[$i++]);
 							break;
 						case code::TYPE_SHORT://short
-							$return1 = Binary::readLShort(substr($str, $i, 2));
+							$return1 = Binary::readShort(substr($str, $i, 2));
 							$return .= ' :'.bin2hex($str[$i++]).';';
 							$return .= ' :'.bin2hex($str[$i]).';';
 							break;
@@ -135,7 +135,7 @@ class opcode_dumper{
 					$return .= ' var:';
 
 					$bool = ord($str[$i]);
-					var_dump($bool);
+					//var_dump($bool);
 					if($bool === code::TYPE_NULL){
 						$return .= "null";
 					}elseif($bool === code::TYPE_TRUE){
@@ -143,7 +143,7 @@ class opcode_dumper{
 					}elseif($bool === code::TYPE_FALSE){
 						$return .= "false";
 					}
-					$return .= ";";
+					$return .= ";".PHP_EOL;
 					break;
 				case code::ADD:
 					$return .= ' ADD?:'.bin2hex($str[$i++]).';';
@@ -304,6 +304,7 @@ class opcode_dumper{
 					break;
 				case code::LGOTO:
 					$return .= ' LGOTO:'.bin2hex($str[$i]).';';
+					//$return .= ' var:'.bin2hex($str[$i++]).';';
 					break;
 				case code::JMPA:
 					$return .= ' JMPA:'.bin2hex($str[$i]).';';

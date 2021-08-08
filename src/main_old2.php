@@ -133,10 +133,11 @@ class main_old2{
 
 				return $return;
 			case If_::class://...?
+				/** @var If_ $node */
 				//ConstFetch
 				//$return = "";
 				$label = $this->label_count;
-				$expr = $this->execExpr($node->cond);
+				$expr = $this->execStmts([$node->cond]);
 				$ifcount = $this->count++;
 				$elseifs = null; // 00 = null
 				$else = null;
@@ -154,6 +155,8 @@ class main_old2{
 
 				$stmts = $this->execStmts($node->stmts).$this->putGotoLabel($label);
 
+
+				//var_dump(opcode_dumper::hexentities($expr.$this->putjmpz($ifcount, $stmts).$elseifs.$else));
 				return $this->solveLabel($expr.$this->putjmpz($ifcount, $stmts).$elseifs.$else, $label);//.$this->putLabel($label); $else
 			case Else_::class:
 				return $this->execStmts($node->stmts);//JMPZ
@@ -583,16 +586,19 @@ class main_old2{
 				case code::PRINT:
 				case code::JMP:
 				case code::JMPZ:
+				case code::SJMP://
 				case code::LABEL:
 				case code::JMPA:
 				case code::FUN_INIT:
 				case code::FUN_SEND_ARGS:
 					$i++;
 					break;
-				case code::LGOTO:
+				case code::LGOTO://LGOTO INT SIZE 1
 					$start = $i;
-					$i += 3;
-					$array[] = [$start, 3, $i++];
+					//$tmpsize = ord($exec[$i+2]);
+					//var_dump($tmpsize);
+					$i += 5;
+					$array[] = [$start, 5, $i++];
 					/*if($label === $return1){
 
 					}*/
@@ -604,10 +610,11 @@ class main_old2{
 		$len = strlen($exec);
 		foreach(array_reverse($array) as $value){
 			[$start, $len1, $end] = $value; //$skip_replace
-			$new = code::JMP.$this->getInt($len - ($end + 0));
+			$new = code::JMP.code::INT.chr(code::TYPE_SHORT).Binary::writeShort($len - ($end + 0));//$this->getInt($len - ($end + 0));
 			/** @var string $exec */
 			$exec = substr_replace($exec, '', $start, $len1);
 			$exec = substr_replace($exec, $new, $start, 0);
+			var_dump(opcode_dumper::hexentities($exec));
 			$len = strlen($exec);
 		}
 		return $exec;
@@ -952,7 +959,7 @@ class main_old2{
 		if($target !== null){
 			return code::JMPZ.$this->put_var($var).$this->getInt(strlen($target) + $offset).$stmts;//
 		}
-		return code::JMPZ.$this->put_var($var).$this->getInt(strlen($stmts) + $offset + 1).$stmts;
+		return code::JMPZ.$this->put_var($var).$this->getInt(strlen($stmts) + $offset + 0).$stmts;
 	}
 
 	public function putjmp(string $stmts, bool $skip = false, int $offset = 0): string{
@@ -968,7 +975,8 @@ class main_old2{
 	}
 
 	public function putGotoLabel(int $label): string{
-		return code::LGOTO.$this->getInt($label);
+		var_dump(strlen(code::LGOTO.code::INT.chr(code::TYPE_SHORT).Binary::writeShort($label)));
+		return code::LGOTO.code::INT.chr(code::TYPE_SHORT).Binary::writeShort($label);
 	}
 
 
