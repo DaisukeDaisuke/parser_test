@@ -48,13 +48,14 @@ class function_callTest extends TestCase{
 	public function providetestisInsideHangingBox(): array{
 		return [
 			[
-				'$i=1;$b=var_dump(null,true,false,$i+1,2,2+3,"test");',
+				'$i=1;$b=var_dump(null,true,false,$i+1,2,2+3,1.5,"test");',
 				'NULL
 bool(true)
 bool(false)
 int(2)
 int(2)
 int(5)
+float(1.5)
 string(4) "test"
 '
 			],

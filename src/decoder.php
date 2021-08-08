@@ -17,7 +17,7 @@ class decoder{
 	public $values = [];
 	/** @var ?string $tmpfuncName */
 	public $tmpfuncName = null;
-	/** @var array $tmpfuncargs */
+	/** @var array<int, mixed> $tmpfuncargs */
 	public $tmpfuncargs = [];
 
 	public function __construct(){
@@ -159,7 +159,7 @@ class decoder{
 	/**
 	 * @param string $opcode
 	 * @return void
-	 * @throws RuntimeException
+	 * @throws RuntimeException|\Throwable
 	 */
 	public function decodeStmt_array(string $opcode): void{
 		switch($opcode){
@@ -385,6 +385,9 @@ class decoder{
 					break;
 				case is_int($arg);
 					echo "int(".((string) $arg).")";
+					break;
+				case is_float($arg);
+					echo "float(".((string) $arg).")";
 					break;
 				case is_string($arg);
 					echo 'string('.strlen($arg).') "'.$arg.'"';

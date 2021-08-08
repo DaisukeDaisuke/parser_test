@@ -311,7 +311,7 @@ class main_old2{
 				if($expr->expr instanceof Assign){//print $i = 100;
 					/** @var Variable $var */
 					$var = $expr->expr->var;
-					return $this->execExpr($expr->expr).code::PRINT.$this->exec_variable($var, $this->count).$this->write_var($outputid ?? $this->count, 1);;
+					return $this->execExpr($expr->expr).code::PRINT.$this->exec_variable($var, $this->count).$this->write_var($outputid ?? $this->count, 1);
 				}
 				return $this->execStmts([$expr->expr], $targetid).code::PRINT.$this->put_var($targetid ?? $this->count++).$this->write_var($outputid ?? $this->count, 1);
 			case $expr instanceof AssignOp:
@@ -894,14 +894,14 @@ class main_old2{
 		throw new \RuntimeException("checkIntSize overflow [".$value."]");
 	}
 
-	public function putjmpz(int $var, string $stmts, ?string $target = null, $offset = 0): string{//0 => jmp
+	public function putjmpz(int $var, string $stmts, ?string $target = null,int $offset = 0): string{//0 => jmp
 		if($target !== null){
 			return code::JMPZ.$this->put_var($var).$this->getInt(strlen($target) + $offset).$stmts;//
 		}
 		return code::JMPZ.$this->put_var($var).$this->getInt(strlen($stmts) + $offset + 1).$stmts;
 	}
 
-	public function putjmp(string $stmts, bool $skip = false, $offset = 0): string{
+	public function putjmp(string $stmts, bool $skip = false,int $offset = 0): string{
 		if($skip === true){
 			return code::JMP.$this->getInt(strlen($stmts) + $offset);
 		}

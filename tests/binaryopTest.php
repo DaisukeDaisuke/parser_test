@@ -51,35 +51,35 @@ class binaryopTest extends TestCase{
 		return [
 			[
 				'var_dump(20 + 30);',
-				'50',
+				'int(50)',
 			],
 			[
 				'var_dump(20 * 30);',
-				'600',
+				'int(600)',
 			],
 			[
 				'var_dump(20 / 20);',
-				'1',
+				'int(1)',
 			],
 			[
 				'var_dump(20 - 30);',
-				'-10',
+				'int(-10)',
 			],
 			[
 				'var_dump(1 & 2);',
-				'0',
+				'int(0)',
 			],
 			[
 				'var_dump(1 | 2);',
-				'3',
+				'int(3)',
 			],
 			[
 				'var_dump(1 ^ 2);',
-				'3',
+				'int(3)',
 			],
 			[
 				'var_dump(1 && 1);',
-				'1',
+				self::TYPE_TRUE,
 			],
 			[
 				'var_dump(1 && 0);',
@@ -91,7 +91,7 @@ class binaryopTest extends TestCase{
 			],
 			[
 				'var_dump(0 && 0);',
-				self::TYPE_TRUE,
+				self::TYPE_FALSE,
 			],
 			[
 				'var_dump(1 || 1);',
@@ -112,11 +112,11 @@ class binaryopTest extends TestCase{
 			//code::COALESCE
 			[
 				'var_dump("1"."2");',
-				'12',
+				'string(2) "12"',
 			],
 			[
 				'var_dump((1).(2));',
-				'12',
+				'string(2) "12"',
 			],
 			[
 				'var_dump(1 == 2);',
@@ -226,7 +226,7 @@ class binaryopTest extends TestCase{
 			],
 			[
 				'var_dump(3 % 2);',
-				self::TYPE_TRUE
+				'int(1)'
 			],
 			[
 				'var_dump(1 != 2);',
@@ -262,15 +262,15 @@ class binaryopTest extends TestCase{
 			],
 			[
 				'var_dump(1 << 2);',
-				'4'
+				'int(4)'
 			],
 			[
 				'var_dump(2 ** 3);',
-				'8'
+				'int(8)'
 			],
 			[
 				'var_dump(2 >> 1);',
-				self::TYPE_TRUE
+				'int(1)'
 			],
 			[
 				'var_dump(1 < 2);',
@@ -298,15 +298,15 @@ class binaryopTest extends TestCase{
 			],
 			[
 				'var_dump(1 <=> 2);',
-				'-1'
+				'int(-1)'
 			],
 			[
 				'var_dump(2 <=> 1);',
-				self::TYPE_TRUE
+				'int(1)'
 			],
 			[
 				'var_dump(1 <=> 1);',
-				self::TYPE_FALSE
+				'int(0)'
 			],
 		];
 	}

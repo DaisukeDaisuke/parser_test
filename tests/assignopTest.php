@@ -29,11 +29,11 @@ class assignopTest extends TestCase{
 		foreach($main_old->getLogger()->getLogs() as $key => $array){
 			if($array[Logger::TYPE_LEVEL] === Logger::WARNING){
 				self::assertEquals(true, isset($errors[$key]),"key ".$key." not found");
-				var_dump($array[Logger::TYPE_MESSAGE]);
+				//var_dump($array[Logger::TYPE_MESSAGE]);
 				self::assertEquals(true, $errors[$key] === $array[Logger::TYPE_MESSAGE]);
 			}
 		}
-		//self::assertEquals(count($errors), count($main_old->getLogger()->getLogs()));
+		self::assertEquals(count($errors), count($main_old->getLogger()->getLogs()));
 		//var_dump($code, $main_old->hexentities($output));
 
 		ob_start();

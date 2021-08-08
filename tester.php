@@ -184,7 +184,7 @@ echo 1;
 //$code='$i=1;$b=var_dump(null,true,false,$i+1,2,2+3,"test");';
 //$code='$a="test";echo strlen(substr($a,1,2));';
 
-//$code='$a="test";echo strlen($a,1,2);';//!!
+$code='$a="test";echo strlen($a,1,2);';//!!
 
 //$code='for ($i = 1, $j = 0; $i <= 10; $j += $i, print $i, $i++);';
 
