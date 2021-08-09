@@ -16,13 +16,11 @@ jobs:
         id: composer-cache
         uses: actions/cache@v2
         with:
-          id: cache
           path: vendor
           key: php-${{ hashFiles('**/composer.lock') }}
           restore-keys: |
             php-${{ hashFiles('**/composer.lock') }}
       - name: update autoload or Install dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
         run: (test -d vendor && (composer dump-autoload)) || (composer install --no-dev --prefer-dist --no-progress --no-suggest)
      
   test:

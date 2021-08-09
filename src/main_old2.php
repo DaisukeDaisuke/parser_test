@@ -601,7 +601,6 @@ class main_old2{
 					//var_dump($tmpsize);
 					$i += 5;
 					if($tmpid !== $label){
-						var_dump("skiped");
 						break;
 					}
 					$array[] = [$start, 5, $i++];

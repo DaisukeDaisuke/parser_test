@@ -4,7 +4,7 @@ use PhpParser\ParserFactory;
 use PHPUnit\Framework\TestCase;
 use purser\decoder;
 use purser\main_old2;
-use purser\opcode_dumper;
+use purser\phpFinalException;
 
 class for_Test extends TestCase{
 	/**
@@ -14,9 +14,10 @@ class for_Test extends TestCase{
 	 * @dataProvider providetestisInsideHangingBox
 	 * @param string $code
 	 * @param string $output1
+	 * @param string|null $compilerfinalerror
 	 * @return void
 	 */
-	public function testisInsideHangingBox(string $code, string $output1){
+	public function testisInsideHangingBox(string $code, string $output1, ?string $compilerfinalerror = null){
 		$parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7);
 		$stmts = $parser->parse("<?php\n".$code);
 
@@ -24,8 +25,21 @@ class for_Test extends TestCase{
 			throw new \RuntimeException("phpParser crashed");
 		}
 
-		$main_old = new main_old2();
-		$output = $main_old->execStmts($stmts);
+		try{
+			$main_old = new main_old2();
+			$output = $main_old->execStmts($stmts);
+		}catch(phpFinalException $exception){
+			if($compilerfinalerror !== null){
+				self::assertEquals($exception->getMessage(), $compilerfinalerror);
+				return;
+			}
+			throw new $exception;
+		}
+
+		if($compilerfinalerror !== null){
+			throw new \RuntimeException("phpFinalException '".$compilerfinalerror."' was not thrown.");
+		}
+
 
 		//var_dump($test = opcode_dumper::hexentities($output));
 
@@ -96,6 +110,31 @@ class for_Test extends TestCase{
 
 			],
 			[
+				'for($i=0; $i<101; $i++){
+					$i++;
+					echo $i;
+					if($i >= 10){
+						echo ",";
+						break;
+						echo ",";
+					}
+				}
+				echo 5;',
+				'1357911,5'
+			],
+			[
+				'for($i=0; $i<101; $i++){
+					echo $i;
+					if($i === 10){
+						echo ",";
+						break;
+						echo ",";
+					}
+				}
+				echo 5;',
+				'012345678910,5'
+			],
+			[
 				'for(;true;){
 					echo 1;
 					if(true){
@@ -107,6 +146,63 @@ class for_Test extends TestCase{
 				}
 				echo 5;',
 				'125'
+			],
+			[
+				'for(;true;){
+					for(;true;){
+						echo 1;
+						if(true){
+							echo 2;
+							break 2;
+							echo 3;
+						}
+						echo 4;
+					}
+				}
+				echo 5;',
+				'125',
+			],
+			[
+				'for(;true;){
+					break 2;
+				}
+				echo 1;',
+				'',
+				"Cannot 'break' 2 levels",
+			],
+			[
+				'for(;true;){
+					for(;true;){
+						break 3;
+					}
+				}
+				echo 1;',
+				'',
+				"Cannot 'break' 3 levels",
+			],
+			[
+				'for(;true;){
+					break -1;
+				}
+				echo 5;',
+				'',
+				"'break' operator with non-integer operand is no longer supported",
+			],
+			[
+				'for(;true;){
+					break 1.5;
+				}
+				echo 5;',
+				'',
+				"'break' operator accepts only positive integers",
+			],
+			[
+				'for(;true;){
+					break 1+1;
+				}
+				echo 5;',
+				'',
+				"'break' operator with non-integer operand is no longer supported",
 			],
 		];
 	}

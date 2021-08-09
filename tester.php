@@ -172,17 +172,26 @@ for($i=0; $i<101; $i++){
     echo "\n";
 }';
 
+for($i=0; $i<101; $i++){
+	$i++;
+	echo $i;
+	if($i >= 10){
+		echo ",";
+		break;
+		echo ",";
+	}
+}
+echo 5;
 
-$code='
-if(1+2===3){
-					echo "test print";
-				}elseif(1===1){
-					echo "a";
-				}elseif(1===1){
-					echo "b";
-				}else{
-					echo "c";
-				}';
+$code='for($i=0; $i<101; $i++){
+					echo $i;
+					if($i === 10){
+						echo ",";
+						break;
+						echo ",";
+					}
+				}
+				echo 5;';
 //125
 
 //for ($i = 1, $j = 0; $i <= 10; $j += $i, print $i, $i++);
