@@ -174,13 +174,16 @@ for($i=0; $i<101; $i++){
 
 
 $code='
-for(; true;){
-echo 0;
-if(true){
-	break;
-}
-echo 1;
-}';
+if(1+2===3){
+					echo "test print";
+				}elseif(1===1){
+					echo "a";
+				}elseif(1===1){
+					echo "b";
+				}else{
+					echo "c";
+				}';
+//125
 
 //for ($i = 1, $j = 0; $i <= 10; $j += $i, print $i, $i++);
 //$j=0;$j += (1+2);echo $j;

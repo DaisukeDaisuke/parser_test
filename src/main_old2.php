@@ -197,9 +197,9 @@ class main_old2{
 				$unjmp = $this->putunjmp($output);
 				if($scopenode->isUsed()){
 					//$unjmp .= $this->putLabel($scope);
-					var_dump(opcode_dumper::hexentities($unjmp));
+					//var_dump(opcode_dumper::hexentities($unjmp));
 					$unjmp = $this->solveLabel($unjmp, $scope);
-					var_dump(opcode_dumper::hexentities($unjmp));
+					//var_dump(opcode_dumper::hexentities($unjmp));
 				}
 				unset($this->forscope[$scope]);
 				$this->currentlyScope = $scope;
@@ -595,10 +595,16 @@ class main_old2{
 					break;
 				case code::LGOTO://LGOTO INT SIZE 1
 					$start = $i;
-					//$tmpsize = ord($exec[$i+2]);
+					//var_dump("!!",ord($exec[$i+2]),ord($exec[$i+3]),ord($exec[$i+4]));
+
+					$tmpid = Binary::readShort($exec[$i+3].$exec[$i+4]);
 					//var_dump($tmpsize);
 					$i += 5;
-					$array[] = [$start, 5, $i++];
+					if($tmpid !== $label){
+						var_dump("skiped");
+						break;
+					}
+					$array[$tmpid] = [$start, 5, $i++];
 					/*if($label === $return1){
 
 					}*/
@@ -611,10 +617,13 @@ class main_old2{
 		foreach(array_reverse($array) as $value){
 			[$start, $len1, $end] = $value; //$skip_replace
 			$new = code::JMP.code::INT.chr(code::TYPE_SHORT).Binary::writeShort($len - ($end + 0));//$this->getInt($len - ($end + 0));
+
+			//var_dump(opcode_dumper::hexentities($exec));
+
 			/** @var string $exec */
 			$exec = substr_replace($exec, '', $start, $len1);
 			$exec = substr_replace($exec, $new, $start, 0);
-			var_dump(opcode_dumper::hexentities($exec));
+			//var_dump(opcode_dumper::hexentities($exec));
 			$len = strlen($exec);
 		}
 		return $exec;
@@ -975,7 +984,7 @@ class main_old2{
 	}
 
 	public function putGotoLabel(int $label): string{
-		var_dump(strlen(code::LGOTO.code::INT.chr(code::TYPE_SHORT).Binary::writeShort($label)));
+		//var_dump(strlen(code::LGOTO.code::INT.chr(code::TYPE_SHORT).Binary::writeShort($label)));
 		return code::LGOTO.code::INT.chr(code::TYPE_SHORT).Binary::writeShort($label);
 	}
 
