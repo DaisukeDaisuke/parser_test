@@ -253,7 +253,8 @@ class decoder{
 			return $var;
 			//return null;
 		}
-		throw new RuntimeException("Scalar ".bin2hex($opcode)." not found, off:".$this->getBinaryStream()->getOffset());
+
+		throw new RuntimeException("Scalar ".bin2hex($opcode)." not found.");
 	}
 
 	/**

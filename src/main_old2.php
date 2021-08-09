@@ -604,7 +604,7 @@ class main_old2{
 						var_dump("skiped");
 						break;
 					}
-					$array[$tmpid] = [$start, 5, $i++];
+					$array[] = [$start, 5, $i++];
 					/*if($label === $return1){
 
 					}*/
