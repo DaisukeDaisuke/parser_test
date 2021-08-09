@@ -62,6 +62,7 @@ use PhpParser\Node\Scalar\LNumber;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Break_;
+use PhpParser\Node\Stmt\Continue_;
 use PhpParser\Node\Stmt\Echo_;
 use PhpParser\Node\Stmt\Else_;
 use PhpParser\Node\Stmt\Expression;
@@ -95,6 +96,8 @@ class main_old2{
 	public $forscope = [];
 	/** @var ?int $currentlyScope */
 	public $currentlyScope = null;
+	/** @var ?int $currentlyContinueScope */
+	public $currentlyContinueScope = null;
 
 	public function __construct(bool $is_phpunit = false){
 		$this->block[$this->blockid] = new CodeBlock($this->blockid);
@@ -136,7 +139,7 @@ class main_old2{
 				/** @var If_ $node */
 				//ConstFetch
 				//$return = "";
-				$label = $this->label_count;
+				$label = $this->label_count++;
 				$expr = $this->execStmts([$node->cond]);
 				$ifcount = $this->count++;
 				$elseifs = null; // 00 = null
@@ -165,10 +168,16 @@ class main_old2{
 			case For_::class:
 				/** @var For_ $node */
 				$scope = $this->label_count++;
-				$scopenode = new scopenode($this->currentlyScope, $scope);
-				$this->forscope[$scope] = $scopenode;
-				$this->currentlyScope = $scope;
+				$continueScope = $this->label_count++;
 
+				$scopeNode = new scopenode($this->currentlyScope, $scope);
+				$continueScopeNode = new scopenode($this->currentlyContinueScope, $continueScope);
+
+				$this->forscope[$scope] = $scopeNode;
+				$this->forscope[$continueScope] = $continueScopeNode;
+
+				$this->currentlyScope = $scope;
+				$this->currentlyContinueScope = $continueScope;
 				$init = "";
 				foreach($node->init as $value){
 					$init .= $this->execExpr($value);
@@ -179,7 +188,12 @@ class main_old2{
 					$loop .= $this->execExpr($value);
 				}
 				$stmts = $this->execStmts($node->stmts);
+				if($continueScopeNode->isUsed()){
+					//var_dump(opcode_dumper::hexentities($stmts));
+					$stmts = $this->solveLabel($stmts, $continueScope);
+				}
 				$output = $stmts.$loop;
+
 
 				//$cond = "";
 
@@ -195,50 +209,23 @@ class main_old2{
 				//$output = $init.$this->putunjmp($output);
 				//$output = $init.$cond.$this->putunjmp($output);
 				$unjmp = $this->putunjmp($output);
-				if($scopenode->isUsed()){
+				if($scopeNode->isUsed()){
 					//$unjmp .= $this->putLabel($scope);
 					//var_dump(opcode_dumper::hexentities($unjmp));
 					$unjmp = $this->solveLabel($unjmp, $scope);
 					//var_dump(opcode_dumper::hexentities($unjmp));
 				}
 				unset($this->forscope[$scope]);
-				$this->currentlyScope = $scope;
+				$this->currentlyScope = $scopeNode->getParent();
+				$this->currentlyContinueScope = $continueScopeNode->getParent();
 
 				return $init.$unjmp;
 			case break_::class;
-
-				if($this->currentlyScope === null){
-					throw new \RuntimeException("Internal error: Unexpected break. (execStmt)");
-				}
-				$scopenode = $this->forscope[$this->currentlyScope] ?? null;
-				if($scopenode === null){
-					throw new \RuntimeException("Internal error: scope ".$this->currentlyScope." not found. (execStmt)");
-				}
-				/** @var Expr|int|null $num */
 				/** @var break_ $node */
-				$num = $node->num;
-
-				if($num instanceof LNumber){
-					$num = $num->value;
-				}elseif($num instanceof Scalar){//$num instanceof Variable||$num instanceof ConstFetch||$num instanceof FuncCall
-					throw new phpFinalException("'break' operator accepts only positive integers");
-				}
-
-				if($num instanceof Expr||($num !== null&&$num < 1)){
-					throw new phpFinalException("'break' operator with non-integer operand is no longer supported");
-				}
-				//throw new \RuntimeException('The "break 1+2;" syntax is not supported.');
-				$id = $scopenode->getId();
-				$breaknum = $num ?? 1;
-				for($i = 1; $i <= $breaknum - 1; $i++){
-					$scopenode = $this->forscope[$scopenode->getParent()] ?? null;
-					if($scopenode === null){
-						throw new phpFinalException("Cannot 'break' ".$breaknum." levels");
-					}
-					$id = $scopenode->getId();
-				}
-				$scopenode->onUse();
-				return $this->putGotoLabel($id);
+				return $this->exec_Break_Continue($node->num, $this->currentlyScope,"break");
+			case Continue_::class:
+				/** @var Continue_ $node */
+				return $this->exec_Break_Continue($node->num, $this->currentlyContinueScope,"continue");
 		}
 		return "";//code::nop
 	}
@@ -985,6 +972,46 @@ class main_old2{
 	public function putGotoLabel(int $label): string{
 		//var_dump(strlen(code::LGOTO.code::INT.chr(code::TYPE_SHORT).Binary::writeShort($label)));
 		return code::LGOTO.code::INT.chr(code::TYPE_SHORT).Binary::writeShort($label);
+	}
+
+	/**
+	 * Break_|Continue_
+	 *
+	 * @param Expr|int|null $num
+	 * @param int|null $currentlyScope
+	 * @param string $name
+	 * @return string
+	 */
+	public function exec_Break_Continue($num, ?int $currentlyScope, string $name): string{
+		if($currentlyScope === null){
+			//throw new \RuntimeException("Internal error: Unexpected break. (execStmt)");
+			throw new phpFinalException("'".$name."' not in the 'loop' or 'switch' context");
+		}
+		$scopeNode = $this->forscope[$currentlyScope] ?? null;
+		if($scopeNode === null){
+			throw new \RuntimeException("Internal error: scope ".$this->currentlyScope." not found. (execStmt)");
+		}
+		if($num instanceof LNumber){
+			$num = $num->value;
+		}elseif($num instanceof Scalar){//$num instanceof Variable||$num instanceof ConstFetch||$num instanceof FuncCall
+			throw new phpFinalException("'".$name."' operator accepts only positive integers");
+		}
+
+		if($num instanceof Expr||($num !== null&&$num < 1)){
+			throw new phpFinalException("'".$name."' operator with non-integer operand is no longer supported");
+		}
+		//throw new \RuntimeException('The "break 1+2;" syntax is not supported.');
+		$id = $scopeNode->getId();
+		$breaknum = $num ?? 1;
+		for($i = 1; $i <= $breaknum - 1; $i++){
+			$scopeNode = $this->forscope[$scopeNode->getParent()] ?? null;
+			if($scopeNode === null){
+				throw new phpFinalException("Cannot '".$name."' ".$breaknum." levels");
+			}
+			$id = $scopeNode->getId();
+		}
+		$scopeNode->onUse();
+		return $this->putGotoLabel($id);
 	}
 
 

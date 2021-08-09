@@ -158,41 +158,22 @@ $code='$i = 100;$i = 200;';*/
 				echo $k;'*/;
 /*$code= '$i = print "test_";echo $i;';*/
 
-$code='
+/*$code='
 for($i=0; $i<101; $i++){
-    if($i%15 === 0){
-        echo "FizzBuzz";
-    }else if($i%3 === 0){
-        echo "Fizz";
-    }else if($i%5 === 0){
-        echo "Buzz";
-    }else{
-        echo $i;
-    }
-    echo "\n";
-}';
-
-for($i=0; $i<101; $i++){
-	$i++;
-	echo $i;
-	if($i >= 10){
-		echo ",";
-		break;
-		echo ",";
+	if($i % 15 === 0){
+		echo "FizzBuzz,";
+		continue;
 	}
-}
-echo 5;
-
-$code='for($i=0; $i<101; $i++){
-					echo $i;
-					if($i === 10){
-						echo ",";
-						break;
-						echo ",";
-					}
-				}
-				echo 5;';
-//125
+	if($i % 3 === 0){
+		echo "Fizz,";
+		continue;
+	}
+	if($i % 5 === 0){
+		echo "Buzz,";
+		continue;
+	}
+	echo $i.",";
+}';*/
 
 //for ($i = 1, $j = 0; $i <= 10; $j += $i, print $i, $i++);
 //$j=0;$j += (1+2);echo $j;
@@ -208,6 +189,33 @@ $code='for($i=0; $i<101; $i++){
 /*$code='$i=100;echo $i--;echo $i--;echo $i--;';*/
 /*$code='$i=100;
 print ++$i;';*/
+for($i=0; $i<5; $i++){
+	if(1===0){
+		echo 1;
+	}elseif(1===0){
+		echo 2;
+	}else{
+		echo 5;
+		continue;
+	}
+	echo 6;
+}
+$code='for($i=0; $i<6; $i++){
+					echo $i,",";
+					if($i % 2){
+						echo ":";
+						continue;
+						echo 1;
+					}
+					if($i % 5){
+						echo ";";
+						continue;
+						echo 2;
+					}
+					echo ",";
+				}
+				echo 5;';
+
 $time_start = microtime(true);
 
 $parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7);
