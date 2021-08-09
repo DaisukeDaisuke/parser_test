@@ -189,17 +189,6 @@ for($i=0; $i<101; $i++){
 /*$code='$i=100;echo $i--;echo $i--;echo $i--;';*/
 /*$code='$i=100;
 print ++$i;';*/
-for($i=0; $i<5; $i++){
-	if(1===0){
-		echo 1;
-	}elseif(1===0){
-		echo 2;
-	}else{
-		echo 5;
-		continue;
-	}
-	echo 6;
-}
 $code='for($i=0; $i<6; $i++){
 					echo $i,",";
 					if($i % 2){
