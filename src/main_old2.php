@@ -48,7 +48,9 @@ use PhpParser\Node\Expr\BinaryOp\SmallerOrEqual;
 use PhpParser\Node\Expr\BinaryOp\Spaceship;
 use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Expr\ErrorSuppress;
+use PhpParser\Node\Expr\Exit_;
 use PhpParser\Node\Expr\FuncCall;
+use PhpParser\Node\Expr\Isset_;
 use PhpParser\Node\Expr\PostDec;
 use PhpParser\Node\Expr\PostInc;
 use PhpParser\Node\Expr\PreDec;
@@ -67,8 +69,10 @@ use PhpParser\Node\Stmt\Echo_;
 use PhpParser\Node\Stmt\Else_;
 use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\For_;
+use PhpParser\Node\Stmt\HaltCompiler;
 use PhpParser\Node\Stmt\If_;
 use PhpParser\Node\Stmt\Nop;
+use PhpParser\Node\Stmt\While_;
 use pocketmine\utils\Binary;
 
 
@@ -106,9 +110,10 @@ class main_old2{
 
 	/**
 	 * @param Stmt $node
+	 * @param bool $rootscope
 	 * @return string
 	 */
-	public function execStmt(Stmt $node): string{
+	public function execStmt(Stmt $node, bool $rootscope = false): string{
 		$return = "";
 		switch(get_class($node)){
 			case Echo_::class:
@@ -166,7 +171,8 @@ class main_old2{
 			case Expression::class:
 				return $this->execExpr($node->expr);
 			case For_::class:
-				/** @var For_ $node */
+			case While_::class:
+				/** @var For_|While_ $node */
 				$scope = $this->label_count++;
 				$continueScope = $this->label_count++;
 
@@ -179,29 +185,43 @@ class main_old2{
 				$this->currentlyScope = $scope;
 				$this->currentlyContinueScope = $continueScope;
 				$init = "";
-				foreach($node->init as $value){
-					$init .= $this->execExpr($value);
+				$loop = "";
+				if($node instanceof For_){
+					foreach($node->init as $value){
+						$init .= $this->execExpr($value);
+					}
 				}
 
-				$loop = "";
-				foreach($node->loop as $value){
-					$loop .= $this->execExpr($value);
+				if(!is_array($node->cond)){
+					$condExpr = [$node->cond];
+				}else{
+					$condExpr = $node->cond;
 				}
+				$condresult = [];
+				foreach($condExpr as $item){
+					$condresult[] = $this->execExpr($item);
+				}
+				$tmpcount = $this->count++;
+
 				$stmts = $this->execStmts($node->stmts);
 				if($continueScopeNode->isUsed()){
 					//var_dump(opcode_dumper::hexentities($stmts));
 					$stmts = $this->solveLabel($stmts, $continueScope);
 				}
+				if($node instanceof For_){
+					foreach($node->loop as $value){
+						$loop .= $this->execExpr($value);
+					}
+				}
 				$output = $stmts.$loop;
-
 
 				//$cond = "";
 
+
 				$cond = $this->putjmp($output, true, 7);//7 = putunjmp len
-				foreach(array_reverse($node->cond) as $value){
-					$tmp = $this->execExpr($value);
+				foreach(array_reverse($condresult) as $value){
 					$tmpjmp = $this->putjmp($cond, true, 0);//false
-					$cond = $tmp.$this->putjmpz($this->count++, "", $tmpjmp, 0).$tmpjmp.$cond;//8//true
+					$cond = $value.$this->putjmpz($tmpcount, "", $tmpjmp, 0).$tmpjmp.$cond;//8//true
 				}
 				//$cond = $cond;
 
@@ -220,12 +240,13 @@ class main_old2{
 				$this->currentlyContinueScope = $continueScopeNode->getParent();
 
 				return $init.$unjmp;
+
 			case break_::class;
 				/** @var break_ $node */
-				return $this->exec_Break_Continue($node->num, $this->currentlyScope,"break");
+				return $this->exec_Break_Continue($node->num, $this->currentlyScope, "break");
 			case Continue_::class:
 				/** @var Continue_ $node */
-				return $this->exec_Break_Continue($node->num, $this->currentlyContinueScope,"continue");
+				return $this->exec_Break_Continue($node->num, $this->currentlyContinueScope, "continue");
 		}
 		return "";//code::nop
 	}
@@ -273,31 +294,69 @@ class main_old2{
 				/** @var Variable $var */
 				$var = $expr->var;
 				$oldid = null;
-				$var = $this->exec_variable($var, $this->count, false, $oldid, true);
+				$name = null;
+				$var = $this->exec_variable($var, $this->count, false, $oldid, true, $name);
+
+				$undefined = "";
+				if($oldid === null){
+					//$undefined = $this->write_var($this->count, 0);
+					$this->logger->warning('Undefined variable $'.$name);
+					//$this->count++;
+					//$recursion = true;
+					$recursion = false;
+					return $this->write_var($this->count, 1);//isset $a ?? 1
+				}
 				$targetid = $oldid ?? $this->count;
-				return code::ADD.$var.code::READV.$var.code::INT.$this->putRawInt(1);
-			case $expr instanceof PreDec://++$i;
+				return $undefined.code::ADD.$var.code::READV.$var.code::INT.$this->putRawInt(1);
+			case $expr instanceof PreDec://--$i;
 				$recursion = true;//!!!!!!!!!
 				//$is_var = true;
 				/** @var Variable $var */
 				$var = $expr->var;
 				$oldid = null;
 				$var = $this->exec_variable($var, $this->count, false, $oldid, true);
-				$targetid = $oldid ?? $this->count;
-				return code::MINUS.$var.code::READV.$var.code::INT.$this->putRawInt(1);
-			case $expr instanceof PostInc://$i++;
-				/** @var Variable $var */
-				$var = $expr->var;
-				$oldid = null;
-				$var = $this->exec_variable($var, $this->count, false, $oldid, true);
-				return code::VALUE.$var.code::ADD.$var.code::READV.$var.code::INT.$this->putRawInt(1);
-			case $expr instanceof PostDec://$i++;
-				/** @var Variable $var */
-				$var = $expr->var;
-				$oldid = null;
-				$var = $this->exec_variable($var, $this->count, false, $oldid, true);
 
-				return code::VALUE.$var.code::MINUS.$var.code::READV.$var.code::INT.$this->putRawInt(1);
+				$undefined = "";
+				if($oldid === null){
+					//$undefined = $this->write_var($this->count, 0);
+					$this->logger->warning('Undefined variable $'.$var);
+					//$this->count++;
+					//$recursion = true;
+					$recursion = false;
+					return $this->write_var($this->count, 1);//isset $a ?? 1
+				}
+
+				$targetid = $oldid ?? $this->count;
+				return $undefined.code::MINUS.$var.code::READV.$var.code::INT.$this->putRawInt(1);
+			case $expr instanceof PostInc://$i++;
+				//$recursion = true;//!!!!!!!!!
+				/** @var Variable $var */
+				$var = $expr->var;
+				$oldid = null;
+				$name = null;
+				$var = $this->exec_variable($var, $this->count, false, $oldid, true, $name);
+
+				$undefined = "";
+				if($oldid === null){
+					$undefined = $this->write_var($this->count, 0);
+					$this->logger->warning('Undefined variable $'.$name);
+					$this->count++;
+				}
+
+				return $undefined.code::VALUE.$var.code::ADD.$var.code::READV.$var.code::INT.$this->putRawInt(1);
+			case $expr instanceof PostDec://$i--;
+				//$recursion = true;//!!!!!!!!!
+				/** @var Variable $var */
+				$var = $expr->var;
+				$oldid = null;
+				$var = $this->exec_variable($var, $this->count, false, $oldid, true);
+				$undefined = "";
+				if($oldid === null){
+					$undefined = $this->write_var($this->count, 0);
+					$this->logger->warning('Undefined variable $'.$name);
+					$this->count++;
+				}
+				return $undefined.code::VALUE.$var.code::MINUS.$var.code::READV.$var.code::INT.$this->putRawInt(1);
 			case $expr instanceof Assign:
 				//var_dump("!!!!!!!!!!!!!!!!!");
 
@@ -388,6 +447,24 @@ class main_old2{
 					$result1 .= code::FUN_SUBMIT.$this->write_varId($outputid);
 				}
 				return $result2.$result1;
+			case $expr instanceof Isset_:
+				$recursion = true;
+
+				return "";
+			case $expr instanceof Exit_:
+				$recursion = true;//
+				if($expr->expr === null){
+					return code::EXIT.$this->getInt(0);
+				}
+				if($expr->expr instanceof Variable){
+					return code::EXIT.$this->exec_variable($expr->expr, $this->count++);
+				}
+				if($expr->expr instanceof Assign){//print $i = 100;
+					/** @var Variable $var */
+					$var = $expr->expr->var;
+					return $this->execExpr($expr->expr).code::EXIT.$this->exec_variable($var, $this->count);
+				}
+				return $this->execStmts([$expr->expr], $targetid).code::EXIT.$this->put_var($targetid ?? $this->count++);
 			case $expr instanceof Expr:
 				//var_dump(get_class($expr));
 				$recursion = true;
@@ -584,7 +661,7 @@ class main_old2{
 					$start = $i;
 					//var_dump("!!",ord($exec[$i+2]),ord($exec[$i+3]),ord($exec[$i+4]));
 
-					$tmpid = Binary::readShort($exec[$i+3].$exec[$i+4]);
+					$tmpid = Binary::readShort($exec[$i + 3].$exec[$i + 4]);
 					//var_dump($tmpsize);
 					$i += 5;
 					if($tmpid !== $label){
@@ -617,10 +694,19 @@ class main_old2{
 
 	/**
 	 * @param Stmt[]|Expr[] $nodes
-	 * @param int|null $targetid
 	 * @return string
 	 */
-	public function execStmts(array $nodes, ?int &$targetid = null): string{//,bool $array = false
+	public function onexec(array $nodes): string{
+		return $this->execStmts($nodes, $tmp, true);
+	}
+
+	/**
+	 * @param Stmt[]|Expr[] $nodes
+	 * @param int|null $targetid
+	 * @param bool $rootscope
+	 * @return string
+	 */
+	public function execStmts(array $nodes, ?int &$targetid = null, bool $rootscope = false): string{//,bool $array = false
 		$return = "";
 		/*if($array === true){
 			$return = [];
@@ -640,10 +726,19 @@ class main_old2{
 				if($node instanceof Nop){
 					continue;
 				}
+				if($node instanceof HaltCompiler){
+					/*if($rootscope === false){
+						throw new phpFinalException("__HALT_COMPILER() can only be used from the outermost scope");
+					}*/
+					return $return.code::EXIT.$this->getInt(0).$node->remaining;//__COMPILER_HALT_OFFSET__
+				}
 				//if($array === true){
 				//$return[] = $this->execStmt($node);
 				//}else{
-				$return .= ($this->execStmt($node) ?? "");//.$return;
+
+				$return .= ($this->execStmt($node, $rootscope) ?? "");
+
+//.$return;
 				//}
 			}
 		}
@@ -684,7 +779,8 @@ class main_old2{
 			case BooleanOr::class:
 				return $this->execbinaryplus($node, code::BOOL_OR, $outputid);
 			case Coalesce::class:
-				return $this->execbinaryplus($node, code::COALESCE, $outputid);
+				$this->execCoalesce($node, $outputid);
+			//return $this->execbinaryplus($node, code::COALESCE, $outputid);
 			case Concat::class:
 				return $this->execbinaryplus($node, code::CONCAT, $outputid);
 			case Equal::class:
@@ -1021,5 +1117,28 @@ class main_old2{
 
 	public function getLogger(): Logger{
 		return $this->logger;
+	}
+
+	public function execCoalesce(Coalesce $node, ?int $outputid): string{
+		/*if(!$node->left instanceof Variable){
+			return $this->execStmts([$node->left]);
+		}*/
+		if($node->left instanceof Variable){
+			$var = $node->left->name;
+			if($var instanceof Expr){
+				throw new \RuntimeException("\$var instanceof Expr === true");
+			}
+		}
+
+		if($node->right instanceof Variable){
+			$var = $node->right->name;
+			if($var instanceof Expr){
+				throw new \RuntimeException("\$var instanceof Expr === true");
+			}
+		}
+	}
+
+	public function putIsset(int $address): string{
+		return code::ISSET.$this->write_varId($address);
 	}
 }

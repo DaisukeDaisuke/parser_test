@@ -20,6 +20,15 @@
     "phpunit/phpunit": "8.*",
     "roave/security-advisories": "dev-latest"
   },
+  "autoload-dev": {
+    "autoload": {
+      "psr-4": {
+        "tests\\": [
+          ""
+        ]
+      }
+    }
+  },
   "scripts": {
     "test": "vendor/bin/phpunit"
   },

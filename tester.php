@@ -6,6 +6,7 @@ error_reporting(E_ALL);
 use PhpParser\NodeDumper;
 use PhpParser\ParserFactory;
 use purser\decoder;
+use purser\ExitException;
 use purser\main_old2;
 use purser\opcode_dumper;
 
@@ -189,21 +190,16 @@ for($i=0; $i<101; $i++){
 /*$code='$i=100;echo $i--;echo $i--;echo $i--;';*/
 /*$code='$i=100;
 print ++$i;';*/
-$code='for($i=0; $i<6; $i++){
-					echo $i,",";
-					if($i % 2){
-						echo ":";
-						continue;
-						echo 1;
-					}
-					if($i % 5){
-						echo ";";
-						continue;
-						echo 2;
-					}
-					echo ",";
+//$code='var_dump(@++$i <= 10,$i);';
+$code='var_dump(@++$i <= 10,$i);';
+$code='while (@++$i <= 10) echo $i++;';
+$code='for($i=0;false;$i++){
+					echo 1;
 				}
-				echo 5;';
+				echo $i;';
+$code='while (@++$i <= 10) echo $i++;';
+//$code='if(isset($a));';
+$code='if(1){$a=1;die($a);}';
 
 $time_start = microtime(true);
 
@@ -218,7 +214,7 @@ $dumper = new NodeDumper(['dumpComments' => true,]);
 echo $dumper->dump($stmts, "<?php\n".$code);
 
 $main_old = new main_old2();
-$output = $main_old->execStmts($stmts);
+$output = $main_old->onexec($stmts);
 
 $time = microtime(true) - $time_start;
 echo $time." 秒";
@@ -232,7 +228,13 @@ var_dump(opcode_dumper::hexentities($output),opcode_dumper::hexentities1($output
 
 //ob_start();
 $decoder = new decoder();
-$decoder->decode($output);
+try{
+	$decoder->decode($output);
+}catch(ExitException $exception){
+	var_dump("exit code: " .$exception->getMessagecode());
+	$exception->exec();
+}
+
 //$log = ob_get_clean();
 //var_dump($log);
 $binaryStream = $decoder->getBinaryStream();

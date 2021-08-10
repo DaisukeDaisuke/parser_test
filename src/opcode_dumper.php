@@ -320,6 +320,9 @@ class opcode_dumper{
 					$return .= ' var:'.bin2hex($str[$i++]).';';
 					$return .= ' var:'.bin2hex($str[$i]).';';
 					break;
+				case code::EXIT:
+					$return .= ' EXIT:'.bin2hex($str[$i]).';';
+					break;
 				default:
 					$return .= ' :'.bin2hex($str[$i]).';';
 			}

@@ -58,14 +58,19 @@ class decoder{
 	}
 
 	public function decodebinaryop_array(string $opcode): void{
-		if($opcode === code::CONCAT){
+		/*if($opcode === code::CONCAT){
 			//var_dump("!!");
-		}
+		}*/
 		$output = $this->getAddress();
+		if($opcode === code::COALESCE){
+
+			return;
+		}
+
 		$var1 = $this->decodeScalar();//
 		$var2 = $this->decodeScalar();
 		//var_dump([$output, $var1, $var2]);
-		$return1 = 0;
+		$return1 = null;
 
 		switch($opcode){
 			//binaryOP
@@ -97,7 +102,7 @@ class decoder{
 				$return1 = ($var1||$var2);
 				break;
 			case code::COALESCE:
-				//$return1 = $var1 ?? $var2;
+				$return1 = $var1 ?? $var2;
 				break;
 			case code::CONCAT:
 				$return1 = $var1.$var2;
@@ -217,6 +222,9 @@ class decoder{
 				$this->tmpfuncName = null;
 				$this->tmpfuncargs = [];
 				return;
+			case code::EXIT:
+				$var = $this->decodeScalar();
+				throw new ExitException($var);
 		}
 		throw new RuntimeException("Unexpected Stmt: off:".$this->getOffset().", op:".bin2hex($opcode)." not found");
 	}

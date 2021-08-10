@@ -28,6 +28,8 @@ class code{
 	public const STRING = "\x94";
 	public const VALUE = "\x95";
 	public const BOOL = "\x96";
+	//
+	public const ISSET = "\x97";//ISSET output address: bool
 	//public const DOUBLE = "\xC4";
 	//public const READV = "\x00";
 
@@ -75,6 +77,8 @@ class code{
 	public const LGOTO = "\xA4";//GOTOL INT 1 1
 	public const JMPA = "\xA5";//JMPA INT 1 255
 	public const SJMP = "\xA6";//JMPZ int...? //relative
+
+	public const EXIT = "\xA7";//exit exit code
 
 
 	public const FUN_INIT = "\xB0";//FUN_INIT string size ... target

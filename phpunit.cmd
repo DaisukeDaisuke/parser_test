@@ -1,2 +1,2 @@
 
-.\bin\php\php.exe vendor\phpunit\phpunit\phpunit
+.\bin\php\php.exe vendor\phpunit\phpunit\phpunit %*
