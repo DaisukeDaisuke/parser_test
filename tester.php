@@ -191,15 +191,56 @@ for($i=0; $i<101; $i++){
 /*$code='$i=100;
 print ++$i;';*/
 //$code='var_dump(@++$i <= 10,$i);';
-$code='var_dump(@++$i <= 10,$i);';
-$code='while (@++$i <= 10) echo $i++;';
-$code='for($i=0;false;$i++){
-					echo 1;
-				}
-				echo $i;';
-$code='while (@++$i <= 10) echo $i++;';
-//$code='if(isset($a));';
-$code='if(1){$a=1;die($a);}';
+//$code='var_dump(@++$i <= 10,$i);';
+//$code='while (@++$i <= 10) echo $i++;';
+//$code='for($i=0;false;$i++){
+//					echo 1;
+//				}
+//				echo $i;';
+//$code='while (@++$i <= 10) echo $i++;';
+////$code='if(isset($a));';
+//$code='if(1){$a=1;die($a);}';
+
+$code = 'switch(3){
+	case 100:
+		echo "print1";
+		break;
+	case 2:
+		echo "print2";
+	default:
+		echo "print default";
+	case 3:
+		echo "print3";
+		break;
+}';
+
+$code = 'switch(200){
+	case 100:
+		echo "print1";
+		break;
+	default:
+		echo "print default";
+		//break;
+	case 2:
+		echo "print2";
+	
+	case 3:
+		echo "print3";
+		break;
+}';
+
+/*
+
+jmpz //case //2
+print "test" //1
+goto label //break; //1
+jmp 4 //1
+
+jmpz
+print "test"
+jmp 4
+
+*/
 
 $time_start = microtime(true);
 
@@ -222,16 +263,18 @@ echo $time." 秒";
 //var_dump($main_old);
 
 //file_put_contents(".\\output.bin", $output);
-
-var_dump(opcode_dumper::hexentities($output),opcode_dumper::hexentities1($output));
+$list1 = [];
+var_dump(opcode_dumper::hexentities($output, $list1), opcode_dumper::hexentities1($output));
+//var_dump($list1);
+var_dump(strlen($output));
 
 
 //ob_start();
 $decoder = new decoder();
 try{
-	$decoder->decode($output);
+	$decoder->decode($output, true);
 }catch(ExitException $exception){
-	var_dump("exit code: " .$exception->getMessagecode());
+	var_dump("exit code: ".$exception->getMessagecode());
 	$exception->exec();
 }
 

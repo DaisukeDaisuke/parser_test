@@ -19,20 +19,35 @@ class decoder{
 	public $tmpfuncName = null;
 	/** @var array<int, mixed> $tmpfuncargs */
 	public $tmpfuncargs = [];
+	/** @var array<int, string> */
+	public $dump;
+	/** @var bool $debug */
+	public $debug;
 
 	public function __construct(){
 		//none
 	}
 
-	public function decode(string $opcode): void{
+	public function decode(string $opcode, bool $debug = false) : void{
 		$this->len = strlen($opcode);
 		$this->stream = new BinaryStream($opcode);
+		$this->debug = $debug;
+		$this->dump = [];
+		opcode_dumper::hexentities($opcode, $this->dump);
+
 		$this->decodeopcode();
 	}
 
 	public function decodeopcode(): void{
 		$values = [];
 		while(!$this->feof()){
+			if($this->debug === true){
+				$string = $this->dump[$this->getBinaryStream()->getOffset()] ?? null;
+				if($string === null){
+					echo("> ".$this->getBinaryStream()->getOffset()."\n");
+				}
+				echo($string."\n");
+			}
 			$opcode = $this->getByte();//......!!!!!!!!!!
 			$test = bin2hex($opcode);
 			//binaryOP

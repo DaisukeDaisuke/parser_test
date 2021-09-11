@@ -72,6 +72,7 @@ use PhpParser\Node\Stmt\For_;
 use PhpParser\Node\Stmt\HaltCompiler;
 use PhpParser\Node\Stmt\If_;
 use PhpParser\Node\Stmt\Nop;
+use PhpParser\Node\Stmt\Switch_;
 use PhpParser\Node\Stmt\While_;
 use pocketmine\utils\Binary;
 
@@ -103,9 +104,9 @@ class main_old2{
 	/** @var ?int $currentlyContinueScope */
 	public $currentlyContinueScope = null;
 
-	public function __construct(bool $is_phpunit = false){
+	public function __construct(bool $is_phpunit = false, ?string $display_program = "Main.php"){
 		$this->block[$this->blockid] = new CodeBlock($this->blockid);
-		$this->logger = new Logger($is_phpunit);
+		$this->logger = new Logger($is_phpunit, $display_program);
 	}
 
 	/**
@@ -237,16 +238,133 @@ class main_old2{
 				}
 				unset($this->forscope[$scope]);
 				$this->currentlyScope = $scopeNode->getParent();
-				$this->currentlyContinueScope = $continueScopeNode->getParent();
+			$this->currentlyContinueScope = $continueScopeNode->getParent();
 
-				return $init.$unjmp;
+			return $init.$unjmp;
 
-			case break_::class;
+			case Break_::class;
 				/** @var break_ $node */
 				return $this->exec_Break_Continue($node->num, $this->currentlyScope, "break");
 			case Continue_::class:
 				/** @var Continue_ $node */
 				return $this->exec_Break_Continue($node->num, $this->currentlyContinueScope, "continue");
+			case Switch_::class:
+				/** @var Switch_ $node */
+				//var_dump($node);
+
+				$hasjmpid = $this->count++;
+
+				$scope = $this->label_count++;
+				$continueScope = $this->label_count++;
+
+				$scopeNode = new scopenode($this->currentlyScope, $scope);
+				$continueScopeNode = new scopenode($this->currentlyContinueScope, $continueScope);
+
+				$this->forscope[$scope] = $scopeNode;
+				$this->forscope[$continueScope] = $continueScopeNode;
+
+				$this->currentlyScope = $scope;
+				$this->currentlyContinueScope = $continueScope;
+
+				$switch_cond = $this->execStmts([$node->cond]);
+				$count = $this->count++;
+
+				$array = [];
+
+				foreach($node->cases as $case){
+					$tmp = null;
+					//$id = $this->count++;//4
+					$recursion = false;
+					if($case->cond === null){
+						$default = $this->execStmts($case->stmts);
+						$array[] = [null, null, $default, true];
+						continue;
+					}
+					$expr1 = $this->execExpr($case->cond, null, $tmp, $recursion);
+
+					$exprid = -1;
+					if($recursion){
+						$exprid = $this->count++;//7
+					}
+					$outputid = $this->count++;
+
+					$cond = code::EQUAL.$this->write_varId($outputid).$this->write_variableId($count);
+					if($recursion){
+						$cond = $expr1.$cond.$this->put_var($exprid);
+					}else{
+						$cond .= $expr1;
+					}
+					$stmts = $this->execStmts($case->stmts);
+					//$tmpjmpz = $this->putjmpz($outputid,"",$stmts);
+					$array[] = [$cond, $outputid, $stmts, false];//$cond.$tmpjmp
+				}
+
+				$result = "";
+
+//				foreach($array as $key => $item){
+//					$tmpjmp = $this->putjmp($array[$key+1][0] ?? "", true);
+//					//var_dump([opcode_dumper::hexentities($item[0]), opcode_dumper::hexentities($item[1])]);
+//					$result .= $item[0].$this->putjmpz($outputid,$item[2],null, strlen($tmpjmp)).$tmpjmp;//.code::NOP.code::NOP;
+//					//$result .= $cond.$this->putjmpz($item[1], "", "", strlen($item[2]) + strlen($array[$key+1][0] ?? "")).$item[2].code::NOP.code::NOP;
+//				}
+
+				$defaultpos = null;
+
+				$condfactory = [];
+
+				$previous_stmts = "";
+				$previous_cond = "";
+				$previous_jmpz = "";
+				$jmp_offset = 0;
+				foreach(array_reverse($array) as $key => $item){
+					if($item[3] === true||$item[1] === null){
+						//$defaultpos = strlen($result);//end
+						$tmp = $item[2].$this->write_var($hasjmpid, 0);
+						$tmpjmp1 = $tmp.$this->putjmp($condfactory[$key - 1] ?? "", true);
+						$defaultpos = strlen($result.$tmpjmp1);
+						$tmpjmp = $this->putjmp($tmpjmp1);
+						$result = $tmpjmp.$result;
+						//$previous_cond .= $tmpjmp;
+
+						//$previous_cond .= $tmpjmp;
+						//start
+						var_dump($defaultpos);
+						continue;
+					}
+					$stmts = $item[2].$this->putjmp($previous_cond, true);
+					$condfactory[$key] = $previous_cond = $item[0].$this->putjmpz($item[1], "", $stmts);
+					$result = $previous_cond.$stmts.$result;
+
+					$jmp_offset = 0;
+				}
+
+
+				if($defaultpos !== null){
+					$tmp = $this->putjmpz($hasjmpid, "", null, 7);
+					$result .= $tmp;
+					$result .= $this->putunjmp1(-$defaultpos - (strlen($tmp)));//$this->putjmpz($hasjmpid,"",null, -$defaultpos - (strlen($tmp)));  - (strlen($tmp))
+
+//					$exec = substr_replace($result, "aaaaaaaa", -$defaultpos - (strlen($tmp)), 0);//debug
+//
+//					var_dump(-$defaultpos - (strlen($tmp)), opcode_dumper::hexentities($exec));
+				}
+
+				if($scopeNode->isUsed()){
+					//$unjmp .= $this->putLabel($scope);
+					//var_dump(opcode_dumper::hexentities($unjmp));
+					$result = $this->solveLabel($result, $scope);
+					//var_dump(opcode_dumper::hexentities($unjmp));
+				}
+				unset($this->forscope[$scope]);
+				$this->currentlyScope = $scopeNode->getParent();
+				$this->currentlyContinueScope = $continueScopeNode->getParent();
+
+				//var_dump(opcode_dumper::hexentities($switch_cond.$result));
+
+				return $switch_cond.$this->write_var($hasjmpid, 1).$result;
+			/*case Case_::class:
+
+				break;*/
 		}
 		return "";//code::nop
 	}
@@ -300,7 +418,7 @@ class main_old2{
 				$undefined = "";
 				if($oldid === null){
 					//$undefined = $this->write_var($this->count, 0);
-					$this->logger->warning('Undefined variable $'.$name);
+					$this->logger->warning('Undefined variable $'.$name, $expr->getAttribute("startLine"));
 					//$this->count++;
 					//$recursion = true;
 					$recursion = false;
@@ -314,12 +432,13 @@ class main_old2{
 				/** @var Variable $var */
 				$var = $expr->var;
 				$oldid = null;
-				$var = $this->exec_variable($var, $this->count, false, $oldid, true);
+				$name = null;
+				$var = $this->exec_variable($var, $this->count, false, $oldid, true, $name);
 
 				$undefined = "";
 				if($oldid === null){
 					//$undefined = $this->write_var($this->count, 0);
-					$this->logger->warning('Undefined variable $'.$var);
+					$this->logger->warning('Undefined variable $'.$name, $expr->getAttribute("startLine"));
 					//$this->count++;
 					//$recursion = true;
 					$recursion = false;
@@ -339,7 +458,7 @@ class main_old2{
 				$undefined = "";
 				if($oldid === null){
 					$undefined = $this->write_var($this->count, 0);
-					$this->logger->warning('Undefined variable $'.$name);
+					$this->logger->warning('Undefined variable $'.$name, $expr->getAttribute("startLine"));
 					$this->count++;
 				}
 
@@ -349,11 +468,12 @@ class main_old2{
 				/** @var Variable $var */
 				$var = $expr->var;
 				$oldid = null;
-				$var = $this->exec_variable($var, $this->count, false, $oldid, true);
+				$name = null;
+				$var = $this->exec_variable($var, $this->count, false, $oldid, true, $name);
 				$undefined = "";
 				if($oldid === null){
 					$undefined = $this->write_var($this->count, 0);
-					$this->logger->warning('Undefined variable $'.$name);
+					$this->logger->warning('Undefined variable $'.$name, $expr->getAttribute("startLine"));
 					$this->count++;
 				}
 				return $undefined.code::VALUE.$var.code::MINUS.$var.code::READV.$var.code::INT.$this->putRawInt(1);
@@ -1060,12 +1180,16 @@ class main_old2{
 		return code::JMP.$this->getInt(strlen($stmts) + $offset).$stmts;
 	}
 
-	public function putunjmp(string $stmts): string{
+	public function putunjmp(string $stmts) : string{
 		$tmp = -strlen($stmts.code::JMP.code::INT.Binary::writeByte(4).Binary::writeInt(-strlen($stmts) - 1000));
 		return $stmts.code::JMP.code::INT.Binary::writeByte(4).Binary::writeInt($tmp);//8
 	}
 
-	public function putGotoLabel(int $label): string{
+	public function putunjmp1(int $offset) : string{
+		return code::JMP.code::INT.Binary::writeByte(4).Binary::writeInt($offset - 7);
+	}
+
+	public function putGotoLabel(int $label) : string{
 		//var_dump(strlen(code::LGOTO.code::INT.chr(code::TYPE_SHORT).Binary::writeShort($label)));
 		return code::LGOTO.code::INT.chr(code::TYPE_SHORT).Binary::writeShort($label);
 	}

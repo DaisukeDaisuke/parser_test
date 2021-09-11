@@ -25,38 +25,51 @@ class Logger{
 	public $is_phpunit;
 
 	/**
-	 * @param bool $is_phpunit
+	 * @var ?string $display_program
 	 */
-	public function __construct(bool $is_phpunit = false){
+	public $display_program;
+
+	/**
+	 * @param bool $is_phpunit
+	 * @param string|null $display_program
+	 */
+	public function __construct(bool $is_phpunit = false, ?string $display_program = null){
 		$this->is_phpunit = $is_phpunit;
+		$this->display_program = $display_program;
 	}
 
-	public function log(string $message, int $level): void{
+	public function log(string $message, int $level, $line = null) : void{
 		switch($level){
 			case self::WARNING:
 				if($this->isErrorSuppress()) return;
 				$error = "php compiler warning: ".$message;
-				$this->echo($error.PHP_EOL);
 				$this->logs[] = [$error, $level];
+				if($line !== null){
+					if($this->display_program !== null){
+						$error .= " in ".$this->display_program;
+					}
+					$error .= " on line ".$line;
+				}
+				$this->echo($error.PHP_EOL);
 				break;
 		}
 	}
 
-	public function echo(string $message): void{
+	public function echo(string $message) : void{
 		if($this->is_phpunit) return;
 		echo $message;
 	}
 
-	public function warning(string $message): string{
-		$this->log($message, self::WARNING);
+	public function warning(string $message, ?int $line = null) : string{
+		$this->log($message, self::WARNING, $line);
 		return "";
 	}
 
-	public function setErrorSuppress(bool $errorSuppress): void{
+	public function setErrorSuppress(bool $errorSuppress) : void{
 		$this->errorSuppress = $errorSuppress;
 	}
 
-	public function isErrorSuppress(): bool{
+	public function isErrorSuppress() : bool{
 		return $this->errorSuppress;
 	}
 

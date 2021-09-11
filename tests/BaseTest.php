@@ -4,6 +4,7 @@ use PhpParser\ParserFactory;
 use PHPUnit\Framework\TestCase;
 use purser\decoder;
 use purser\ExitException;
+use purser\Logger;
 use purser\main_old2;
 use purser\phpFinalException;
 
@@ -17,9 +18,10 @@ abstract class BaseTest extends TestCase{
 	 * @param string $output1
 	 * @param string|null $compilerfinalerror
 	 * @param string|int|null $exitcode
+	 * @param string[]|null $logs
 	 * @return void
 	 */
-	public function testisInsideHangingBox(string $code, string $output1, ?string $compilerfinalerror = null, $exitcode = null){
+	public function testisInsideHangingBox(string $code, string $output1, ?string $compilerfinalerror = null, $exitcode = null, ?array $logs = null){
 		$parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7);
 		$stmts = $parser->parse("<?php\n".$code);
 
@@ -42,7 +44,15 @@ abstract class BaseTest extends TestCase{
 		if($compilerfinalerror !== null){
 			throw new \RuntimeException("phpFinalException '".$compilerfinalerror."' was not thrown.");
 		}
-
+		if($logs !== null){
+			foreach($main_old->getLogger()->getLogs() as $key => $log){
+				if($log[Logger::TYPE_LEVEL] === Logger::WARNING){
+					self::assertTrue(isset($logs[$key]), "key ".$key." not found");
+					self::assertSame($logs[$key], $log[0]);
+				}
+			}
+			self::assertCount(count($logs), $main_old->getLogger()->getLogs());
+		}
 
 		//var_dump($test = opcode_dumper::hexentities($output));
 
@@ -75,6 +85,9 @@ abstract class BaseTest extends TestCase{
 				'expected execution result',
 				'expected Compiler Final Error Message',
 				'expected exit code',
+				[
+					'expected logs',
+				],
 			]
 		];
 	}

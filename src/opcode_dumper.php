@@ -5,10 +5,13 @@ namespace purser;
 use pocketmine\utils\Binary;
 
 class opcode_dumper{
-	public static function hexentities(string $str): string{
-		$return = '';
+	/** @phpstan-ignore-next-line */
+	public static function hexentities(string $str, array &$list = []) : string{
+		$result = '';
 		for($i = 0, $iMax = strlen($str); $i < $iMax; $i++){
-			$return .= PHP_EOL;
+			//$return .= PHP_EOL.$i." | ";
+			$return = "";
+			$start = $i;
 			switch($str[$i]){
 				case code::READV:
 					$return .= ' READV:'.bin2hex($str[$i++]).';';
@@ -326,8 +329,11 @@ class opcode_dumper{
 				default:
 					$return .= ' :'.bin2hex($str[$i]).';';
 			}
+
+			$result .= PHP_EOL." | ".$start."-".$i." | ".($i - $start + 1)." | ".$return;
+			$list[$start] = trim(PHP_EOL." | ".$start."-".$i." | ".($i - $start + 1)." | ".$return);
 		}
-		return $return;
+		return $result;
 	}
 
 	public static function hexentities1(string $str): string{
