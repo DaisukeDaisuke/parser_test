@@ -214,19 +214,19 @@ $code = 'switch(3){
 		break;
 }';
 
-$code = 'switch(200){
+$code = 'switch(2){
 	case 100:
 		echo "print1";
-		break;
-	default:
-		echo "print default";
 		//break;
 	case 2:
 		echo "print2";
-	
+		default:
+		echo "print default";
+		//break;
 	case 3:
 		echo "print3";
 		break;
+
 }';
 
 /*
@@ -267,7 +267,7 @@ $list1 = [];
 var_dump(opcode_dumper::hexentities($output, $list1), opcode_dumper::hexentities1($output));
 //var_dump($list1);
 var_dump(strlen($output));
-
+var_dump("===========");
 
 //ob_start();
 $decoder = new decoder();

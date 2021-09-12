@@ -315,6 +315,7 @@ class main_old2{
 				$previous_stmts = "";
 				$previous_cond = "";
 				$previous_jmpz = "";
+				$previous_default = false;
 				$jmp_offset = 0;
 				foreach(array_reverse($array) as $key => $item){
 					if($item[3] === true||$item[1] === null){
@@ -324,14 +325,21 @@ class main_old2{
 						$defaultpos = strlen($result.$tmpjmp1);
 						$tmpjmp = $this->putjmp($tmpjmp1);
 						$result = $tmpjmp.$result;
+						$previous_default = true;
+						//$jmp_offset = strlen($tmpjmp);//4byte ジャンプ
 						//$previous_cond .= $tmpjmp;
 
 						//$previous_cond .= $tmpjmp;
 						//start
-						var_dump($defaultpos);
+						//var_dump($defaultpos);
 						continue;
 					}
-					$stmts = $item[2].$this->putjmp($previous_cond, true);
+					if($previous_default){
+						$stmts = $item[2];
+						$previous_default = false;
+					}else{
+						$stmts = $item[2].$this->putjmp($previous_cond, true, $jmp_offset);// 4byte
+					}
 					$condfactory[$key] = $previous_cond = $item[0].$this->putjmpz($item[1], "", $stmts);
 					$result = $previous_cond.$stmts.$result;
 
