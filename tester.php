@@ -214,21 +214,66 @@ $code = 'switch(3){
 		break;
 }';
 
-$code = 'switch(2){
+$code = 'switch(1000){
 	case 100:
 		echo "print1";
 		//break;
 	case 2:
 		echo "print2";
-		default:
+	default:
 		echo "print default";
-		//break;
+		break;
 	case 3:
 		echo "print3";
 		break;
-
+	case 4:
+		echo "print4";
+		break;
+	case 5:
+		echo "print5";
+		break;
+	case 6:
+		echo "print6";
+		break;
+	case 7:
+		echo "print6";
+		break;
+	case 8:
+		echo "print6";
+		break;
+	case 9:
+		echo "print6";
+		break;
+	case 10:
+		echo "print6";
+		break;
+	case 11:
+		echo "print6";
+		break;
+	case 12:
+		echo "print6";
+		break;
 }';
+$code = 'for($i = 0; $i <= 3; $i++){
+					switch($i){
+						case 1:
+							echo "print1\n";
+							break;
+						case 2:
+							echo "print2\n";
+							break;
+						default:
+							echo "print default\n";
+							break;
+						case 3:
+							echo "print3\n";
+							break;
+					}
+				}';
 
+$code = '$a = (int) "1";$a = "2";var_dump($a,(string) $a,(string) 3);';
+$code = '$a = 0;$b = 0;var_dump((string) ($a+$b));
+';
 /*
 
 jmpz //case //2

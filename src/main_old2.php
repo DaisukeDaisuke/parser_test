@@ -46,6 +46,13 @@ use PhpParser\Node\Expr\BinaryOp\ShiftRight;
 use PhpParser\Node\Expr\BinaryOp\Smaller;
 use PhpParser\Node\Expr\BinaryOp\SmallerOrEqual;
 use PhpParser\Node\Expr\BinaryOp\Spaceship;
+use PhpParser\Node\Expr\Cast;
+use PhpParser\Node\Expr\Cast\Bool_ as CastBool;
+use PhpParser\Node\Expr\Cast\Double as CastDouble;
+use PhpParser\Node\Expr\Cast\Int_ as CastInt;
+use PhpParser\Node\Expr\Cast\Object_ as CastObject;
+use PhpParser\Node\Expr\Cast\String_ as CastString;
+use PhpParser\Node\Expr\Cast\Unset_ as CastUnset;
 use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Expr\ErrorSuppress;
 use PhpParser\Node\Expr\Exit_;
@@ -103,10 +110,13 @@ class main_old2{
 	public $currentlyScope = null;
 	/** @var ?int $currentlyContinueScope */
 	public $currentlyContinueScope = null;
+	/** @var ?string $file */
+	public $file = null;
 
 	public function __construct(bool $is_phpunit = false, ?string $display_program = "Main.php"){
 		$this->block[$this->blockid] = new CodeBlock($this->blockid);
 		$this->logger = new Logger($is_phpunit, $display_program);
+		$this->file = $display_program;
 	}
 
 	/**
@@ -174,21 +184,21 @@ class main_old2{
 			case For_::class:
 			case While_::class:
 				/** @var For_|While_ $node */
-				$scope = $this->label_count++;
-				$continueScope = $this->label_count++;
+			$scope = $this->label_count++;
+			$continueScope = $this->label_count++;
 
-				$scopeNode = new scopenode($this->currentlyScope, $scope);
-				$continueScopeNode = new scopenode($this->currentlyContinueScope, $continueScope);
+			$scopeNode = new scopenode($this->currentlyScope, $scope, scopenode::TYPE_FOR_WHILE);
+			$continueScopeNode = new scopenode($this->currentlyContinueScope, $continueScope, scopenode::TYPE_FOR_WHILE);
 
-				$this->forscope[$scope] = $scopeNode;
-				$this->forscope[$continueScope] = $continueScopeNode;
+			$this->forscope[$scope] = $scopeNode;
+			$this->forscope[$continueScope] = $continueScopeNode;
 
-				$this->currentlyScope = $scope;
-				$this->currentlyContinueScope = $continueScope;
-				$init = "";
-				$loop = "";
-				if($node instanceof For_){
-					foreach($node->init as $value){
+			$this->currentlyScope = $scope;
+			$this->currentlyContinueScope = $continueScope;
+			$init = "";
+			$loop = "";
+			if($node instanceof For_){
+				foreach($node->init as $value){
 						$init .= $this->execExpr($value);
 					}
 				}
@@ -244,10 +254,10 @@ class main_old2{
 
 			case Break_::class;
 				/** @var break_ $node */
-				return $this->exec_Break_Continue($node->num, $this->currentlyScope, "break");
+				return $this->exec_Break_Continue($node->num, $this->currentlyScope, "break", $node->getAttribute("startLine"));
 			case Continue_::class:
 				/** @var Continue_ $node */
-				return $this->exec_Break_Continue($node->num, $this->currentlyContinueScope, "continue");
+				return $this->exec_Break_Continue($node->num, $this->currentlyContinueScope, "continue", $node->getAttribute("startLine"));
 			case Switch_::class:
 				/** @var Switch_ $node */
 				//var_dump($node);
@@ -257,8 +267,8 @@ class main_old2{
 				$scope = $this->label_count++;
 				$continueScope = $this->label_count++;
 
-				$scopeNode = new scopenode($this->currentlyScope, $scope);
-				$continueScopeNode = new scopenode($this->currentlyContinueScope, $continueScope);
+				$scopeNode = new scopenode($this->currentlyScope, $scope, scopenode::TYPE_SWITCH);
+				$continueScopeNode = new scopenode($this->currentlyContinueScope, $continueScope, scopenode::TYPE_SWITCH);
 
 				$this->forscope[$scope] = $scopeNode;
 				$this->forscope[$continueScope] = $continueScopeNode;
@@ -271,13 +281,19 @@ class main_old2{
 
 				$array = [];
 
+				$hasdefault = false;
+
 				foreach($node->cases as $case){
 					$tmp = null;
 					//$id = $this->count++;//4
 					$recursion = false;
 					if($case->cond === null){
+						if($hasdefault === true){
+							throw new phpFinalException("Switch statements may only contain one default clause", $case->getAttribute("startLine"), $this->file);
+						}
 						$default = $this->execStmts($case->stmts);
 						$array[] = [null, null, $default, true];
+						$hasdefault = true;
 						continue;
 					}
 					$expr1 = $this->execExpr($case->cond, null, $tmp, $recursion);
@@ -357,11 +373,12 @@ class main_old2{
 //					var_dump(-$defaultpos - (strlen($tmp)), opcode_dumper::hexentities($exec));
 				}
 
+				if($continueScopeNode->isUsed()){
+					$result = $this->solveLabel($result, $continueScope);
+				}
+
 				if($scopeNode->isUsed()){
-					//$unjmp .= $this->putLabel($scope);
-					//var_dump(opcode_dumper::hexentities($unjmp));
 					$result = $this->solveLabel($result, $scope);
-					//var_dump(opcode_dumper::hexentities($unjmp));
 				}
 				unset($this->forscope[$scope]);
 				$this->currentlyScope = $scopeNode->getParent();
@@ -593,6 +610,9 @@ class main_old2{
 					return $this->execExpr($expr->expr).code::EXIT.$this->exec_variable($var, $this->count);
 				}
 				return $this->execStmts([$expr->expr], $targetid).code::EXIT.$this->put_var($targetid ?? $this->count++);
+			case $expr instanceof Cast:
+				$recursion = true;
+				return $this->putCast($expr, $outputid);
 			case $expr instanceof Expr:
 				//var_dump(get_class($expr));
 				$recursion = true;
@@ -603,7 +623,44 @@ class main_old2{
 		throw new \RuntimeException('execExpr "'.get_class($expr).'" not found');
 	}
 
-	public function execAssignOp(AssignOp $node): string{
+	public function putCast(Cast $expr_node, ?int $outputid = null) : string{
+		switch(true){
+			case $expr_node instanceof CastBool:
+				$id = code::TYPE_BOOL;
+				break;
+			case $expr_node instanceof CastInt:
+				$id = code::TYPE_INT;
+				break;
+			case $expr_node instanceof CastDouble:
+				$id = code::TYPE_DOUBLE;
+				break;
+			case $expr_node instanceof CastObject:
+				$id = code::TYPE_OBJECT;
+				break;
+			case $expr_node instanceof CastString:
+				$id = code::TYPE_STRING;
+				break;
+			case $expr_node instanceof CastUnset:
+				$id = code::TYPE_UNSET;
+				break;
+			default:
+				throw new \RuntimeException("Cast ".get_class($expr_node)." not found.");
+		}
+
+
+		if($expr_node->expr instanceof Scalar||$expr_node->expr instanceof Variable){
+			$basecount = $outputid ?? ++$this->count;
+			return code::CAST.$this->write_varId($basecount).Binary::writeByte($id).$this->execExpr($expr_node->expr);
+		}
+
+		$expr = $this->execStmts([$expr_node->expr]);
+		$test = $this->count++;
+		$basecount = $outputid ?? ++$this->count;
+		return $expr.code::CAST.$this->write_varId($basecount).Binary::writeByte($id).$this->put_var($test);
+
+	}
+
+	public function execAssignOp(AssignOp $node) : string{
 		switch(get_class($node)){
 			case AssignBitwiseAnd::class:
 				return $this->writeAssignOp($node, code::B_AND);
@@ -1208,12 +1265,13 @@ class main_old2{
 	 * @param Expr|int|null $num
 	 * @param int|null $currentlyScope
 	 * @param string $name
+	 * @param int $line
 	 * @return string
 	 */
-	public function exec_Break_Continue($num, ?int $currentlyScope, string $name): string{
+	public function exec_Break_Continue($num, ?int $currentlyScope, string $name, int $line) : string{
 		if($currentlyScope === null){
 			//throw new \RuntimeException("Internal error: Unexpected break. (execStmt)");
-			throw new phpFinalException("'".$name."' not in the 'loop' or 'switch' context");
+			throw new phpFinalException("'".$name."' not in the 'loop' or 'switch' context", $line, $this->file);
 		}
 		$scopeNode = $this->forscope[$currentlyScope] ?? null;
 		if($scopeNode === null){
@@ -1222,11 +1280,11 @@ class main_old2{
 		if($num instanceof LNumber){
 			$num = $num->value;
 		}elseif($num instanceof Scalar){//$num instanceof Variable||$num instanceof ConstFetch||$num instanceof FuncCall
-			throw new phpFinalException("'".$name."' operator accepts only positive integers");
+			throw new phpFinalException("'".$name."' operator accepts only positive integers", $line, $this->file);
 		}
 
 		if($num instanceof Expr||($num !== null&&$num < 1)){
-			throw new phpFinalException("'".$name."' operator with non-integer operand is no longer supported");
+			throw new phpFinalException("'".$name."' operator with non-integer operand is no longer supported", $line, $this->file);
 		}
 		//throw new \RuntimeException('The "break 1+2;" syntax is not supported.');
 		$id = $scopeNode->getId();
@@ -1234,9 +1292,16 @@ class main_old2{
 		for($i = 1; $i <= $breaknum - 1; $i++){
 			$scopeNode = $this->forscope[$scopeNode->getParent()] ?? null;
 			if($scopeNode === null){
-				throw new phpFinalException("Cannot '".$name."' ".$breaknum." levels");
+				throw new phpFinalException("Cannot '".$name."' ".$breaknum." levels", $line, $this->file);
 			}
 			$id = $scopeNode->getId();
+		}
+		if($name === "continue"&&$scopeNode->getType() === scopenode::TYPE_SWITCH){
+			if($scopeNode->getParent() === null){
+				$this->logger->warning73('"continue" targeting switch is equivalent to "break"', $line);
+			}else{
+				$this->logger->warning73('"continue" targeting switch is equivalent to "break". Did you mean to use "continue 2"?', $line);
+			}
 		}
 		$scopeNode->onUse();
 		return $this->putGotoLabel($id);

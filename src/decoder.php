@@ -63,7 +63,7 @@ class decoder{
 				$this->decodeStmt_array($opcode);
 				continue;
 			}
-			if($opcode >= code::READV&&$opcode <= code::VALUE){
+			if($opcode >= code::READV&&$opcode <= code::ISSET){
 				$this->decodeScalar($opcode);
 				continue;
 			}
@@ -240,6 +240,33 @@ class decoder{
 			case code::EXIT:
 				$var = $this->decodeScalar();
 				throw new ExitException($var);
+			case code::CAST:
+				$address = $this->getAddress();
+				$type = $this->getByteInt();
+				$scalar = $this->decodeScalar();
+				$return = null;
+				switch($type){
+					case code::TYPE_BOOL:
+						$return = (bool) $scalar;
+						break;
+					case code::TYPE_INT:
+						$return = (int) $scalar;
+						break;
+					case code::TYPE_DOUBLE:
+						$return = (float) $scalar;
+						break;
+					case code::TYPE_OBJECT:
+						$return = (object) $scalar;
+						break;
+					case code::TYPE_STRING:
+						$return = (string) $scalar;
+						break;
+					case code::TYPE_UNSET:
+						$return = null;
+						break;
+				}
+				$this->setvalue($address, $return);
+				return;
 		}
 		throw new RuntimeException("Unexpected Stmt: off:".$this->getOffset().", op:".bin2hex($opcode)." not found");
 	}
@@ -252,6 +279,7 @@ class decoder{
 		if($opcode === null){
 			$opcode = $this->get(1);
 		}
+		$opcodedebug = bin2hex($opcode);
 		//var_dump([ord($opcode),$this->stream->getOffset()]);
 		if($opcode === code::READV){
 			return $this->getvalue();//$this->getAddress();//$this->getvalue();
@@ -277,7 +305,12 @@ class decoder{
 			//return null;
 		}
 
-		throw new RuntimeException("Scalar ".bin2hex($opcode)." not found.");
+		$binaryStream = $this->getBinaryStream();
+		if($binaryStream === null){
+			throw new \RuntimeException('$binaryStream === null');
+		}
+		$offset = $binaryStream->offset;
+		throw new RuntimeException("Scalar ".bin2hex($opcode)." not found. opcode off: ".$offset);
 	}
 
 	/**

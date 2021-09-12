@@ -46,7 +46,7 @@ abstract class BaseTest extends TestCase{
 		}
 		if($logs !== null){
 			foreach($main_old->getLogger()->getLogs() as $key => $log){
-				if($log[Logger::TYPE_LEVEL] === Logger::WARNING){
+				if($log[Logger::TYPE_LEVEL] === Logger::WARNING||$log[Logger::TYPE_LEVEL] === Logger::WARNING73){
 					self::assertTrue(isset($logs[$key]), "key ".$key." not found");
 					self::assertSame($logs[$key], $log[0]);
 				}
@@ -72,7 +72,7 @@ abstract class BaseTest extends TestCase{
 			throw new \RuntimeException("The output is empty.");
 		}
 
-		self::assertSame(trim($output1), trim($log));
+		self::assertSame($this->convert(trim($output1)), $this->convert(trim($log)));
 	}
 
 	/**
@@ -90,5 +90,13 @@ abstract class BaseTest extends TestCase{
 				],
 			]
 		];
+	}
+
+	public function convert(string $string, string $to = "\n") : string{
+		return strtr($string, array(
+			"\r\n" => $to,
+			"\r" => $to,
+			"\n" => $to,
+		));
 	}
 }

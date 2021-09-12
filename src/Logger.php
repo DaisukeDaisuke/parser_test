@@ -13,6 +13,7 @@ class Logger{
 	private $errorSuppress = false;
 
 	public const WARNING = 2;
+	public const WARNING73 = 2;
 	public const FINAL = 3;
 	/**
 	 * @var array<int, array{string, int}> $logs
@@ -38,7 +39,7 @@ class Logger{
 		$this->display_program = $display_program;
 	}
 
-	public function log(string $message, int $level, $line = null) : void{
+	public function log(string $message, int $level, ?int $line = null) : void{
 		switch($level){
 			case self::WARNING:
 				if($this->isErrorSuppress()) return;
@@ -62,6 +63,11 @@ class Logger{
 
 	public function warning(string $message, ?int $line = null) : string{
 		$this->log($message, self::WARNING, $line);
+		return "";
+	}
+
+	public function warning73(string $message, ?int $line = null) : string{
+		$this->log($message, self::WARNING73, $line);
 		return "";
 	}
 

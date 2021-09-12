@@ -17,6 +17,14 @@ class code{
 	public const TYPE_NULL = 2;
 	//type bool
 
+	//cast
+	public const TYPE_STRING = 16;
+	public const TYPE_BOOL = 17;
+	public const TYPE_ARRAY = 18;
+	public const TYPE_OBJECT = 19;
+	public const TYPE_UNSET = 20;
+
+
 	//opcode
 
 	public const NOP = "\x00";//(string) null or nop
@@ -79,7 +87,7 @@ class code{
 	public const SJMP = "\xA6";//JMPZ int...? //relative
 
 	public const EXIT = "\xA7";//exit exit code
-
+	public const CAST = "\xA8";//CAST output TO(byte) scalar
 
 	public const FUN_INIT = "\xB0";//FUN_INIT string size ... target
 	public const FUN_SEND_ARGS = "\xB1";//FUN_SEND_ARGS scalar
