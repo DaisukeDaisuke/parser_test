@@ -42,9 +42,9 @@ class decoder{
 		$values = [];
 		while(!$this->feof()){
 			if($this->debug === true){
-				$string = $this->dump[$this->getBinaryStream()->getOffset()] ?? null;
+				$string = $this->dump[$this->stream->getOffset()] ?? null;
 				if($string === null){
-					echo("> ".$this->getBinaryStream()->getOffset()."\n");
+					echo("> ".$this->stream->getOffset()."\n");
 				}
 				echo($string."\n");
 			}

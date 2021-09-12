@@ -5,9 +5,9 @@ namespace purser;
 use Throwable;
 
 class phpFinalException extends \RuntimeException{
-	/** @var ?int $line */
+	/** @var ?int stream */
 	public $virtualline = null;
-	/** @var ?string $file */
+	/** @var ?string $virtualfile */
 	public $virtualfile = null;
 
 	/**

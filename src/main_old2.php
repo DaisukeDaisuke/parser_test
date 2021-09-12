@@ -1333,6 +1333,7 @@ class main_old2{
 				throw new \RuntimeException("\$var instanceof Expr === true");
 			}
 		}
+		return "";//
 	}
 
 	public function putIsset(int $address): string{

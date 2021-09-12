@@ -72,6 +72,11 @@ string(1) "0"
 bool(false)
 2',
 			],
+			[
+				'$a = (string) 1+1;var_dump($a+1,1+$a);',
+				'int(3)
+int(3)',
+			],
 		];
 	}
 }
