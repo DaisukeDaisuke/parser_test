@@ -274,6 +274,9 @@ $code = 'for($i = 0; $i <= 3; $i++){
 $code = '$a = (int) "1";$a = "2";var_dump($a,(string) $a,(string) 3);';
 $code = '$a = 0;$b = 0;var_dump((string) ($a+$b));
 ';
+$code = 'echo print $tdm="tdm",print $tdm,$tdm,"\n";';
+$code = 'echo print "a",print "b";';//a1b1
+$code = 'echo print print $tdm="test",print $tdm,1-(int)$tdm,$tdm,"\n";';
 /*
 
 jmpz //case //2
@@ -317,7 +320,7 @@ var_dump("===========");
 //ob_start();
 $decoder = new decoder();
 try{
-	$decoder->decode($output, true);
+	$decoder->decode($output, false);
 }catch(ExitException $exception){
 	var_dump("exit code: ".$exception->getMessagecode());
 	$exception->exec();

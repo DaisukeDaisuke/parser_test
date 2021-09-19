@@ -56,6 +56,18 @@ class printTest extends BaseTest{
 				print $i;',
 				"100_1"
 			],
+			[
+				'echo print "a",print "b";',
+				'a1b1'
+			],
+			[
+				'echo print "a","b",print "c";',
+				'a1bc1'
+			],
+			[
+				'echo print print $tdm="b",print $tdm,1-(int)$tdm,$tdm,"\n";',
+				'b11b11b'
+			],
 		];
 	}
 }

@@ -145,8 +145,8 @@ class main_old2{
 						//$this->count++;
 						continue;
 					}
-					$return .= $this->execStmts([$expr], $targetid);//
-					$result .= code::PRINT.$this->put_var($targetid ?? $this->count++);
+					$return1 = $this->execStmts([$expr], $targetid);//
+					$result .= $return1.code::PRINT.$this->put_var($targetid ?? $this->count++);
 				}
 				$return .= $result;
 
