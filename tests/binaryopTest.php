@@ -268,18 +268,18 @@ class binaryopTest extends BaseTest{
 				'var_dump(1 <=> 1);',
 				'int(0)'
 			],
-			[
-				'var_dump(null ?? true);',
-				self::TYPE_TRUE,
-			],
-			[
-				'$a=1;var_dump($a ?? true);',
-				'int(1)',
-			],
-			[
-				'var_dump($a ?? true);',
-				self::TYPE_TRUE,
-			],
+//			[
+//				'var_dump(null ?? true);',
+//				self::TYPE_TRUE,
+//			],
+//			[
+//				'$a=1;var_dump($a ?? true);',
+//				'int(1)',
+//			],
+//			[
+//				'var_dump($a ?? true);',
+//				self::TYPE_TRUE,
+//			],
 		];
 	}
 }

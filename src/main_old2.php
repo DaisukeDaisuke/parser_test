@@ -601,6 +601,9 @@ class main_old2{
 				if($expr->expr === null){
 					return code::EXIT.$this->getInt(0);
 				}
+				if($expr->expr instanceof LNumber){
+					return code::EXIT.$this->getInt($expr->expr->value);
+				}
 				if($expr->expr instanceof Variable){
 					return code::EXIT.$this->exec_variable($expr->expr, $this->count++);
 				}

@@ -277,6 +277,9 @@ $code = '$a = 0;$b = 0;var_dump((string) ($a+$b));
 $code = 'echo print $tdm="tdm",print $tdm,$tdm,"\n";';
 $code = 'echo print "a",print "b";';//a1b1
 $code = 'echo print print $tdm="test",print $tdm,1-(int)$tdm,$tdm,"\n";';
+$code = 'exit(1);';
+$code = 'var_dump(1+intval(1.1));';
+var_dump(1 + intval(1.1));
 /*
 
 jmpz //case //2
