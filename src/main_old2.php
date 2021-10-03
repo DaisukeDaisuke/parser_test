@@ -81,6 +81,7 @@ use PhpParser\Node\Stmt\If_;
 use PhpParser\Node\Stmt\Nop;
 use PhpParser\Node\Stmt\Switch_;
 use PhpParser\Node\Stmt\While_;
+use PhpParser\Node\VariadicPlaceholder;
 use pocketmine\utils\Binary;
 
 
@@ -575,14 +576,19 @@ class main_old2{
 				$result1 = code::FUN_INIT.$this->put_Scalar($name->parts[0]);
 				$result2 = "";
 				foreach($expr->args as $arg){
-					$targetid = null;
-					$tmprecursion = false;
-					$tmp = $this->execExpr($arg->value, null, $targetid, $tmprecursion);
-					if($tmprecursion){
-						$result2 .= $tmp;
-						$result1 .= code::FUN_SEND_ARGS.$this->put_var($this->count++);
+					if(!$arg instanceof VariadicPlaceholder){
+						$targetid = null;
+						$tmprecursion = false;
+						var_dump($arg->value);
+						$tmp = $this->execExpr($arg->value, null, $targetid, $tmprecursion);
+						if($tmprecursion){
+							$result2 .= $tmp;
+							$result1 .= code::FUN_SEND_ARGS.$this->put_var($this->count++);
+						}else{
+							$result1 .= code::FUN_SEND_ARGS.$tmp;
+						}
 					}else{
-						$result1 .= code::FUN_SEND_ARGS.$tmp;
+						throw new \RuntimeException("Variadic arguments are not currently supported.");
 					}
 				}
 
