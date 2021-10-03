@@ -579,7 +579,6 @@ class main_old2{
 					if(!$arg instanceof VariadicPlaceholder){
 						$targetid = null;
 						$tmprecursion = false;
-						var_dump($arg->value);
 						$tmp = $this->execExpr($arg->value, null, $targetid, $tmprecursion);
 						if($tmprecursion){
 							$result2 .= $tmp;
