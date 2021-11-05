@@ -402,6 +402,8 @@ class main_old2{
 	 * @param bool $recursion
 	 * @param ?int $is_var
 	 * @return string
+	 *
+	 * @throws \RuntimeException
 	 */
 	public function execExpr(Expr $expr, ?int $outputid = null, ?int &$targetid = null, bool &$recursion = false, ?int &$is_var = null): string{//array...?
 		switch(true){
@@ -450,7 +452,7 @@ class main_old2{
 					$recursion = false;
 					return $this->write_var($this->count, 1);//isset $a ?? 1
 				}
-				$targetid = $oldid ?? $this->count;
+				$targetid = $oldid;// ?? $this->count;
 				return $undefined.code::ADD.$var.code::READV.$var.code::INT.$this->putRawInt(1);
 			case $expr instanceof PreDec://--$i;
 				$recursion = true;//!!!!!!!!!
@@ -471,7 +473,7 @@ class main_old2{
 					return $this->write_var($this->count, 1);//isset $a ?? 1
 				}
 
-				$targetid = $oldid ?? $this->count;
+				$targetid = $oldid;// ?? $this->count;
 				return $undefined.code::MINUS.$var.code::READV.$var.code::INT.$this->putRawInt(1);
 			case $expr instanceof PostInc://$i++;
 				//$recursion = true;//!!!!!!!!!
@@ -625,8 +627,10 @@ class main_old2{
 				//var_dump(get_class($expr));
 				$recursion = true;
 				//var_dump(get_class($expr));
-				return $this->execExpr($expr);//再帰...?
 
+				//return $this->execExpr($expr);//再帰...?
+				//break;
+				throw new \RuntimeException("expr ".get_class($expr)." is not supported.");
 		}
 		throw new \RuntimeException('execExpr "'.get_class($expr).'" not found');
 	}
@@ -909,7 +913,7 @@ class main_old2{
 			if($node instanceof Expr){
 				$root = false;
 				$targetid = null;
-				$return1 = $this->execExpr($node, null, $targetid, $root) ?? "";
+				$return1 = $this->execExpr($node, null, $targetid, $root);// ?? "";
 				if($root === false){
 					$return1 = code::WRITEV.$this->write_varId($targetid ?? $this->count).$return1;
 				}
@@ -929,7 +933,7 @@ class main_old2{
 				//$return[] = $this->execStmt($node);
 				//}else{
 
-				$return .= ($this->execStmt($node, $rootscope) ?? "");
+				$return .= ($this->execStmt($node, $rootscope));// ?? ""
 
 //.$return;
 				//}
