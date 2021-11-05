@@ -5,14 +5,16 @@ Warning: This is my fun project and there is no warranty of any kind.
 I recommend kphp as an alternative to this project.  
 https://github.com/VKCOM/kphp
 
-##
+## Unsupported features
+note: many functions are not supported.
 - [ ] class
 - [ ] STDIN
 - [ ] isset
 
-And many functions are not supported.
 
-## 
+
+## Supported functions
+note: many unknown bugs are included.
 - [x] print
 - [x] echo
 - [x] if
@@ -24,5 +26,3 @@ And many functions are not supported.
 - [x] true,false
 - [x] Variable (part)
 - [x] continue, break
-
-And it contains many unknown bugs.
