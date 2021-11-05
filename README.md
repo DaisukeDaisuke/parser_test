@@ -2,7 +2,7 @@
 My personal play project.  
 Please note that it relies on many dependencies.  
 Warning: This is my fun project and there is no warranty of any kind.  
-I recommend kphp.   
+I recommend kphp instead.   
 https://github.com/VKCOM/kphp
 
 <details>
