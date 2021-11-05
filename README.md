@@ -40,3 +40,10 @@ note: many unknown bugs are included.
 - [x] `$a--`,`--$a`
 
 </details>
+
+## files
+[main_old2.php](https://github.com/DaisukeDaisuke/parser_test/blob/master/src/main_old2.php)
+
+[decoder.php](https://github.com/DaisukeDaisuke/parser_test/blob/master/src/decoder.php)
+
+[opcode_dumper.php](https://github.com/DaisukeDaisuke/parser_test/blob/master/src/opcode_dumper.php)
