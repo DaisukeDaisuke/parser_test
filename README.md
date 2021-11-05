@@ -19,7 +19,7 @@ And many functions are not supported.
 - [x] elseif
 - [x] for
 - [x] while
-- [x] (+,-,*,/)
+- [x] (+,-,*,/, etc...)
 - [x] true,false
 - [x] Variable (part)
 - [x] continue, break
