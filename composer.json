@@ -3,7 +3,7 @@
   "description": "",
   "license": "MIT",
   "require": {
-    "php": "^7.2 || ^8.0",
+    "php": "^7.3 || ^7.4 || ^8.0",
     "php-64bit": "*",
     "nikic/php-parser": "^4.10",
     "pocketmine/binaryutils": "^0.1.13"
@@ -20,12 +20,21 @@
     "phpunit/phpunit": "8.*",
     "roave/security-advisories": "dev-latest"
   },
+  "autoload-dev": {
+    "autoload": {
+      "psr-4": {
+        "tests\\": [
+          ""
+        ]
+      }
+    }
+  },
   "scripts": {
     "test": "vendor/bin/phpunit"
   },
   "config": {
     "platform": {
-      "php": "7.2.0"
+      "php": "7.3.0"
     },
     "sort-packages": true
   }

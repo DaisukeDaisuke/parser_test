@@ -1,1 +1,2 @@
-vendor\bin\phpunit.bat
+
+php vendor\phpunit\phpunit\phpunit %*

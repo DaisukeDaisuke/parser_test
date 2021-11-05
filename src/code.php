@@ -4,14 +4,26 @@ namespace purser;
 
 class code{
 	//metadata
+	//int
 	public const TYPE_BYTE = 1;
 	public const TYPE_SHORT = 2;
 	public const TYPE_INT = 4;
 	public const TYPE_LONG = 8;
 	public const TYPE_DOUBLE = 9;
-
 	public const TYPE_SIZE_DOUBLE = 8;
+	//bool
+	public const TYPE_FALSE = 0;
+	public const TYPE_TRUE = 1;
+	public const TYPE_NULL = 2;
 	//type bool
+
+	//cast
+	public const TYPE_STRING = 16;
+	public const TYPE_BOOL = 17;
+	public const TYPE_ARRAY = 18;
+	public const TYPE_OBJECT = 19;
+	public const TYPE_UNSET = 20;
+
 
 	//opcode
 
@@ -22,6 +34,10 @@ class code{
 	public const WRITEV = "\x92";//writev output int size 1
 	public const INT = "\x93";
 	public const STRING = "\x94";
+	public const VALUE = "\x95";
+	public const BOOL = "\x96";
+	//
+	public const ISSET = "\x97";//ISSET output address: bool
 	//public const DOUBLE = "\xC4";
 	//public const READV = "\x00";
 
@@ -65,9 +81,16 @@ class code{
 	public const PRINT = "\xA0";
 	public const JMP = "\xA1";//JMPZ int...? //relative
 	public const JMPZ = "\xA2";//JMPZ READV === 0 INT size offset ...
-
 	public const LABEL = "\xA3";//LABEL INT 1 1
 	public const LGOTO = "\xA4";//GOTOL INT 1 1
 	public const JMPA = "\xA5";//JMPA INT 1 255
+	public const SJMP = "\xA6";//JMPZ int...? //relative
 
+	public const EXIT = "\xA7";//exit exit code
+	public const CAST = "\xA8";//CAST output TO(byte) scalar
+
+	public const FUN_INIT = "\xB0";//FUN_INIT string size ... target
+	public const FUN_SEND_ARGS = "\xB1";//FUN_SEND_ARGS scalar
+	public const FUN_SUBMIT = "\xB2";//FUN_SUBMIT output
+	//public const FUN_RECEIVE_RETURN = "\xB2";//FUN_RECEIVE_RETURN output
 }

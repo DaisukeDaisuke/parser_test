@@ -1,3 +1,7 @@
 /.idea
 /backup
 /vendor
+/bin/
+.phpunit.result.cache
+diff.diff
+output.bin
