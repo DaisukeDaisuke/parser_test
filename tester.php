@@ -279,7 +279,25 @@ $code = 'echo print "a",print "b";';//a1b1
 $code = 'echo print print $tdm="test",print $tdm,1-(int)$tdm,$tdm,"\n";';
 $code = 'exit(1);';
 $code = 'var_dump(1+intval(1.1));';
-var_dump(1 + intval(1.1));
+//var_dump(1 + intval(1.1));
+$code = '$i = 1;
+while ($i <= 10) {
+	echo $i++;
+}';
+$code = 'for($i=0; $i<101; $i++){
+					if($i%15 === 0){
+					    echo "FizzBuzz";
+					}else if($i%3 === 0){
+					    echo "Fizz";
+					}else if($i%5 === 0){
+					    echo "Buzz";
+					}else{
+					    echo $i;
+					}
+					echo ",";
+				}';
+//$code = '$a[]="a";';
+
 /*
 
 jmpz //case //2
@@ -313,7 +331,7 @@ echo $time." 秒";
 
 //var_dump($main_old);
 
-//file_put_contents(".\\output.bin", $output);
+file_put_contents("output.bin", $output);
 $list1 = [];
 var_dump(opcode_dumper::hexentities($output, $list1), opcode_dumper::hexentities1($output));
 //var_dump($list1);

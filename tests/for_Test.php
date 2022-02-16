@@ -90,6 +90,22 @@ class for_Test extends TestCase{
 				'0',
 			],
 			[
+				'for(;false,false,false,false,true;){
+					echo 1;
+					break;
+				}
+				echo 0;',
+				'10',
+			],
+			[
+				'for(;true,false;){
+					echo 1;
+					break;
+				}
+				echo 0;',
+				'0',
+			],
+			[
 				'for ($i = 1, $j = 0; $i <= 10; $j += $i, print $i, $i++);',
 				'12345678910',
 			],
