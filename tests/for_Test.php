@@ -27,26 +27,32 @@ class for_Test extends TestCase{
 
 		try{
 			$main_old = new main_old2();
-			$output = $main_old->execStmts($stmts);
+			$output = $main_old->onexec($stmts);
 		}catch(phpFinalException $exception){
 			if($compilerfinalerror !== null){
 				self::assertEquals($exception->getMessage(), $compilerfinalerror);
 				return;
 			}
-			throw new $exception;
+			throw $exception;
 		}
 
 		if($compilerfinalerror !== null){
 			throw new \RuntimeException("phpFinalException '".$compilerfinalerror."' was not thrown.");
 		}
 
-
 		//var_dump($test = opcode_dumper::hexentities($output));
 
-		ob_start();
-		$decoder = new decoder();
-		$decoder->decode($output);
-		$log = ob_get_clean();
+		try{
+			ob_start();
+			$decoder = new decoder();
+			$decoder->decode($output);
+			$log = ob_get_clean();
+		}catch(\RuntimeException $exception){
+			ob_get_clean();
+			var_dump($code);
+			throw $exception;
+		}
+
 
 		//var_dump($code,$stmts,$output,$log);
 

@@ -5,6 +5,88 @@ namespace purser;
 use pocketmine\utils\Binary;
 
 class opcode_dumper{
+	public static function dumpInt(string $str, int &$i) : string{
+		$return = ' INT:'.bin2hex($str[$i++]).';';
+		$return .= ' size:'.bin2hex($str[$i]).';';
+		$size = ord($str[$i++]);
+		$return1 = 0;
+		switch($size){
+			case code::TYPE_BYTE://byte
+				$return1 = Binary::readSignedByte($str[$i]);
+				$return .= ' '.$return1.':'.bin2hex($str[$i]).';';
+
+				break;
+			case code::TYPE_SHORT://short
+				$return1 = Binary::readSignedShort(substr($str, $i, 2));
+				$return .= ' :'.bin2hex($str[$i++]).';';
+				$return .= ' :'.bin2hex($str[$i]).';';
+				break;
+			case code::TYPE_INT://int
+				$return1 = Binary::readInt(substr($str, $i, 4));
+				$return .= ' :'.bin2hex($str[$i++]).';';
+				$return .= ' :'.bin2hex($str[$i++]).';';
+				$return .= ' :'.bin2hex($str[$i++]).';';
+				$return .= ' :'.bin2hex($str[$i]).';';
+				break;
+			case code::TYPE_LONG://long
+				$return1 = Binary::readLong(substr($str, $i, 8));
+				$return .= ' :'.bin2hex($str[$i++]).';';
+				$return .= ' :'.bin2hex($str[$i++]).';';
+				$return .= ' :'.bin2hex($str[$i++]).';';
+				$return .= ' :'.bin2hex($str[$i++]).';';
+
+				$return .= ' :'.bin2hex($str[$i++]).';';
+				$return .= ' :'.bin2hex($str[$i++]).';';
+				$return .= ' :'.bin2hex($str[$i++]).';';
+				$return .= ' :'.bin2hex($str[$i]).';';
+				break;
+			case code::TYPE_DOUBLE:
+				$return1 = Binary::readLDouble(substr($str, $i, 8));
+				$return .= ' :'.bin2hex($str[$i++]).';';
+				$return .= ' :'.bin2hex($str[$i++]).';';
+				$return .= ' :'.bin2hex($str[$i++]).';';
+				$return .= ' :'.bin2hex($str[$i++]).';';
+
+				$return .= ' :'.bin2hex($str[$i++]).';';
+				$return .= ' :'.bin2hex($str[$i++]).';';
+				$return .= ' :'.bin2hex($str[$i++]).';';
+				$return .= ' :'.bin2hex($str[$i]).';';
+				break;
+		}
+		return $return;
+	}
+
+	public static function readInt(string $str, int &$i, ?int &$size = null) : int{
+		$code = $str[$i++];
+		if($code !== code::INT){
+			throw new \LogicException("readInt: off:".$i.", val: ".ord($code)." is not int");
+		}
+		$size = ord($str[$i++]);
+		$result = null;
+		switch($size){
+			case code::TYPE_BYTE://byte
+				$result = Binary::readSignedByte($str[$i]);
+				break;
+			case code::TYPE_SHORT://short
+				$result = Binary::readSignedShort(substr($str, $i, 2));
+				$i += 1;
+				break;
+			case code::TYPE_INT://int
+				$result = Binary::readInt(substr($str, $i, 4));
+				$i += 3;
+				break;
+			case code::TYPE_LONG://long
+				$result = Binary::readLong(substr($str, $i, 8));
+				$i += 7;
+				break;
+			case code::TYPE_DOUBLE:
+				$result = Binary::readLDouble(substr($str, $i, 8));
+				$i += 7;
+				break;
+		}
+		return $result;
+	}
+
 	/** @phpstan-ignore-next-line */
 	public static function hexentities(string $str, array &$list = []) : string{
 		$result = '';
@@ -24,55 +106,8 @@ class opcode_dumper{
 					$return .= ' output:'.bin2hex($str[$i]).';';
 					break;
 				case code::INT:
-					$return .= ' INT:'.bin2hex($str[$i++]).';';
-					$return .= ' size:'.bin2hex($str[$i]).';';
-					$size = ord($str[$i++]);
-					$return1 = 0;
-					switch($size){
-						case code::TYPE_BYTE://byte
-							$return1 = Binary::readSignedByte($str[$i]);
-							$return .= ' '.$return1.':'.bin2hex($str[$i]).';';
-
-							break;
-						case code::TYPE_SHORT://short
-							$return1 = Binary::readSignedShort(substr($str, $i, 2));
-							$return .= ' :'.bin2hex($str[$i++]).';';
-							$return .= ' :'.bin2hex($str[$i]).';';
-							break;
-						case code::TYPE_INT://int
-							$return1 = Binary::readInt(substr($str, $i, 4));
-							$return .= ' :'.bin2hex($str[$i++]).';';
-							$return .= ' :'.bin2hex($str[$i++]).';';
-							$return .= ' :'.bin2hex($str[$i++]).';';
-							$return .= ' :'.bin2hex($str[$i]).';';
-							break;
-						case code::TYPE_LONG://long
-							$return1 = Binary::readLong(substr($str, $i, 8));
-							$return .= ' :'.bin2hex($str[$i++]).';';
-							$return .= ' :'.bin2hex($str[$i++]).';';
-							$return .= ' :'.bin2hex($str[$i++]).';';
-							$return .= ' :'.bin2hex($str[$i++]).';';
-
-							$return .= ' :'.bin2hex($str[$i++]).';';
-							$return .= ' :'.bin2hex($str[$i++]).';';
-							$return .= ' :'.bin2hex($str[$i++]).';';
-							$return .= ' :'.bin2hex($str[$i]).';';
-							break;
-						case code::TYPE_DOUBLE:
-							$return1 = Binary::readLDouble(substr($str, $i, 8));
-							$return .= ' :'.bin2hex($str[$i++]).';';
-							$return .= ' :'.bin2hex($str[$i++]).';';
-							$return .= ' :'.bin2hex($str[$i++]).';';
-							$return .= ' :'.bin2hex($str[$i++]).';';
-
-							$return .= ' :'.bin2hex($str[$i++]).';';
-							$return .= ' :'.bin2hex($str[$i++]).';';
-							$return .= ' :'.bin2hex($str[$i++]).';';
-							$return .= ' :'.bin2hex($str[$i]).';';
-							break;
-					}
+					$return .= self::dumpInt($str, $i);
 					$return .= PHP_EOL;
-
 					break;
 				case code::STRING:
 					$return .= ' STRING:'.bin2hex($str[$i++]).';';
@@ -203,7 +238,6 @@ class opcode_dumper{
 					$return .= ' output:'.bin2hex($str[$i++]).';';
 					$return .= ' output:'.bin2hex($str[$i]).';';
 					break;
-
 				case code::EQUAL:
 					$return .= ' EQUAL?:'.bin2hex($str[$i++]).';';
 					$return .= ' output:'.bin2hex($str[$i++]).';';
@@ -294,7 +328,9 @@ class opcode_dumper{
 					$return .= ' PRINT:'.bin2hex($str[$i]).';';
 					break;
 				case code::JMP:
-					$return .= ' JMP:'.bin2hex($str[$i]).';';
+					$return .= ' JMP:'.bin2hex($str[$i++]).', ';
+					$int = self::readInt($str, $i, $size);
+					$return .= "size: ".$size.", ".$int.", set: ".($i + $int).";";
 					break;
 				case code::JMPZ:
 					$return .= ' JMPZ:'.bin2hex($str[$i]).';';
@@ -303,11 +339,12 @@ class opcode_dumper{
 					$return .= ' SJMP:'.bin2hex($str[$i]).';';
 					break;
 				case code::LABEL:
-					$return .= ' LABEL:'.bin2hex($str[$i]).';';
+					$return .= ' LABEL:'.bin2hex($str[$i++]).' ';
+					$return .= 'label: 0x'.dechex(self::readInt($str, $i, $size)).";";
 					break;
 				case code::LGOTO:
-					$return .= ' LGOTO:'.bin2hex($str[$i]).';';
-					//$return .= ' var:'.bin2hex($str[$i++]).';';
+					$return .= ' LGOTO:'.bin2hex($str[$i++]).' ';
+					$return .= 'jmp: 0x'.dechex(self::readInt($str, $i, $size)).";";
 					break;
 				case code::JMPA:
 					$return .= ' JMPA:'.bin2hex($str[$i]).';';

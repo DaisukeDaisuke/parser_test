@@ -177,7 +177,7 @@ class main_old2{
 
 
 				//var_dump(opcode_dumper::hexentities($expr.$this->putjmpz($ifcount, $stmts).$elseifs.$else));
-				return $this->solveLabel($expr.$this->putjmpz($ifcount, $stmts).$elseifs.$else, $label);//.$this->putLabel($label); $else
+				return $this->addLabel($expr.$this->putjmpz($ifcount, $stmts).$elseifs.$else, $label);//.$this->putLabel($label); $else
 			case Else_::class:
 				return $this->execStmts($node->stmts);//JMPZ
 			case Expression::class:
@@ -185,21 +185,23 @@ class main_old2{
 			case For_::class:
 			case While_::class:
 				/** @var For_|While_ $node */
-			$scope = $this->label_count++;
-			$continueScope = $this->label_count++;
+				$back_label = $this->label_count++;
+				$end_label = $this->label_count++;
+				$scope = $this->label_count++;
+				$continueScope = $this->label_count++;
 
-			$scopeNode = new scopenode($this->currentlyScope, $scope, scopenode::TYPE_FOR_WHILE);
-			$continueScopeNode = new scopenode($this->currentlyContinueScope, $continueScope, scopenode::TYPE_FOR_WHILE);
+				$scopeNode = new scopenode($this->currentlyScope, $scope, scopenode::TYPE_FOR_WHILE);
+				$continueScopeNode = new scopenode($this->currentlyContinueScope, $continueScope, scopenode::TYPE_FOR_WHILE);
 
-			$this->forscope[$scope] = $scopeNode;
-			$this->forscope[$continueScope] = $continueScopeNode;
+				$this->forscope[$scope] = $scopeNode;
+				$this->forscope[$continueScope] = $continueScopeNode;
 
-			$this->currentlyScope = $scope;
-			$this->currentlyContinueScope = $continueScope;
-			$init = "";
-			$loop = "";
-			if($node instanceof For_){
-				foreach($node->init as $value){
+				$this->currentlyScope = $scope;
+				$this->currentlyContinueScope = $continueScope;
+				$init = "";
+				$loop = "";
+				if($node instanceof For_){
+					foreach($node->init as $value){
 						$init .= $this->execExpr($value);
 					}
 				}
@@ -218,7 +220,7 @@ class main_old2{
 				$stmts = $this->execStmts($node->stmts);
 				if($continueScopeNode->isUsed()){
 					//var_dump(opcode_dumper::hexentities($stmts));
-					$stmts = $this->solveLabel($stmts, $continueScope);
+					$stmts = $this->addLabel($stmts, $continueScope);
 				}
 				if($node instanceof For_){
 					foreach($node->loop as $value){
@@ -229,29 +231,31 @@ class main_old2{
 
 				//$cond = "";
 
-
-				$cond = $this->putjmp($output, true, 7);//7 = putunjmp len
+				$cond = $this->putGotoLabel($scope);//7 = putunjmp len
 				foreach(array_reverse($condresult) as $value){
 					$tmpjmp = $this->putjmp($cond, true, 0);//false
 					$cond = $value.$this->putjmpz($tmpcount, "", $tmpjmp, 0).$tmpjmp.$cond;//8//true
 				}
+
 				//$cond = $cond;
 
-				$output = $cond.$output;
+				$output = $this->putLabel($back_label).$cond.$output;
 				//$output = $init.$this->putunjmp($output);
 				//$output = $init.$cond.$this->putunjmp($output);
-				$unjmp = $this->putunjmp($output);
-				if($scopeNode->isUsed()){
-					//$unjmp .= $this->putLabel($scope);
-					//var_dump(opcode_dumper::hexentities($unjmp));
-					$unjmp = $this->solveLabel($unjmp, $scope);
-					//var_dump(opcode_dumper::hexentities($unjmp));
-				}
+				$unjmp = $output.$this->putGotoLabel($back_label);
+				$unjmp = $this->addLabel($unjmp, $scope);//end
+//				if($scopeNode->isUsed()){
+//					//$unjmp .= $this->putLabel($scope);
+//					//var_dump(opcode_dumper::hexentities($unjmp));
+//					$unjmp = $this->addLabel($unjmp, $scope);
+//					//var_dump(opcode_dumper::hexentities($unjmp));
+//				}
+
 				unset($this->forscope[$scope]);
 				$this->currentlyScope = $scopeNode->getParent();
-			$this->currentlyContinueScope = $continueScopeNode->getParent();
+				$this->currentlyContinueScope = $continueScopeNode->getParent();
 
-			return $init.$unjmp;
+				return $init.$unjmp;
 
 			case Break_::class;
 				/** @var break_ $node */
@@ -375,11 +379,11 @@ class main_old2{
 				}
 
 				if($continueScopeNode->isUsed()){
-					$result = $this->solveLabel($result, $continueScope);
+					$result = $this->addLabel($result, $continueScope);
 				}
 
 				if($scopeNode->isUsed()){
-					$result = $this->solveLabel($result, $scope);
+					$result = $this->addLabel($result, $scope);
 				}
 				unset($this->forscope[$scope]);
 				$this->currentlyScope = $scopeNode->getParent();
@@ -745,14 +749,20 @@ class main_old2{
 		return $this->write_variableId($this->getValualueId($solvedName, $force, $id, $oldid));//code::VALUE
 	}
 
-	public function write_variableId(int $node): string{//変数処理...
+	public function write_variableId(int $node) : string{//変数処理...
 		return code::VALUE.$this->write_varId($node);//code::VALUE
 	}
 
-	public function solveLabel(string $exec, int $label): string{
+	public function addLabel(string $exec, int $label) : string{
+		return $exec.$this->putLabel($label);
+	}
+
+	public function solveLabel(string $exec) : string{
+		$labels = [];
 		//return $exec;
-		$array = [];
+		$lgoto = [];
 		$len = strlen($exec);
+		$label_offset = 0;
 		for($i = 0, $iMax = strlen($exec); $i < $iMax;){
 			switch($exec[$i]){
 				case code::INT:
@@ -848,7 +858,6 @@ class main_old2{
 				case code::JMP:
 				case code::JMPZ:
 				case code::SJMP://
-				case code::LABEL:
 				case code::JMPA:
 				case code::FUN_INIT:
 				case code::FUN_SEND_ARGS:
@@ -856,35 +865,55 @@ class main_old2{
 					break;
 				case code::LGOTO://LGOTO INT SIZE 1
 					$start = $i;
-					//var_dump("!!",ord($exec[$i+2]),ord($exec[$i+3]),ord($exec[$i+4]));
-
-					$tmpid = Binary::readShort($exec[$i + 3].$exec[$i + 4]);
-					//var_dump($tmpsize);
-					$i += 5;
-					if($tmpid !== $label){
-						break;
-					}
-					$array[] = [$start, 5, $i++];
-					/*if($label === $return1){
-
-					}*/
+					$labelId = Binary::readInt($exec[$i + 3].$exec[$i + 4].$exec[$i + 5].$exec[$i + 6]);
+					$i += 7;
+					$lgoto[] = [$start, 7, $i, $labelId];
+					break;
+				case code::LABEL:
+					$labelId = Binary::readInt($exec[$i + 3].$exec[$i + 4].$exec[$i + 5].$exec[$i + 6]);
+					//var_dump(opcode_dumper::hexentities1(substr($exec, $i-1, 20)));
+					$exec = substr_replace($exec, '', $i, 7);
+					//var_dump(opcode_dumper::hexentities1(substr($exec, $i-1, 20)));
+					$labels[$labelId] = $i;
+					$iMax = strlen($exec);
+					$label_offset += 7;
+					//var_dump(dechex(ord($exec[$i])));
 					break;
 				default:
+//					var_dump("solveLabel");
+//					var_dump(opcode_dumper::hexentities1(substr($exec, $i-1, 20)));
+//					var_dump(dechex(ord($exec[$i])));
 					$i++;
+					break;
 			}
 		}
-		$len = strlen($exec);
-		foreach(array_reverse($array) as $value){
-			[$start, $len1, $end] = $value; //$skip_replace
-			$new = code::JMP.code::INT.chr(code::TYPE_SHORT).Binary::writeShort($len - ($end + 0));//$this->getInt($len - ($end + 0));
+		foreach(array_reverse($lgoto) as $value){
+			[$start, $len1, $end, $labelId] = $value; //$skip_replace
+			$start2 = $labels[$labelId];
+			$jmp_offset = $start2 - $end;
+//			if($jmp_offset === 0){
+//				$exec = substr_replace($exec, '', $start, $len1);
+//				continue;
+//			}
 
-			//var_dump(opcode_dumper::hexentities($exec));
-
-			/** @var string $exec */
+			if($jmp_offset > 0){
+				$jmp = code::JMP.code::INT.Binary::writeByte(4).Binary::writeInt($jmp_offset);
+			}else{
+				$jmp = code::JMP.code::INT.Binary::writeByte(4).Binary::writeInt($jmp_offset);
+			}
 			$exec = substr_replace($exec, '', $start, $len1);
-			$exec = substr_replace($exec, $new, $start, 0);
-			//var_dump(opcode_dumper::hexentities($exec));
-			$len = strlen($exec);
+			$exec = substr_replace($exec, $jmp, $start, 0);
+
+
+//			$new = code::JMP.code::INT.chr(code::TYPE_SHORT).Binary::writeShort($len - ($end + 0));//$this->getInt($len - ($end + 0));
+//
+//			//var_dump(opcode_dumper::hexentities($exec));
+//
+//			/** @var string $exec */
+//			$exec = substr_replace($exec, '', $start, $len1);
+//			$exec = substr_replace($exec, $new, $start, 0);
+//			//var_dump(opcode_dumper::hexentities($exec));
+//			$len = strlen($exec);
 		}
 		return $exec;
 	}
@@ -894,7 +923,8 @@ class main_old2{
 	 * @return string
 	 */
 	public function onexec(array $nodes): string{
-		return $this->execStmts($nodes, $tmp, true);
+		//return $this->execStmts($nodes, $tmp, true);
+		return $this->solveLabel($this->execStmts($nodes, $tmp, true));
 	}
 
 	/**
@@ -1250,11 +1280,15 @@ class main_old2{
 		return code::JMPZ.$this->put_var($var).$this->getInt(strlen($stmts) + $offset + 0).$stmts;
 	}
 
-	public function putjmp(string $stmts, bool $skip = false, int $offset = 0): string{
+	public function putjmp(string $stmts, bool $skip = false, int $offset = 0) : string{
 		if($skip === true){
 			return code::JMP.$this->getInt(strlen($stmts) + $offset);
 		}
 		return code::JMP.$this->getInt(strlen($stmts) + $offset).$stmts;
+	}
+
+	public function putJmpLabel(string $stmts, int $label) : string{
+		return $this->putLabel($label).$stmts.$this->putGotoLabel($label);
 	}
 
 	public function putunjmp(string $stmts) : string{
@@ -1268,7 +1302,7 @@ class main_old2{
 
 	public function putGotoLabel(int $label) : string{
 		//var_dump(strlen(code::LGOTO.code::INT.chr(code::TYPE_SHORT).Binary::writeShort($label)));
-		return code::LGOTO.code::INT.chr(code::TYPE_SHORT).Binary::writeShort($label);
+		return code::LGOTO.code::INT.chr(code::TYPE_INT).Binary::writeInt($label);
 	}
 
 	/**
@@ -1321,7 +1355,7 @@ class main_old2{
 
 
 	public function putLabel(int $label): string{
-		return code::LABEL.$this->getInt($label);
+		return code::LABEL.code::INT.chr(code::TYPE_INT).Binary::writeInt($label);
 	}
 
 	public function getLogger(): Logger{

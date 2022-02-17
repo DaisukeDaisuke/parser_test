@@ -452,6 +452,14 @@ class if_Test extends BaseTest{
 				echo "9";',
 				'129',
 			],
+//			[
+//				'if(!print 1||print 2||!print 3||print 4||print 5||print 6){
+//					echo "true";
+//				}else{
+//					echo "false";
+//				}',
+//				'1true',
+//			],
 		];
 
 	}

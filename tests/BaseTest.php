@@ -62,6 +62,10 @@ abstract class BaseTest extends TestCase{
 			$decoder->decode($output);
 		}catch(ExitException $exception){
 			self::assertSame($exitcode, $exception->exec(false), "ExitException falled");
+		}catch(\RuntimeException $exception){
+			ob_get_clean();
+			var_dump($code);
+			throw $exception;
 		}
 
 		$log = ob_get_clean();

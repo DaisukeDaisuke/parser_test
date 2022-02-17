@@ -52,7 +52,7 @@ class decoder{
 			$test = bin2hex($opcode);
 			//binaryOP
 			if($opcode === code::NOP){
-				//echo "「nop: ".$this->getOffset()."」";
+				echo "「nop: ".$this->getOffset()."」\n";
 				continue;
 			}
 			if($opcode >= code::ADD&&$opcode <= code::ABC){
@@ -268,6 +268,9 @@ class decoder{
 				$this->setvalue($address, $return);
 				return;
 		}
+		//var_dump(opcode_dumper::hexentities($this->stream->get(20)));
+//		ob_end_flush();
+//		var_dump(opcode_dumper::hexentities1($this->stream->get(20)));
 		throw new RuntimeException("Unexpected Stmt: off:".$this->getOffset().", op:".bin2hex($opcode)." not found");
 	}
 

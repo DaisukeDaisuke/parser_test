@@ -3,7 +3,6 @@ include __DIR__."/vendor/autoload.php";
 
 error_reporting(E_ALL);
 
-use PhpParser\NodeDumper;
 use PhpParser\ParserFactory;
 use purser\decoder;
 use purser\ExitException;
@@ -284,17 +283,8 @@ $code = '$i = 1;
 while ($i <= 10) {
 	echo $i++;
 }';
-$code = 'for($i=0; $i<101; $i++){
-					if($i%15 === 0){
-					    echo "FizzBuzz";
-					}else if($i%3 === 0){
-					    echo "Fizz";
-					}else if($i%5 === 0){
-					    echo "Buzz";
-					}else{
-					    echo $i;
-					}
-					echo ",";
+$code = 'for($i=0; $i<10; $i++){
+					echo $i.",";
 				}';
 //$code = '$a[]="a";';
 
@@ -311,6 +301,15 @@ jmp 4
 
 */
 
+$code = 'if(false){
+					if(false){
+						echo "0";
+					}else{
+						echo "1";
+					}
+				}else{
+					echo "2";
+				}';
 $time_start = microtime(true);
 
 $parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7);
@@ -320,8 +319,8 @@ if($stmts === null){
 	throw new \RuntimeException("phpParser crashed");
 }
 
-$dumper = new NodeDumper(['dumpComments' => true,]);
-echo $dumper->dump($stmts, "<?php\n".$code);
+//$dumper = new NodeDumper(['dumpComments' => true,]);
+//echo $dumper->dump($stmts, "<?php\n".$code);
 
 $main_old = new main_old2();
 $output = $main_old->onexec($stmts);
@@ -336,12 +335,13 @@ $list1 = [];
 var_dump(opcode_dumper::hexentities($output, $list1), opcode_dumper::hexentities1($output));
 //var_dump($list1);
 var_dump(strlen($output));
+
 var_dump("===========");
 
 //ob_start();
 $decoder = new decoder();
 try{
-	$decoder->decode($output, false);
+	$decoder->decode($output, true);
 }catch(ExitException $exception){
 	var_dump("exit code: ".$exception->getMessagecode());
 	$exception->exec();
@@ -357,3 +357,4 @@ if(isset($binaryStream)){
 }else{
 	var_dump("!!");
 }
+
