@@ -4,8 +4,6 @@ include __DIR__."/vendor/autoload.php";
 error_reporting(E_ALL);
 
 use PhpParser\ParserFactory;
-use purser\decoder;
-use purser\ExitException;
 use purser\main_old2;
 use purser\opcode_dumper;
 
@@ -301,15 +299,15 @@ jmp 4
 
 */
 
-$code = 'if(false){
-					if(false){
-						echo "0";
-					}else{
-						echo "1";
+$code = 'for($i=0; $i<12; $i++){
+					$i++;
+					echo $i;
+					if($i >= 10){
+						echo "exit";
+						break;
 					}
-				}else{
-					echo "2";
-				}';
+				}
+				echo 5;';
 $time_start = microtime(true);
 
 $parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7);
@@ -339,22 +337,22 @@ var_dump(strlen($output));
 var_dump("===========");
 
 //ob_start();
-$decoder = new decoder();
-try{
-	$decoder->decode($output, true);
-}catch(ExitException $exception){
-	var_dump("exit code: ".$exception->getMessagecode());
-	$exception->exec();
-}
-
-//$log = ob_get_clean();
-//var_dump($log);
-$binaryStream = $decoder->getBinaryStream();
-if(isset($binaryStream)){
-	if(strlen($output) !== $binaryStream->getOffset()){
-		throw new \RuntimeException("A program overrun has been detected. Expected: ".strlen($output).", Actual: ".$binaryStream->getOffset());
-	}
-}else{
-	var_dump("!!");
-}
-
+//$decoder = new decoder();
+//try{
+//	$decoder->decode($output, true);
+//}catch(ExitException $exception){
+//	var_dump("exit code: ".$exception->getMessagecode());
+//	$exception->exec();
+//}
+//
+////$log = ob_get_clean();
+////var_dump($log);
+//$binaryStream = $decoder->getBinaryStream();
+//if(isset($binaryStream)){
+//	if(strlen($output) !== $binaryStream->getOffset()){
+//		throw new \RuntimeException("A program overrun has been detected. Expected: ".strlen($output).", Actual: ".$binaryStream->getOffset());
+//	}
+//}else{
+//	var_dump("!!");
+//}
+//

@@ -34,6 +34,9 @@ class for_Test extends TestCase{
 				return;
 			}
 			throw $exception;
+		}catch(\Throwable $e){
+			var_dump($code);
+			throw $e;
 		}
 
 		if($compilerfinalerror !== null){
@@ -47,7 +50,7 @@ class for_Test extends TestCase{
 			$decoder = new decoder();
 			$decoder->decode($output);
 			$log = ob_get_clean();
-		}catch(\RuntimeException $exception){
+		}catch(\Throwable $exception){
 			ob_get_clean();
 			var_dump($code);
 			throw $exception;

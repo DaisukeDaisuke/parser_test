@@ -177,7 +177,8 @@ class main_old2{
 
 
 				//var_dump(opcode_dumper::hexentities($expr.$this->putjmpz($ifcount, $stmts).$elseifs.$else));
-				return $this->addLabel($expr.$this->putjmpz($ifcount, $stmts).$elseifs.$else, $label);//.$this->putLabel($label); $else
+				return $this->solveLabel($this->addLabel($expr.$this->putjmpz($ifcount, $stmts).$elseifs.$else, $label));
+			//return $this->solveLabel($this->addLabel($expr.$this->putjmpz($ifcount, $stmts).$elseifs.$else, $label));//.$this->putLabel($label); $else
 			case Else_::class:
 				return $this->execStmts($node->stmts);//JMPZ
 			case Expression::class:
@@ -872,6 +873,7 @@ class main_old2{
 				case code::LABEL:
 					$labelId = Binary::readInt($exec[$i + 3].$exec[$i + 4].$exec[$i + 5].$exec[$i + 6]);
 					//var_dump(opcode_dumper::hexentities1(substr($exec, $i-1, 20)));
+					/** @var string $exec */
 					$exec = substr_replace($exec, '', $i, 7);
 					//var_dump(opcode_dumper::hexentities1(substr($exec, $i-1, 20)));
 					$labels[$labelId] = $i;
