@@ -891,6 +891,9 @@ class main_old2{
 		}
 		foreach(array_reverse($lgoto) as $value){
 			[$start, $len1, $end, $labelId] = $value; //$skip_replace
+			if(!isset($labels[$labelId])){
+				continue;
+			}
 			$start2 = $labels[$labelId];
 			$jmp_offset = $start2 - $end;
 //			if($jmp_offset === 0){
