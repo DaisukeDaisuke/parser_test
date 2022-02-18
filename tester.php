@@ -1,9 +1,11 @@
 <?php
 include __DIR__."/vendor/autoload.php";
 
-error_reporting(E_ALL);
+//error_reporting(E_ALL);
 
 use PhpParser\ParserFactory;
+use purser\decoder;
+use purser\ExitException;
 use purser\main_old2;
 use purser\opcode_dumper;
 
@@ -11,13 +13,14 @@ ini_set('xdebug.var_display_max_children', "-1");
 ini_set('xdebug.var_display_max_data', "-1");
 ini_set('xdebug.var_display_max_depth', "-1");
 
-function hexentities(string $str): string{
+function hexentities(string $str) : string{
 	$return = '';
 	for($i = 0, $iMax = strlen($str); $i < $iMax; $i++){
 		$return .= ' :'.bin2hex($str[$i]).';';
 	}
 	return $return;
 }
+
 
 //$code = 'echo true === false;';
 //$code = "echo ((2*1+1)+(2/1+3)-(2/(5*6+20)*(5*(6/2))))+7.4;";
@@ -149,8 +152,7 @@ $k=$i-$j;
 echo $k;';*/
 /*$code='echo print $k = print $j = $i = 100;';*/
 /*$code='echo $j = $i = 100;';
-$code='$i = 100;$i = 200;';*/
-/*$code = '$i = 100;
+$code='$i = 100;$i = 200;';*//*$code = '$i = 100;
 				$j=200;
 				$k=$i-$j;
 				echo $k;'*/;
@@ -299,15 +301,22 @@ jmp 4
 
 */
 
-$code = 'for($i=0; $i<12; $i++){
-					$i++;
-					echo $i;
-					if($i >= 10){
-						echo "exit";
-						break;
-					}
-				}
-				echo 5;';
+$code = '
+if(false){
+        for($i=0; $i<5; $i++){
+                echo $i;
+        }
+}else{
+        for($i=0; $i<5; $i++){
+                echo $i++;
+        }
+}';
+
+//$code='$j=1+1+1;print $i."\n";';
+var_dump($i + 1);
+var_dump((string) $i);
+//$code='var_dump($i+1+5);';
+
 $time_start = microtime(true);
 
 $parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7);
@@ -337,22 +346,22 @@ var_dump(strlen($output));
 var_dump("===========");
 
 //ob_start();
-//$decoder = new decoder();
-//try{
-//	$decoder->decode($output, true);
-//}catch(ExitException $exception){
-//	var_dump("exit code: ".$exception->getMessagecode());
-//	$exception->exec();
-//}
-//
-////$log = ob_get_clean();
-////var_dump($log);
-//$binaryStream = $decoder->getBinaryStream();
-//if(isset($binaryStream)){
-//	if(strlen($output) !== $binaryStream->getOffset()){
-//		throw new \RuntimeException("A program overrun has been detected. Expected: ".strlen($output).", Actual: ".$binaryStream->getOffset());
-//	}
-//}else{
-//	var_dump("!!");
-//}
-//
+$decoder = new decoder();
+try{
+	$decoder->decode($output, true);
+}catch(ExitException $exception){
+	var_dump("exit code: ".$exception->getMessagecode());
+	$exception->exec();
+}
+
+//$log = ob_get_clean();
+//var_dump($log);
+$binaryStream = $decoder->getBinaryStream();
+if(isset($binaryStream)){
+	if(strlen($output) !== $binaryStream->getOffset()){
+		throw new \RuntimeException("A program overrun has been detected. Expected: ".strlen($output).", Actual: ".$binaryStream->getOffset());
+	}
+}else{
+	var_dump("!!");
+}
+

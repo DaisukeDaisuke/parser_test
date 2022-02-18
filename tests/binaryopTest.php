@@ -268,6 +268,60 @@ class binaryopTest extends BaseTest{
 				'var_dump(1 <=> 1);',
 				'int(0)'
 			],
+			[
+				'var_dump(1+$i);',
+				'int(1)',
+				null,
+				null,
+				[
+					"php compiler warning: Undefined variable i"
+				]
+			],
+			[
+				'var_dump($i+1);',
+				'int(1)',
+				null,
+				null,
+				[
+					"php compiler warning: Undefined variable i"
+				]
+			],
+			[
+				'var_dump(1+$i+5);',
+				'int(6)',
+				null,
+				null,
+				[
+					"php compiler warning: Undefined variable i"
+				]
+			],
+			[
+				'var_dump($i+1+5);',
+				'int(6)',
+				null,
+				null,
+				[
+					"php compiler warning: Undefined variable i"
+				]
+			],
+			[
+				'var_dump(5+1+$i);',
+				'int(6)',
+				null,
+				null,
+				[
+					"php compiler warning: Undefined variable i"
+				]
+			],
+			[
+				'var_dump(5+$i+1);',
+				'int(6)',
+				null,
+				null,
+				[
+					"php compiler warning: Undefined variable i"
+				]
+			],
 //			[
 //				'var_dump(true||print "2");',
 //				'2bool(true)'

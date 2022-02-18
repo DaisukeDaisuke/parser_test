@@ -410,7 +410,7 @@ class main_old2{
 	 *
 	 * @throws \RuntimeException
 	 */
-	public function execExpr(Expr $expr, ?int $outputid = null, ?int &$targetid = null, bool &$recursion = false, ?int &$is_var = null): string{//array...?
+	public function execExpr(Expr $expr, ?int $outputid = null, ?int &$targetid = null, bool &$recursion = false, ?int &$is_var = null, ?string &$created_var = null) : string{//array...?
 		switch(true){
 			case $expr instanceof BinaryOp:
 				$recursion = true;
@@ -436,8 +436,8 @@ class main_old2{
 			case $expr instanceof Variable:
 				//$recursion = true;//!!!!!!!!!
 				//$is_var = true;
-
-				return $this->exec_variable($expr, $this->count);
+				$tmp_ = null;
+				return $this->exec_variable($expr, $this->count, false, $tmp_, false, $solvedName, $created_var);
 			case $expr instanceof PreInc://++$i;
 				$recursion = true;//!!!!!!!!!
 				//$is_var = true;
@@ -732,7 +732,7 @@ class main_old2{
 		return $result1.$opcode.$var1.code::VALUE.$var1.$result;
 	}
 
-	public function exec_variable(Variable $node, int $id, bool $force = false, ?int &$oldid = null, bool $raw = false, ?string &$solvedName = null): string{//変数処理...
+	public function exec_variable(Variable $node, int $id, bool $force = false, ?int &$oldid = null, bool $raw = false, ?string &$solvedName = null, string &$created = null) : string{//変数処理...
 		if($node->name instanceof Expr){
 			//var_dump("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 			if($node->name instanceof Variable){
@@ -745,9 +745,9 @@ class main_old2{
 		//return $this->write_variableId($this->count);
 		$solvedName = $node->name;
 		if($raw === true){
-			return $this->write_varId($this->getValualueId($solvedName, $force, $id, $oldid));
+			return $this->write_varId($this->getValueId($solvedName, $force, $id, $oldid, $created));
 		}
-		return $this->write_variableId($this->getValualueId($solvedName, $force, $id, $oldid));//code::VALUE
+		return $this->write_variableId($this->getValueId($solvedName, $force, $id, $oldid, $created));//code::VALUE
 	}
 
 	public function write_variableId(int $node) : string{//変数処理...
@@ -1062,12 +1062,11 @@ class main_old2{
 	public function execbinaryplus(BinaryOp $node, string $opcode, ?int $outputid = null): string{
 		$recursionLeft = false;
 		$recursionRight = false;
-
-		$tmp = null;
-		$left = $this->execExpr($node->left, null, $tmp, $recursionLeft, $is_varleft);
+		$created_var_left = null;
+		$left = $this->execExpr($node->left, null, $tmp, $recursionLeft, $is_varleft, $created_var_left);
 		$basecount1 = $this->count++;
-		$tmp = null;
-		$right = $this->execExpr($node->right, null, $tmp, $recursionRight, $is_varright);
+		$created_var_right = null;
+		$right = $this->execExpr($node->right, null, $tmp, $recursionRight, $is_varright, $created_var_left);
 		$basecount2 = $this->count++;
 
 		//var_dump([$is_varleft,$is_varright]);
@@ -1080,6 +1079,16 @@ class main_old2{
 		//!!
 
 		$return = "";
+
+		if($created_var_left !== null){
+			$this->getLogger()->warning("Undefined variable ".$created_var_left, $node->getAttribute("startLine"));
+			$return .= $this->write_var($this->getValueId($created_var_left, false, -1), 0);
+		}
+		if($created_var_right !== null){
+			$this->getLogger()->warning("Undefined variable ".$created_var_right, $node->getAttribute("startLine"));
+			$return .= $this->write_var($this->getValueId($created_var_left, false, -1), 0);
+		}
+
 		if($recursionLeft&&$recursionRight){
 			/*if($is_varleft&&$is_varright){
 				$return .= $opcode.$this->write_varId($count1).$this->write_variableId($basecount1).$this->write_variableId($basecount2);
@@ -1131,18 +1140,18 @@ class main_old2{
 	}
 
 	/**
-	 * @param string $value
+	 * @see exec_var
 	 * @param bool $force
 	 * @param int $id
 	 * @param int|null $oldid
+	 * @param string $value
 	 * @return int
-	 * @see exec_var
 	 */
-	public function getValualueId(string $value, bool $force, int $id, ?int &$oldid): int{
-		return $this->block[$this->blockid]->get($value, $id, $force, $oldid);//$this->write_varId();
+	public function getValueId(string $value, bool $force, int $id, ?int &$oldid = null, ?string &$created = null) : int{
+		return $this->block[$this->blockid]->get($value, $id, $force, $oldid, $created);//$this->write_varId();
 	}
 
-	public function execScalar(Scalar $node): string{
+	public function execScalar(Scalar $node) : string{
 		switch(true){
 			case $node instanceof LNumber:
 			case $node instanceof DNumber:

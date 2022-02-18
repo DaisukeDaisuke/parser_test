@@ -4,6 +4,7 @@ use PhpParser\ParserFactory;
 use PHPUnit\Framework\TestCase;
 use purser\decoder;
 use purser\main_old2;
+use purser\opcode_dumper;
 use purser\phpFinalException;
 
 class for_Test extends TestCase{
@@ -36,6 +37,7 @@ class for_Test extends TestCase{
 			throw $exception;
 		}catch(\Throwable $e){
 			var_dump($code);
+			var_dump("==========");
 			throw $e;
 		}
 
@@ -50,9 +52,12 @@ class for_Test extends TestCase{
 			$decoder = new decoder();
 			$decoder->decode($output);
 			$log = ob_get_clean();
-		}catch(\Throwable $exception){
-			ob_get_clean();
+		}catch(\RuntimeException $exception){
+			ob_end_clean();
+			var_dump("==========");
 			var_dump($code);
+			var_dump(opcode_dumper::hexentities($output));
+			var_dump("==========");
 			throw $exception;
 		}
 
@@ -387,6 +392,18 @@ class for_Test extends TestCase{
 					
 				}',
 				'012312312',
+			],
+			[
+				'if(false){
+					for($i=0; $i<5; $i++){
+						echo $i;
+					}
+				}else{
+					for($i=0; $i<5; $i++){
+						echo $i++;
+					}
+				}',
+				'024',
 			],
 		];
 	}

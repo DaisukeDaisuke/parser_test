@@ -63,7 +63,7 @@ abstract class BaseTest extends TestCase{
 		}catch(ExitException $exception){
 			self::assertSame($exitcode, $exception->exec(false), "ExitException falled");
 		}catch(\RuntimeException $exception){
-			ob_get_clean();
+			ob_end_clean();
 			var_dump($code);
 			throw $exception;
 		}

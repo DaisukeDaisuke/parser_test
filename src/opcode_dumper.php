@@ -87,6 +87,36 @@ class opcode_dumper{
 		return $result;
 	}
 
+	public static function readREADV(string $str, int &$i) : string{
+		$code = $str[$i++];
+//		if($code1 !== code::READV){
+//			throw new \LogicException("readInt: off:".$i.", val: ".ord($code1)." is not readv");
+//		}
+		//dechex(ord($code1))
+		$code1 = $str[$i++];
+
+		$result = "";
+		$result .= " original: ".Binary::readSignedShort($str[$i++].$str[$i++]);
+		$code2 = $str[$i];
+		if($code2 === code::INT){
+			$result .= " int: ".self::readInt($str, $i);
+		}elseif($code2 === code::READV){
+			$result .= " move: ".self::readREADV($str, $i);
+		}
+		return $result;
+	}
+
+	public static function readScalar(string $str, int &$i) : string{
+		$code1 = $str[$i];
+		if($code1 === code::INT){
+			return "int: ".self::readInt($str, $i);
+		}
+		if($code1 === code::READV){
+			return self::readREADV($str, $i);
+		}
+		throw new \LogicException("opcode_dumper::readScalar: off: ".$i." val:".dechex(ord($code1))." is not scalar.");
+	}
+
 	/** @phpstan-ignore-next-line */
 	public static function hexentities(string $str, array &$list = []) : string{
 		$result = '';
@@ -333,7 +363,7 @@ class opcode_dumper{
 					$return .= "size: ".$size.", ".$int.", set: ".($i + $int).";";
 					break;
 				case code::JMPZ:
-					$return .= ' JMPZ:'.bin2hex($str[$i]).';';
+					$return .= ' JMPZ:'.bin2hex($str[$i]);//.' '.self::readScalar($str, $i, );
 					break;
 				case code::SJMP:
 					$return .= ' SJMP:'.bin2hex($str[$i]).';';

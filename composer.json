@@ -6,7 +6,8 @@
     "php": "^7.3 || ^7.4 || ^8.0",
     "php-64bit": "*",
     "nikic/php-parser": "^4.10",
-    "pocketmine/binaryutils": "^0.1.13"
+    "pocketmine/binaryutils": "^0.1.13",
+    "ext-gmp": "*"
   },
   "autoload": {
     "psr-4": {
