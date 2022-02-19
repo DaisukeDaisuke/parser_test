@@ -452,8 +452,9 @@ class main_old2{
 					$recursion = false;
 					return $this->write_var($this->count, 1);//isset $a ?? 1
 				}
-				$targetid = $oldid;// ?? $this->count;
-				return $undefined.code::ADD.$var.code::READV.$var.code::INT.$this->putRawInt(1);
+				//$targetid = $oldid;// ?? $this->count;
+				$copy = code::WRITEV.$this->write_varId($this->count).code::VALUE.$var;
+				return $undefined.code::ADD.$var.code::READV.$var.code::INT.$this->putRawInt(1).$copy;
 			case $expr instanceof PreDec://--$i;
 				$recursion = true;//!!!!!!!!!
 				//$is_var = true;
@@ -473,8 +474,9 @@ class main_old2{
 					return $this->write_var($this->count, 1);//isset $a ?? 1
 				}
 
-				$targetid = $oldid;// ?? $this->count;
-				return $undefined.code::MINUS.$var.code::READV.$var.code::INT.$this->putRawInt(1);
+				//$targetid = $oldid;// ?? $this->count;
+				$copy = code::WRITEV.$this->write_varId($this->count).code::VALUE.$var;
+				return $undefined.code::MINUS.$var.code::READV.$var.code::INT.$this->putRawInt(1).$copy;
 			case $expr instanceof PostInc://$i++;
 				$recursion = true;//!!!!!!!!!
 				/** @var Variable $var */
