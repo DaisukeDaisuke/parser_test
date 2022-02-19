@@ -303,8 +303,8 @@ $code = 'print ("a" || (print ("b" || (print "c"))));';
 //$code = 'var_dump((--$i)||false);';
 $code = 'var_dump((--$i)||false);';
 //var_dump((--$i)||false);
-$code = '(print 1)||(print 0)||(print 0);';
-(print 1)||(print 0)||(print 0);
+//$code = '(print 1)||(print 0)||(print 0);';
+//(print 1)||(print 0)||(print 0);
 //print "hello " && print "world";
 //$code='var_dump((++$i)&&9);';
 //var_dump((++$i)&&9);
@@ -315,7 +315,6 @@ $code = '(print 1)||(print 0)||(print 0);';
 //$i=1;var_dump((++$i)&&(print "test"));
 
 
-
 //var_dump(((++$i)+1)&&1);echo $i;
 //$code = '$i++;echo $i++;';
 //ob_start();
@@ -324,6 +323,10 @@ $code = '(print 1)||(print 0)||(print 0);';
 //$code = '$i = 100;if($i){echo 1;}';
 
 
+$code = 'echo -(1+100000);';
+$code = 'echo -100;';
+$code = 'echo -"aaaaa";';
+//echo -"aaaaa";
 //var_dump(0 xor (print "0\n") xor (print "2\n"));
 /*
 

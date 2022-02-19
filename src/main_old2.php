@@ -451,7 +451,7 @@ class main_old2{
 					//$this->count++;
 					//$recursion = true;
 					$recursion = false;
-					return $this->write_var($this->count, 1);//isset $a ?? 1
+					return $this->write_var($this->count++, 1);//isset $a ?? 1
 				}
 				//$targetid = $oldid;// ?? $this->count;
 				$copy = code::WRITEV.$this->write_varId($this->count).code::VALUE.$var;
@@ -636,8 +636,23 @@ class main_old2{
 				$recursion = true;
 				return $this->putCast($expr, $outputid);
 			case $expr instanceof UnaryMinus:
-				return $this->execMinusScalar($expr->expr);
-				break;
+				$var = $expr->expr;
+				if($var instanceof Scalar){
+					return $this->execMinusScalar($var);
+				}elseif($var instanceof Expr){
+					$recursion = true;
+					$oldid = null;
+					$recursion1 = false;
+					$str = $this->execExpr($var,null,$oldid, $recursion1);
+					$output_ = $this->count;
+					$result = code::MINUS.$this->write_varId(++$this->count).$this->getInt(0);
+					if($recursion1){
+						return $str.$result.$this->put_var($output_);
+					}
+					return $result.$str;
+				}
+				var_dump($var);
+				throw new \LogicException("UnaryMinus: \$var is not expected type, actual: ".get_debug_type($val));
 			case $expr instanceof Expr:
 				//var_dump(get_class($expr));
 				$recursion = true;
@@ -1219,8 +1234,11 @@ class main_old2{
 		switch(true){
 			case $node instanceof LNumber:
 			case $node instanceof DNumber:
+				/** @var int|float $val */
+				$val = $node->value;
+				return $this->put_Scalar(-$val);
 			case $node instanceof String_:
-				return $this->put_Scalar(-$node->value);
+				throw new phpFinalException("Fatal error: Uncaught TypeError: Unsupported operand types: string * int", $node->getStartLine(), $this->file);
 			default:
 				throw new \RuntimeException('scalar "'.get_class($node).'" is unprocessed.');
 		}
