@@ -5,6 +5,7 @@ error_reporting(E_ALL);
 
 use PhpParser\NodeDumper;
 use PhpParser\ParserFactory;
+use PhpParser\PrettyPrinter\Standard;
 use purser\decoder;
 use purser\ExitException;
 use purser\main_old2;
@@ -21,6 +22,8 @@ function hexentities(string $str): string{
 	}
 	return $return;
 }
+
+echo "\n";
 
 //$code = 'echo true === false;';
 //$code = "echo ((2*1+1)+(2/1+3)-(2/(5*6+20)*(5*(6/2))))+7.4;";
@@ -295,8 +298,14 @@ $code = '100&&print "test";';
 $code = '($i = 100)&&print "test";echo $i;';
 //$code = '$i = 100;($j = $i)&&false&&print "test";echo $i,$j;';
 //$i = 100;($j = $i)&&false&&print "test";echo $i,$j;
-$code = 'print 1||print 0||print 0;';
-print 1||print 0||print 0;
+$code = 'var_dump((0)||(1)||(print 6));';
+$code = 'print ("a" || (print ("b" || (print "c"))));';
+//print "hello " && print "world";
+//$code='var_dump((++$i)&&9);';
+//var_dump((++$i)&&9);
+//$code = 'print "hello " || print "world";';
+//print "hello " || print "world";
+//print (1||print (0||print 0));
 //($i = 100)&&print "test";echo $i;
 //$i=1;var_dump((++$i)&&(print "test"));
 
@@ -333,6 +342,9 @@ if($stmts === null){
 	throw new \RuntimeException("phpParser crashed");
 }
 
+//$prettyPrinter = new Standard();
+//var_dump($prettyPrinter->prettyPrintFile($stmts));
+
 $dumper = new NodeDumper(['dumpComments' => true,]);
 echo $dumper->dump($stmts, "<?php\n".$code);
 
@@ -354,7 +366,7 @@ var_dump("===========");
 //ob_start();
 $decoder = new decoder();
 try{
-	$decoder->decode($output, true);
+	$decoder->decode($output, false);
 }catch(ExitException $exception){
 	var_dump("exit code: ".$exception->getMessagecode());
 	$exception->exec();

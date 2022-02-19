@@ -1,9 +1,6 @@
 <?php
 
 class binaryopTest extends BaseTest{
-	public const TYPE_TRUE = "bool(true)";
-	public const TYPE_FALSE = "bool(false)";
-
 	/**
 	 * @return string[][]
 	 */
@@ -275,6 +272,70 @@ class binaryopTest extends BaseTest{
 			[
 				'(print 1)||(print 0)||(print 0);',
 				'1'
+			],
+			[
+				'var_dump((0)||(1)||(print 6));',
+				'bool(true)'
+			],
+			[
+				'print "hello " && print "world";',
+				'world1'
+			],
+			[
+				'print "hello " || print "world";',
+				'1'
+			],
+			[
+				'$i=0;var_dump((++$i)&&9);',
+				self::TYPE_TRUE
+			],
+			[
+				'$i=0;var_dump(($i++)&&9);',
+				self::TYPE_FALSE
+			],
+			[
+				'var_dump(($i++)&&9);',
+				self::TYPE_FALSE,
+				null,
+				0,
+				[
+					'php compiler warning: Undefined variable $i'
+				],
+			],
+			[
+				'var_dump(($i--)&&9);',
+				self::TYPE_FALSE,
+				null,
+				0,
+				[
+					'php compiler warning: Undefined variable $i'
+				],
+			],
+			[
+				'var_dump((++$i)&&9);',
+				self::TYPE_TRUE,
+				null,
+				0,
+				[
+					'php compiler warning: Undefined variable $i'
+				],
+			],
+			[
+				'var_dump((--$i));',
+				self::TYPE_NULL,
+				null,
+				0,
+				[
+					'php compiler warning: Undefined variable $i'
+				],
+			],
+			[
+				'',
+				''
+			],
+			[
+				'',
+				''
 			],
 //			[
 //				'var_dump(null ?? true);',

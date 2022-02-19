@@ -9,6 +9,10 @@ use purser\main_old2;
 use purser\phpFinalException;
 
 abstract class BaseTest extends TestCase{
+	public const TYPE_TRUE = "bool(true)";
+	public const TYPE_FALSE = "bool(false)";
+	public const TYPE_NULL = "NULL";
+
 	/**
 	 * (selectedBettingTable)->isInsideHangingBox();
 	 * 関数に関します、テストにてございます...
@@ -87,6 +91,7 @@ abstract class BaseTest extends TestCase{
 				'expected exit code',
 				[
 					'expected logs',
+					//'php compiler warning: php compiler warning: Undefined variable $i',
 				],
 			]
 		];

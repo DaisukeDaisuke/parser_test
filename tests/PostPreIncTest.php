@@ -84,6 +84,10 @@ class PostPreIncTest extends BaseTest{
 					'php compiler warning: Undefined variable $b',
 				],
 			],
+			[
+				'var_dump(--$i);',
+				self::TYPE_NULL
+			],
 		];
 	}
 }

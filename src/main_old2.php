@@ -472,7 +472,7 @@ class main_old2{
 					//$this->count++;
 					//$recursion = true;
 					$recursion = false;
-					return $this->write_var($this->count, 1);//isset $a ?? 1
+					return $this->write_var($this->count, null);//isset $a ?? 1
 				}
 
 				//$targetid = $oldid;// ?? $this->count;
@@ -1129,16 +1129,23 @@ class main_old2{
 		$tmp = null;
 		$left = $this->execExpr($node->left, null, $tmp, $recursionLeft, $is_varleft);
 		$basecount1 = $this->count++;
-		var_dump([$recursionLeft,$basecount1]);
 		$tmp = null;
 		$right = $this->execExpr($node->right, null, $tmp, $recursionRight, $is_varright);
 		$basecount2 = $this->count++;
 
 		$count1 = $outputid ?? $this->count;
 
-		if($recursionLeft){
+		$after = "";
+		if($recursionRight){
+			if(!$recursionLeft){
+				$left = code::WRITEV.$this->write_varId($basecount1).$left;
+				$recursionLeft = true;
+			}
 			//12 = Hard coating!!!!!!!!!!
-			$left .= $this->putjmpz($basecount1, "", $right, 12);
+			$after = $this->write_var($count1, true);
+			$jmp = $this->putjmpz($basecount1, $this->putjmp($right,true, 9));
+			var_dump(opcode_dumper::hexentities($jmp));
+			$left .= $jmp;// === 0, 1 = jmp
 		}
 
 		$return = "";
@@ -1154,7 +1161,7 @@ class main_old2{
 			$return .= $opcode.$this->write_varId($count1).$left.$right;
 		}
 
-		return $return;
+		return $return.$after;
 	}
 
 
