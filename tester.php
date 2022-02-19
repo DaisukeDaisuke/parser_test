@@ -300,6 +300,11 @@ $code = '($i = 100)&&print "test";echo $i;';
 //$i = 100;($j = $i)&&false&&print "test";echo $i,$j;
 $code = 'var_dump((0)||(1)||(print 6));';
 $code = 'print ("a" || (print ("b" || (print "c"))));';
+//$code = 'var_dump((--$i)||false);';
+$code = 'var_dump((--$i)||false);';
+//var_dump((--$i)||false);
+$code = '(print 1)||(print 0)||(print 0);';
+(print 1)||(print 0)||(print 0);
 //print "hello " && print "world";
 //$code='var_dump((++$i)&&9);';
 //var_dump((++$i)&&9);
@@ -366,7 +371,7 @@ var_dump("===========");
 //ob_start();
 $decoder = new decoder();
 try{
-	$decoder->decode($output, false);
+	$decoder->decode($output, true);
 }catch(ExitException $exception){
 	var_dump("exit code: ".$exception->getMessagecode());
 	$exception->exec();

@@ -11,7 +11,7 @@ use purser\phpFinalException;
 abstract class BaseTest extends TestCase{
 	public const TYPE_TRUE = "bool(true)";
 	public const TYPE_FALSE = "bool(false)";
-	public const TYPE_NULL = "NULL";
+	public const TYPE_NULL = 'NULL';
 
 	/**
 	 * (selectedBettingTable)->isInsideHangingBox();
@@ -26,6 +26,9 @@ abstract class BaseTest extends TestCase{
 	 * @return void
 	 */
 	public function testisInsideHangingBox(string $code, string $output1, ?string $compilerfinalerror = null, $exitcode = null, ?array $logs = null){
+		if($exitcode !== null&&!is_string($exitcode)&&!is_int($exitcode)){
+			throw new \InvalidArgumentException("The variable \$exitcode is of the wrong type. actual: ".get_debug_type($exitcode));
+		}
 		$parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7);
 		$stmts = $parser->parse("<?php\n".$code);
 
@@ -55,8 +58,8 @@ abstract class BaseTest extends TestCase{
 					self::assertSame($logs[$key], $log[0]);
 				}
 			}
-			self::assertCount(count($logs), $main_old->getLogger()->getLogs());
 		}
+		self::assertCount(count($logs ?? []), $main_old->getLogger()->getLogs());
 
 		//var_dump($test = opcode_dumper::hexentities($output));
 
@@ -69,13 +72,6 @@ abstract class BaseTest extends TestCase{
 		}
 
 		$log = ob_get_clean();
-
-		//var_dump($code,$stmts,$output,$log);
-
-		if($log === false){
-			throw new \RuntimeException("The output is empty.");
-		}
-
 		self::assertSame($this->convert(trim($output1)), $this->convert(trim($log)));
 	}
 

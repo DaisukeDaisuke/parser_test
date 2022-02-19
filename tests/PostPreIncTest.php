@@ -74,7 +74,7 @@ class PostPreIncTest extends BaseTest{
 				$j--;
 				++$a;
 				--$b;',
-				'',
+				"",
 				null,
 				0,
 				[
@@ -86,7 +86,75 @@ class PostPreIncTest extends BaseTest{
 			],
 			[
 				'var_dump(--$i);',
-				self::TYPE_NULL
+				self::TYPE_NULL,
+				null,
+				0,
+				[
+					'php compiler warning: Undefined variable $i',
+				],
+			],
+			[
+				'var_dump(++$i);',
+				'int(1)',
+				null,
+				0,
+				[
+					'php compiler warning: Undefined variable $i',
+				],
+			],
+			[
+				'var_dump($i--);',
+				self::TYPE_NULL,
+				null,
+				0,
+				[
+					'php compiler warning: Undefined variable $i',
+				],
+			],
+			[
+				'var_dump($i++);',
+				self::TYPE_NULL,
+				null,
+				0,
+				[
+					'php compiler warning: Undefined variable $i',
+				],
+			],
+			[
+				'var_dump((--$i)||false);',
+				self::TYPE_FALSE,
+				null,
+				0,
+				[
+					'php compiler warning: Undefined variable $i',
+				],
+			],
+			[
+				'var_dump((++$i)||false);',
+				self::TYPE_TRUE,
+				null,
+				0,
+				[
+					'php compiler warning: Undefined variable $i',
+				],
+			],
+			[
+				'var_dump(($i--)||false);',
+				self::TYPE_FALSE,
+				null,
+				0,
+				[
+					'php compiler warning: Undefined variable $i',
+				],
+			],
+			[
+				'var_dump(($i++)||false);',
+				self::TYPE_FALSE,
+				null,
+				0,
+				[
+					'php compiler warning: Undefined variable $i',
+				],
 			],
 		];
 	}

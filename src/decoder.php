@@ -201,6 +201,12 @@ class decoder{
 				$jmp = $this->decodeScalar();
 				if($target == 0){
 					$this->offset_seek($jmp);
+					if($this->debug === true){
+						$binaryStream = $this->getBinaryStream();
+						if($binaryStream instanceof BinaryStream){
+							echo "jumped, offset: ",($binaryStream->getOffset() ?? "null"),"\n";
+						}
+					}
 				}
 				return;
 			case code::JMPA:

@@ -472,7 +472,7 @@ class main_old2{
 					//$this->count++;
 					//$recursion = true;
 					$recursion = false;
-					return $this->write_var($this->count, null);//isset $a ?? 1
+					return $this->write_var($this->count++, null);//isset $a ?? 1
 				}
 
 				//$targetid = $oldid;// ?? $this->count;
@@ -1142,10 +1142,12 @@ class main_old2{
 				$recursionLeft = true;
 			}
 			//12 = Hard coating!!!!!!!!!!
-			$after = $this->write_var($count1, true);
-			$jmp = $this->putjmpz($basecount1, $this->putjmp($right,true, 9));
-			var_dump(opcode_dumper::hexentities($jmp));
+			$tmp1 = $this->write_var($count1, true);
+			$after = $this->putjmp($tmp1,true);
+			$jmp2 = $this->putjmp($right,true, 9+strlen($after));
+			$jmp = code::JMPZ.$this->write_variableId($basecount1).$this->getInt(strlen($jmp2)).$jmp2;
 			$left .= $jmp;// === 0, 1 = jmp
+			$after .= $tmp1;
 		}
 
 		$return = "";
