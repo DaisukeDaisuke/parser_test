@@ -289,6 +289,19 @@ $code = '$i=0;($i+=1)&&9;';
 $code = '$i=0;(++$i)&&9;';
 $code = '$i = 100;echo ++$i;echo ++$i;';
 $code = 'var_dump(((++$i)+1)&&1);echo $i;';
+$code = 'var_dump($i);echo $i;';
+$code = '$i=1;var_dump((++$i)&&(print "test"));';
+$code = '100&&print "test";';
+$code = '($i = 100)&&print "test";echo $i;';
+//$code = '$i = 100;($j = $i)&&false&&print "test";echo $i,$j;';
+//$i = 100;($j = $i)&&false&&print "test";echo $i,$j;
+$code = 'print 1||print 0||print 0;';
+print 1||print 0||print 0;
+//($i = 100)&&print "test";echo $i;
+//$i=1;var_dump((++$i)&&(print "test"));
+
+
+
 //var_dump(((++$i)+1)&&1);echo $i;
 //$code = '$i++;echo $i++;';
 //ob_start();
@@ -341,7 +354,7 @@ var_dump("===========");
 //ob_start();
 $decoder = new decoder();
 try{
-	$decoder->decode($output, false);
+	$decoder->decode($output, true);
 }catch(ExitException $exception){
 	var_dump("exit code: ".$exception->getMessagecode());
 	$exception->exec();

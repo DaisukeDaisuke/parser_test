@@ -63,6 +63,7 @@ use PhpParser\Node\Expr\PostInc;
 use PhpParser\Node\Expr\PreDec;
 use PhpParser\Node\Expr\PreInc;
 use PhpParser\Node\Expr\Print_;
+use PhpParser\Node\Expr\UnaryMinus;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Name;
 use PhpParser\Node\Scalar;
@@ -634,6 +635,9 @@ class main_old2{
 			case $expr instanceof Cast:
 				$recursion = true;
 				return $this->putCast($expr, $outputid);
+			case $expr instanceof UnaryMinus:
+				return $this->execMinusScalar($expr->expr);
+				break;
 			case $expr instanceof Expr:
 				//var_dump(get_class($expr));
 				$recursion = true;
@@ -1081,22 +1085,19 @@ class main_old2{
 
 		$count1 = $outputid ?? $this->count;
 
-		var_dump([$targetLeft, $targetRight]);
-
 		$after = "";
-		if($recursionLeft&&!$recursionRight){
+		if($recursionRight){
+			if(!$recursionLeft){
+				$left = code::WRITEV.$this->write_varId($basecount1).$left;
+				$recursionLeft = true;
+			}
 			//9 = Hard coating!!!!!!!!!!
 			//value jmpz
 			$tmp1 = $this->write_var($count1, false);
 			$jmp = $this->putjmp($tmp1,true);
 			$after .= $jmp.$tmp1;//false
-			var_dump(opcode_dumper::hexentities($right));
+			//var_dump(opcode_dumper::hexentities($right));
 			$left .= code::JMPZ.$this->write_variableId($basecount1).$this->getInt(strlen($right) + strlen($jmp) + 9);//$this->putjmpz($basecount1, "", $right, 12);
-		}
-
-		if(!$recursionLeft&&$recursionRight){
-			//$recursionLeft = true;
-
 		}
 
 		$return = "";
@@ -1200,6 +1201,17 @@ class main_old2{
 			case $node instanceof DNumber:
 			case $node instanceof String_:
 				return $this->put_Scalar($node->value);
+			default:
+				throw new \RuntimeException('scalar "'.get_class($node).'" is unprocessed.');
+		}
+	}
+
+	public function execMinusScalar(Scalar $node): string{
+		switch(true){
+			case $node instanceof LNumber:
+			case $node instanceof DNumber:
+			case $node instanceof String_:
+				return $this->put_Scalar(-$node->value);
 			default:
 				throw new \RuntimeException('scalar "'.get_class($node).'" is unprocessed.');
 		}
