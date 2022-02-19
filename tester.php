@@ -277,9 +277,20 @@ $code = '$a = 0;$b = 0;var_dump((string) ($a+$b));
 $code = 'echo print $tdm="tdm",print $tdm,$tdm,"\n";';
 $code = 'echo print "a",print "b";';//a1b1
 $code = 'echo print print $tdm="test",print $tdm,1-(int)$tdm,$tdm,"\n";';
-$code = 'exit(1);';
-$code = 'var_dump(1+intval(1.1));';
-var_dump(1 + intval(1.1));
+//$code = 'exit(1);';
+$code='(print 1)||(print 0)||(print 0);';
+//(print 1)||(print 0)||(print 0);
+$code = "(print 0)&&0;//&&intval(1);";
+$code = "(print 0)&&(print 0)&&1;";
+//(print 0)&&(print 0)&&1;
+//echo "\n";
+
+$code = '$i=0;$i++&&(print 0);';
+
+//$code = '$i = 100;if($i){echo 1;}';
+
+
+//var_dump(0 xor (print "0\n") xor (print "2\n"));
 /*
 
 jmpz //case //2

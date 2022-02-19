@@ -972,9 +972,9 @@ class main_old2{
 			case BitwiseOr::class:
 				return $this->execbinaryplus($node, code::B_OR, $outputid);
 			case BooleanAnd::class:
-				return $this->execbinaryplus($node, code::BOOL_AND, $outputid);
+				return $this->execbinaryLogicAnd($node, code::BOOL_AND, $outputid);
 			case BooleanOr::class:
-				return $this->execbinaryplus($node, code::BOOL_OR, $outputid);
+				return $this->execbinaryLogicOr($node, code::BOOL_OR, $outputid);
 			case Coalesce::class:
 				$this->execCoalesce($node, $outputid);
 			//return $this->execbinaryplus($node, code::COALESCE, $outputid);
@@ -989,9 +989,9 @@ class main_old2{
 			case Identical::class:
 				return $this->execbinaryplus($node, code::IDENTICAL, $outputid);
 			case LogicalAnd::class:
-				return $this->execbinaryplus($node, code::L_AND, $outputid);
+				return $this->execbinaryLogicAnd($node, code::L_AND, $outputid);
 			case LogicalOr::class:
-				return $this->execbinaryplus($node, code::L_OR, $outputid);
+				return $this->execbinaryLogicOr($node, code::L_OR, $outputid);
 			case LogicalXor::class:
 				return $this->execbinaryplus($node, code::L_XOR, $outputid);
 			case Mod::class:
@@ -1035,31 +1035,13 @@ class main_old2{
 		$right = $this->execExpr($node->right, null, $tmp, $recursionRight, $is_varright);
 		$basecount2 = $this->count++;
 
-		//var_dump([$is_varleft,$is_varright]);
-
-
 		$count1 = $outputid ?? $this->count;
-
-		// id output Read_v.id Read_v.id
-
-		//!!
 
 		$return = "";
 		if($recursionLeft&&$recursionRight){
-			/*if($is_varleft&&$is_varright){
-				$return .= $opcode.$this->write_varId($count1).$this->write_variableId($basecount1).$this->write_variableId($basecount2);
-			}elseif($is_varleft&&!$is_varright){
-				$return .= $opcode.$this->write_varId($count1).$this->write_variableId($basecount1).$this->write_variableId($basecount2);
-			}elseif(!$is_varleft&&$is_varright){
-				$return .= $opcode.$this->write_varId($count1).$this->write_variableId($basecount1).$this->write_variableId($basecount2);
-			}else{*/
 			$return = $left.$right;
 			$return .= $opcode.$this->write_varId($count1).$this->put_var($basecount1).$this->put_var($basecount2);//$left,$right
-			//}
-			//$count2 = ++$this->count;
-
 		}elseif($recursionLeft){
-			//$return = $left;
 			$return .= $left.$opcode.$this->write_varId($count1).$this->put_var($basecount1).$right;
 		}elseif($recursionRight){
 			$return .= $right.$opcode.$this->write_varId($count1).$left.$this->put_var($basecount2);
@@ -1068,6 +1050,99 @@ class main_old2{
 		}
 		return $return;
 	}
+
+	/**
+	 * @param BinaryOp $node
+	 * @param string $opcode binaryid
+	 * @param int|null $outputid
+	 * @return string
+	 */
+	public function execbinaryLogicAnd(BinaryOp $node, string $opcode, ?int $outputid = null): string{
+		$recursionLeft = false;
+		$recursionRight = false;
+
+		$tmp = null;
+		$left = $this->execExpr($node->left, null, $tmp, $recursionLeft, $is_varleft);
+		$basecount1 = $this->count++;
+		$tmp = null;
+		$right = $this->execExpr($node->right, null, $tmp, $recursionRight, $is_varright);
+		$basecount2 = $this->count++;
+
+		$count1 = $outputid ?? $this->count;
+
+		$after = "";
+		if($recursionLeft&&!$recursionRight){
+			//9 = Hard coating!!!!!!!!!!
+			//value jmpz
+			$tmp1 = $this->write_var($count1, false);
+			$jmp = $this->putjmp($tmp1,true);
+			$after .= $jmp.$tmp1;//false
+			var_dump(opcode_dumper::hexentities($right));
+			$left .= code::JMPZ.$this->write_variableId($basecount1).$this->getInt(strlen($right) + strlen($jmp) + 9);//$this->putjmpz($basecount1, "", $right, 12);
+		}
+
+		if(!$recursionLeft&&$recursionRight){
+			//$recursionLeft = true;
+
+		}
+
+		$return = "";
+		$binaryop = "";
+		if($recursionLeft&&$recursionRight){
+			$return = $left.$right;
+			$return .= $opcode.$this->write_varId($count1).$this->put_var($basecount1).$this->put_var($basecount2);//$left,$right
+		}elseif($recursionLeft){
+			$return .= $left.$opcode.$this->write_varId($count1).$this->put_var($basecount1).$right;
+		}elseif($recursionRight){
+			$return .= $right.$opcode.$this->write_varId($count1).$left.$this->put_var($basecount2);
+		}else{
+			$return .= $opcode.$this->write_varId($count1).$left.$right;
+		}
+
+		return $return.$after;
+	}
+
+	/**
+	 * @param BinaryOp $node
+	 * @param string $opcode binaryid
+	 * @param int|null $outputid
+	 * @return string
+	 */
+	public function execbinaryLogicOr(BinaryOp $node, string $opcode, ?int $outputid = null): string{
+		$recursionLeft = false;
+		$recursionRight = false;
+
+		$tmp = null;
+		$left = $this->execExpr($node->left, null, $tmp, $recursionLeft, $is_varleft);
+		$basecount1 = $this->count++;
+		var_dump([$recursionLeft,$basecount1]);
+		$tmp = null;
+		$right = $this->execExpr($node->right, null, $tmp, $recursionRight, $is_varright);
+		$basecount2 = $this->count++;
+
+		$count1 = $outputid ?? $this->count;
+
+		if($recursionLeft){
+			//12 = Hard coating!!!!!!!!!!
+			$left .= $this->putjmpz($basecount1, "", $right, 12);
+		}
+
+		$return = "";
+		$binaryop = "";
+		if($recursionLeft&&$recursionRight){
+			$return = $left.$right;
+			$return .= $opcode.$this->write_varId($count1).$this->put_var($basecount1).$this->put_var($basecount2);//$left,$right
+		}elseif($recursionLeft){
+			$return .= $left.$opcode.$this->write_varId($count1).$this->put_var($basecount1).$right;
+		}elseif($recursionRight){
+			$return .= $right.$opcode.$this->write_varId($count1).$left.$this->put_var($basecount2);
+		}else{
+			$return .= $opcode.$this->write_varId($count1).$left.$right;
+		}
+
+		return $return;
+	}
+
 
 	/**
 	 * 指定した変数に指定した値を代入する指示を書きます
@@ -1081,7 +1156,6 @@ class main_old2{
 	}
 
 	public function write_varId(int $var): string{
-
 		return Binary::writeShort($var);
 	}
 
