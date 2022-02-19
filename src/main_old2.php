@@ -476,35 +476,44 @@ class main_old2{
 				$targetid = $oldid;// ?? $this->count;
 				return $undefined.code::MINUS.$var.code::READV.$var.code::INT.$this->putRawInt(1);
 			case $expr instanceof PostInc://$i++;
-				//$recursion = true;//!!!!!!!!!
+				$recursion = true;//!!!!!!!!!
 				/** @var Variable $var */
 				$var = $expr->var;
 				$oldid = null;
 				$name = null;
 				$var = $this->exec_variable($var, $this->count, false, $oldid, true, $name);
 
+				$copy = "";
 				$undefined = "";
 				if($oldid === null){
-					$undefined = $this->write_var($this->count, 0);
+					$undefined = $this->write_var($this->count, null);
 					$this->logger->warning('Undefined variable $'.$name, $expr->getAttribute("startLine"));
+					$copy = code::WRITEV.$this->write_varId($this->count+1).$this->write_variableId($this->count);
 					$this->count++;
+				}else{
+					$copy .= code::WRITEV.$this->write_varId($this->count).$this->write_variableId($oldid);
 				}
-
-				return $undefined.code::VALUE.$var.code::ADD.$var.code::READV.$var.code::INT.$this->putRawInt(1);
+				return $undefined.$copy.code::ADD.$var.code::READV.$var.code::INT.$this->putRawInt(1);
 			case $expr instanceof PostDec://$i--;
-				//$recursion = true;//!!!!!!!!!
+				$recursion = true;//!!!!!!!!!
 				/** @var Variable $var */
 				$var = $expr->var;
 				$oldid = null;
 				$name = null;
 				$var = $this->exec_variable($var, $this->count, false, $oldid, true, $name);
+
 				$undefined = "";
+				$copy = "";
 				if($oldid === null){
-					$undefined = $this->write_var($this->count, 0);
+					$undefined = $this->write_var($this->count, null);
 					$this->logger->warning('Undefined variable $'.$name, $expr->getAttribute("startLine"));
+					$copy = code::WRITEV.$this->write_varId($this->count+1).$this->write_variableId($this->count);
 					$this->count++;
+				}else{
+					$copy = code::WRITEV.$this->write_varId($this->count).$this->write_variableId($oldid);
 				}
-				return $undefined.code::VALUE.$var.code::MINUS.$var.code::READV.$var.code::INT.$this->putRawInt(1);
+
+				return $undefined.$copy.code::MINUS.$var.code::READV.$var.code::INT.$this->putRawInt(1);
 			case $expr instanceof Assign:
 				//var_dump("!!!!!!!!!!!!!!!!!");
 
@@ -1061,14 +1070,16 @@ class main_old2{
 		$recursionLeft = false;
 		$recursionRight = false;
 
-		$tmp = null;
-		$left = $this->execExpr($node->left, null, $tmp, $recursionLeft, $is_varleft);
+		$targetLeft = null;
+		$left = $this->execExpr($node->left, null, $targetLeft, $recursionLeft, $is_varleft);
 		$basecount1 = $this->count++;
-		$tmp = null;
-		$right = $this->execExpr($node->right, null, $tmp, $recursionRight, $is_varright);
+		$targetRight = null;
+		$right = $this->execExpr($node->right, null, $targetRight, $recursionRight, $is_varright);
 		$basecount2 = $this->count++;
 
 		$count1 = $outputid ?? $this->count;
+
+		var_dump([$targetLeft, $targetRight]);
 
 		$after = "";
 		if($recursionLeft&&!$recursionRight){

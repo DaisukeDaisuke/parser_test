@@ -284,9 +284,13 @@ $code = "(print 0)&&0;//&&intval(1);";
 $code = "(print 0)&&(print 0)&&1;";
 //(print 0)&&(print 0)&&1;
 //echo "\n";
-
-$code = '$i=0;$i++&&(print 0);';
-
+$code = '$i=0;(++$i)&&9;';
+$code = '$i=0;($i+=1)&&9;';
+$code = '$i=0;(++$i)&&9;';
+$code = 'echo $i++;echo $i++;';
+//ob_start();
+//echo $i++;echo $i++;
+//var_dump(hexentities(ob_get_clean()));
 //$code = '$i = 100;if($i){echo 1;}';
 
 
@@ -303,7 +307,7 @@ print "test"
 jmp 4
 
 */
-
+echo "\n";
 $time_start = microtime(true);
 
 $parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7);

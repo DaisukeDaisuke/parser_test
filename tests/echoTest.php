@@ -58,6 +58,10 @@ class echoTest extends BaseTest{
 				'echo ((100+100+100)+200),"_",(50+50);',
 				"500_100"
 			],
+			[
+				'echo null;',
+				""//not \x00
+			],
 		];
 	}
 }

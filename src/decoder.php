@@ -184,6 +184,11 @@ class decoder{
 	public function decodeStmt_array(string $opcode): void{
 		switch($opcode){
 			case code::PRINT:
+//				$tmp = $this->decodeScalar();
+//				if($tmp === null){
+//					return;
+//				}
+//				echo $tmp;
 				echo $this->decodeScalar();
 				return;
 			case code::JMP:
