@@ -20,7 +20,7 @@ class CodeBlock{
 	}
 
 	//return id
-	function get(string $value,int &$ifcount,bool $force = false, ?int &$oldid = null): int{
+	function get(string $value,int $ifcount, bool $force = false, ?int &$oldid = null): int{
 		$oldid = $this->ids[$value] ?? null;
 		if($force||!isset($this->ids[$value])){
 			$this->ids[$value] = $ifcount;//!!

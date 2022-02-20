@@ -1,32 +1,55 @@
- | 0-2 | 3 |  WRITEV:92; output:00; output:01;
- | 3-5 | 3 |  INT:93; size:01; 1:01;
+    0: Stmt_Expression(
+        expr: Expr_BinaryOp_Identical(
+            left: Expr_BinaryOp_Spaceship(
+                left: Expr_Variable(
+                    name: a
+                )
+                right: Expr_Variable(
+                    name: b
+                )
+            )
+            right: Expr_UnaryMinus(
+                expr: Scalar_LNumber(
+                    value: 1
+                )
+            )
+        )
+    )
+)
 
- | 6-6 | 1 |  PRINT:a0;
- | 7-9 | 3 |  READV:91; var:00; var:01;
- | 10-12 | 3 |  WRITEV:92; output:00; output:02;
- | 13-15 | 3 |  INT:93; size:01; 1:01;
-
-//if bool_or jmpz
-
- | 16-18 | 3 |  WRITEV:92; output:00; output:03;
- | 19-21 | 3 |  INT:93; size:01; 0:00;
-
- | 22-22 | 1 |  PRINT:a0;
- | 23-25 | 3 |  READV:91; var:00; var:03;
- | 26-28 | 3 |  WRITEV:92; output:00; output:04;
- | 29-31 | 3 |  INT:93; size:01; 1:01;
-
- | 32-34 | 3 |  BOOL_OR?:0a; output:00; output:05;
- | 35-37 | 3 |  READV:91; var:00; var:02;
- | 38-40 | 3 |  READV:91; var:00; var:04;
- | 41-43 | 3 |  WRITEV:92; output:00; output:06;
- | 44-46 | 3 |  INT:93; size:01; 0:00;
-
- | 47-47 | 1 |  PRINT:a0;
- | 48-50 | 3 |  READV:91; var:00; var:06;
- | 51-53 | 3 |  WRITEV:92; output:00; output:07;
- | 54-56 | 3 |  INT:93; size:01; 1:01;
-
- | 57-59 | 3 |  BOOL_OR?:0a; output:00; output:08;
- | 60-62 | 3 |  READV:91; var:00; var:05;
- | 63-65 | 3 |  READV:91; var:00; var:07;"
+array(
+    0: Stmt_Expression(
+        expr: Expr_Cast_Bool(
+            expr: Expr_BinaryOp_BooleanOr(
+                left: Expr_BinaryOp_Identical(
+                    left: Expr_BinaryOp_Spaceship(
+                        left: Expr_Variable(
+                            name: a
+                        )
+                        right: Expr_Variable(
+                            name: b
+                        )
+                    )
+                    right: Expr_UnaryMinus(
+                        expr: Scalar_LNumber(
+                            value: 1
+                        )
+                    )
+                )
+                right: Expr_BinaryOp_Identical(
+                    left: Expr_BinaryOp_Spaceship(
+                        left: Expr_Variable(
+                            name: a
+                        )
+                        right: Expr_Variable(
+                            name: b
+                        )
+                    )
+                    right: Scalar_LNumber(
+                        value: 0
+                    )
+                )
+            )
+        )
+    )
+)

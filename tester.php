@@ -326,6 +326,43 @@ $code = 'var_dump((--$i)||false);';
 $code = 'echo -(1+100000);';
 $code = 'echo -100;';
 $code = 'echo -"aaaaa";';
+//$code = 'echo -100.5;';
+//echo (("aaaaaaa")&&intval(1));
+
+$code = '$i = 1;
+				while ($i <= 10) {
+					echo $i++;
+				}';
+$code = '
+$i=["test"];
+$i[1] = "test";
+';
+$code ='($a <=> $b) === -1;';
+$code = 'var_dump(1 < 100);';
+$code = '(bool)(($a <=> $b) === -1 || ($a <=> $b) === 0);';
+$code = 'var_dump(101 <= intval(101));';
+//var_dump(101 <= intval(101));
+$code='var_dump(intval(101) <= 10 || (101 <= 101);';//error
+$code='var_dump((101 <= 10) || (101 <= 101));';
+//var_dump((101 <= 10) || (101 <= 101));
+$code='var_dump((0 != 0));';
+//var_dump((0 != 0));
+$code='var_dump((-1 >= 0));';
+//var_dump((-1 >= 0));
+
+$code='var_dump((1 > 0));';
+var_dump((1 > 0));
+
+
+//
+//$a = 101;
+//$b = 101;
+//$s_tmp = ($a <=> $b);
+//echo (($s_tmp === -1)||($s_tmp === 0));
+
+//$code = 'echo -null;';
+//echo -null;
+
 //echo -"aaaaa";
 //var_dump(0 xor (print "0\n") xor (print "2\n"));
 /*

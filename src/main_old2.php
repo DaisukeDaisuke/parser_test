@@ -115,6 +115,13 @@ class main_old2{
 	/** @var ?string $file */
 	public $file = null;
 
+	//config
+	/** @var bool */
+	public $use_spaceship_operator = true;
+
+	public const ADDRESS_SIZE = 2;
+	public const PUT_STR_LEN = self::ADDRESS_SIZE + 1;
+
 	public function __construct(bool $is_phpunit = false, ?string $display_program = "Main.php"){
 		$this->block[$this->blockid] = new CodeBlock($this->blockid);
 		$this->logger = new Logger($is_phpunit, $display_program);
@@ -1011,10 +1018,25 @@ class main_old2{
 			case Concat::class:
 				return $this->execbinaryplus($node, code::CONCAT, $outputid);
 			case Equal::class:
+				if($this->use_spaceship_operator){
+					return $this->execExpr(new Identical(new Spaceship($node->left, $node->right), new LNumber(0)));
+				}
 				return $this->execbinaryplus($node, code::EQUAL, $outputid);
 			case Greater::class:
+				if($this->use_spaceship_operator){
+					return $this->execExpr(new Identical(new Spaceship($node->left, $node->right), new LNumber(1)));
+				}
 				return $this->execbinaryplus($node, code::GREATER, $outputid);
 			case GreaterOrEqual::class:
+				if($this->use_spaceship_operator){
+					$tmp = null;
+					$tmp_expr = $this->execStmts([new Spaceship($node->left, $node->right)]);
+					$spaceship_operator_tmp_Id = $this->count;//unset
+					$this->getValualueId("#!s_tmp", true,$spaceship_operator_tmp_Id, $tmp);
+					$left = new Identical(new Variable("#!s_tmp"), new LNumber(1));
+					$right = new Identical(new Variable("#!s_tmp"), new LNumber(0));
+					return $tmp_expr.$this->execExpr((new BooleanOr($left, $right)));
+				}
 				return $this->execbinaryplus($node, code::GREATEROREQUAL, $outputid);
 			case Identical::class:
 				return $this->execbinaryplus($node, code::IDENTICAL, $outputid);
@@ -1027,6 +1049,9 @@ class main_old2{
 			case Mod::class:
 				return $this->execbinaryplus($node, code::MOD, $outputid);
 			case NotEqual::class:
+				if($this->use_spaceship_operator){
+					return $this->execExpr(new NotIdentical(new Spaceship($node->left, $node->right), new LNumber(0)));
+				}
 				return $this->execbinaryplus($node, code::NOTEQUAL, $outputid);
 			case NotIdentical::class:
 				return $this->execbinaryplus($node, code::NOTIDENTICAL, $outputid);
@@ -1037,8 +1062,20 @@ class main_old2{
 			case ShiftRight::class:
 				return $this->execbinaryplus($node, code::SHIFTRIGHT, $outputid);
 			case Smaller::class:
+				if($this->use_spaceship_operator){
+					return $this->execExpr(new Identical(new Spaceship($node->left, $node->right), new UnaryMinus(new LNumber(1))));
+				}
 				return $this->execbinaryplus($node, code::SMALLER, $outputid);
 			case SmallerOrEqual::class:
+				if($this->use_spaceship_operator){
+					$tmp = null;
+					$tmp_expr = $this->execStmts([new Spaceship($node->left, $node->right)]);
+					$spaceship_operator_tmp_Id = $this->count;//unset
+					$this->getValualueId("#!s_tmp", true,$spaceship_operator_tmp_Id, $tmp);
+					$left = new Identical(new Variable("#!s_tmp"), new UnaryMinus(new LNumber(1)));
+					$right = new Identical(new Variable("#!s_tmp"), new LNumber(0));
+					return $tmp_expr.$this->execExpr((new BooleanOr($left, $right)));
+				}
 				return $this->execbinaryplus($node, code::SMALLEROREQUAL, $outputid);
 			case Spaceship::class:
 				return $this->execbinaryplus($node, code::SPACESHIP, $outputid);
@@ -1112,7 +1149,7 @@ class main_old2{
 			$jmp = $this->putjmp($tmp1,true);
 			$after .= $jmp.$tmp1;//false
 			//var_dump(opcode_dumper::hexentities($right));
-			$left .= code::JMPZ.$this->write_variableId($basecount1).$this->getInt(strlen($right) + strlen($jmp) + 9);//$this->putjmpz($basecount1, "", $right, 12);
+			$left .= code::JMPZ.$this->write_variableId($basecount1).$this->getInt(1+self::ADDRESS_SIZE+(self::PUT_STR_LEN * 2)+strlen($right) + strlen($jmp));//$this->putjmpz($basecount1, "", $right, 12);
 		}
 
 		$return = "";
@@ -1159,7 +1196,7 @@ class main_old2{
 			//12 = Hard coating!!!!!!!!!!
 			$tmp1 = $this->write_var($count1, true);
 			$after = $this->putjmp($tmp1,true);
-			$jmp2 = $this->putjmp($right,true, 9+strlen($after));
+			$jmp2 = $this->putjmp($right,true, 1+self::ADDRESS_SIZE+(self::PUT_STR_LEN * 2)+strlen($after));
 			$jmp = code::JMPZ.$this->write_variableId($basecount1).$this->getInt(strlen($jmp2)).$jmp2;
 			$left .= $jmp;// === 0, 1 = jmp
 			$after .= $tmp1;
@@ -1238,9 +1275,9 @@ class main_old2{
 				$val = $node->value;
 				return $this->put_Scalar(-$val);
 			case $node instanceof String_:
-				throw new phpFinalException("Fatal error: Uncaught TypeError: Unsupported operand types: string * int", $node->getStartLine(), $this->file);
+				throw new phpFinalException("Uncaught TypeError: Unsupported operand types: string * int", $node->getStartLine(), $this->file);
 			default:
-				throw new \RuntimeException('scalar "'.get_class($node).'" is unprocessed.');
+				throw new \RuntimeException('MinusScalar "'.get_class($node).'" is unprocessed.');
 		}
 	}
 
