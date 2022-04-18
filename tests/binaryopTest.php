@@ -353,10 +353,6 @@ class binaryopTest extends BaseTest{
 				'var_dump(true&&(false||true));',
 				self::TYPE_TRUE
 			],
-			[
-				'',
-				''
-			],
 //			[
 //				'var_dump(null ?? true);',
 //				self::TYPE_TRUE,

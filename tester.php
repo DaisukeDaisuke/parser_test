@@ -413,19 +413,16 @@ break;
 }';//$i = always 1
 
 $code='
-$true = false;
-for(print 1; print 2; print 3, $true = true){
-	print 4;
-	if($true) break;
-}';
+var_dump($i);
+var_dump(++$i);
+';
 
-$code = '$true = 0;
-for(print 1; print 2; print 3, $true = 1){
-	print 4;
-	if($true) break;
-}';
-
-
+//$code='
+//var_dump($i);
+//var_dump(++$i);';
+//
+//var_dump($i);
+//var_dump(++$i);
 
 //$code='
 //$true = false;

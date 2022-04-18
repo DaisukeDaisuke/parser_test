@@ -62,6 +62,25 @@ class echoTest extends BaseTest{
 				'echo null;',
 				""//not \x00
 			],
+			[
+				'echo $i;',
+				"\x00",
+				null,
+				null,
+				[
+					'php compiler warning: Undefined variable $i, Incompatibility warning: Assign null to $i.'
+				]
+			],
+			[
+				'echo $i;
+echo $i;',
+				"\x00\x00",
+				null,
+				null,
+				[
+					'php compiler warning: Undefined variable $i, Incompatibility warning: Assign null to $i.'
+				]
+			]
 		];
 	}
 }

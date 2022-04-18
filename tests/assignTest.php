@@ -164,6 +164,37 @@ class assignTest extends BaseTest{
 				'$i=100;$k=200;echo $k,",",$i;',
 				'200,100'
 			],
+			[
+				'var_dump($i);',
+				'NULL',
+				null,
+				null,
+				[
+					'php compiler warning: Undefined variable $i, Incompatibility warning: Assign null to $i.'
+				],
+			],
+			[
+				'var_dump($i);
+				var_dump($i);',
+				'NULL
+NULL',
+				null,
+				null,
+				[
+					'php compiler warning: Undefined variable $i, Incompatibility warning: Assign null to $i.'
+				],
+			],
+			[
+				'var_dump($i);
+				var_dump(++$i);',
+				'NULL
+int(1)',
+				null,
+				null,
+				[
+					'php compiler warning: Undefined variable $i, Incompatibility warning: Assign null to $i.'
+				],
+			],
 		];
 	}
 }

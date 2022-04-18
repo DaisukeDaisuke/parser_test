@@ -150,14 +150,14 @@ class main_old2{
 				$result = "";
 				foreach($node->exprs as $expr){
 					if($expr instanceof Variable){
-						$result .= code::PRINT.$this->exec_variable($expr, $this->count);
+						$result .= code::PRINT.$this->execExpr($expr, $this->count);
 						//$this->count++;//!!!!!!!!!
 						continue;
 					}
 					if($expr instanceof Assign){//echo $i = 100;
 						/** @var Variable $var */
 						$var = $expr->var;
-						$result .= $this->execExpr($expr).code::PRINT.$this->exec_variable($var, $this->count);
+						$result .= $this->execExpr($expr).code::PRINT.$this->execExpr($var, $this->count);
 						//$this->count++;
 						continue;
 					}
@@ -444,7 +444,14 @@ class main_old2{
 				//$recursion = true;//!!!!!!!!!
 				//$is_var = true;
 
-				return $this->exec_variable($expr, $this->count);
+				//Added outputid from April 18, 2022
+				$var = $this->exec_variable($expr, $outputid ?? $this->count, false, $oldid,false, $name, false);
+				if($oldid === null){
+					//$recursion = false;
+					$this->logger->warning('Undefined variable $'.$name.', Incompatibility warning: Assign null to $'.$name.'.', $expr->getAttribute("startLine"));
+					return $this->write_var(($outputid ?? $this->count++), null);
+				}
+				return $var;
 			case $expr instanceof PreInc://++$i;
 				$recursion = true;//!!!!!!!!!
 				//$is_var = true;
