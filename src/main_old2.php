@@ -427,14 +427,14 @@ class main_old2{
 				$value = strtoupper($expr->name->parts[0]);
 				//$return = $this->put_Scalar();
 				if($value === "FALSE"){
-					return $this->write_var($this->count, false);
+					return $this->write_var($outputid ?? $this->count, false);
 				}
 
 				if($value === "TRUE"){
-					return $this->write_var($this->count, true);
+					return $this->write_var($outputid ?? $this->count, true);
 				}
 				if($value === "NULL"){
-					return $this->write_var($this->count, null);
+					return $this->write_var($outputid ?? $this->count, null);
 				}
 
 				return $expr->name->parts[0];//read const id(global...?)
@@ -529,18 +529,11 @@ class main_old2{
 
 				return $undefined.$copy.code::MINUS.$var.code::READV.$var.code::INT.$this->putRawInt(1);
 			case $expr instanceof Assign:
-				//var_dump("!!!!!!!!!!!!!!!!!");
-
 				//$id = $this->execExpr($expr->var);
 				/** @var Variable $value */
 				$value = $expr->var;
-
 				//$baseid = $this->count++;
-
-
 				$oldid1 = $this->count;
-
-
 				//$baseid = $this->count;
 
 				$baseid = $this->count;

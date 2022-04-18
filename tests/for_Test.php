@@ -363,6 +363,50 @@ class for_Test extends TestCase{
 				}',
 				'012312312',
 			],
+			[
+				'$true = false;
+				for(print 1; print 2; print 3, $true = true){
+					print 4;
+					if($true) break;
+				}',
+				'124324',
+			],
+			[
+				'$true = false;
+				for(;;){
+					echo "0";
+					$true = true;
+					if($true){
+						echo "1";
+						break;
+					}
+					echo "2";
+				}
+				echo "3";',
+				'013',
+			],
+			[
+				'$true = 0;
+				for(print 1; print 2; print 3, $true = 1){
+					print 4;
+					if($true) break;
+				}',
+				'124324',
+			],
+			[
+				'$true = 0;
+				for(;;){
+					echo "0";
+					$true = 1;
+					if($true){
+						echo "1";
+						break;
+					}
+					echo "2";
+				}
+				echo "3";',
+				'013',
+			],
 		];
 	}
 }

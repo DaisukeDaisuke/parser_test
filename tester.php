@@ -406,6 +406,51 @@ foreach($array as $value):
     echo $value,"\n"; 
 endforeach;*/';
 
+$code='
+for(;;($i++)){
+echo $i;//$i = 未定義、警告...?
+break;
+}';//$i = always 1
+
+$code='
+$true = false;
+for(print 1; print 2; print 3, $true = true){
+	print 4;
+	if($true) break;
+}';
+
+$code = '$true = 0;
+for(print 1; print 2; print 3, $true = 1){
+	print 4;
+	if($true) break;
+}';
+
+
+
+//$code='
+//$true = false;
+//for(;;){
+//	$true = true;
+//	if($true) break;
+//}';
+
+//$code='
+//$true = false;
+//echo $true;
+//$true = true;
+//echo $true;
+//';
+
+//124324
+//124324
+//$true = false;
+//for(print 1; print 2; print 3, $true = true){
+//	print 4;
+//	if($true) break;
+//}
+
+
+
 
 //
 //$a = 101;
@@ -449,6 +494,8 @@ echo $dumper->dump($stmts, "<?php\n".$code);
 $main_old = new main_old2();
 $output = $main_old->onexec($stmts);
 
+var_dump($main_old->block);
+
 $time = microtime(true) - $time_start;
 echo $time." 秒";
 
@@ -464,7 +511,7 @@ var_dump("===========");
 //ob_start();
 $decoder = new decoder();
 try{
-	$decoder->decode($output, true);
+	$decoder->decode($output, false);
 }catch(ExitException $exception){
 	var_dump("exit code: ".$exception->getMessagecode());
 	$exception->exec();
