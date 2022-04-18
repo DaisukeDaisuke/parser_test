@@ -82,11 +82,11 @@ class Logger{
 	/**
 	 * @return array<int, array{string, int}>
 	 */
-	public function getLogs(): array{
+	public function getLogs() : array{
 		return $this->logs;
 	}
 
-	public function final(\RuntimeException $exception): void{
+	public function final(\RuntimeException $exception) : void{
 		$this->log("PHP Fatal error:".$exception->getMessage(), self::FINAL);
 	}
 }

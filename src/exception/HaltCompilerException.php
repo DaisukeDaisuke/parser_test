@@ -14,7 +14,7 @@ class HaltCompilerException extends \RuntimeException{
 		parent::__construct("", 0, null);
 	}
 
-	public function getRemaining(): string{
+	public function getRemaining() : string{
 		return $this->remaining;
 	}
 

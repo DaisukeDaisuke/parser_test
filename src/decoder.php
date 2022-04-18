@@ -38,7 +38,7 @@ class decoder{
 		$this->decodeopcode();
 	}
 
-	public function decodeopcode(): void{
+	public function decodeopcode() : void{
 		$values = [];
 		while(!$this->feof()){
 			if($this->debug === true){
@@ -72,7 +72,7 @@ class decoder{
 		//var_dump($values);
 	}
 
-	public function decodebinaryop_array(string $opcode): void{
+	public function decodebinaryop_array(string $opcode) : void{
 		/*if($opcode === code::CONCAT){
 			//var_dump("!!");
 		}*/
@@ -181,7 +181,7 @@ class decoder{
 	 * @return void
 	 * @throws RuntimeException|\Throwable
 	 */
-	public function decodeStmt_array(string $opcode): void{
+	public function decodeStmt_array(string $opcode) : void{
 		switch($opcode){
 			case code::PRINT:
 //				$tmp = $this->decodeScalar();
@@ -204,7 +204,7 @@ class decoder{
 					if($this->debug === true){
 						$binaryStream = $this->getBinaryStream();
 						if($binaryStream instanceof BinaryStream){
-							echo "jumped, offset: ",($binaryStream->getOffset() ?? "null"),"\n";
+							echo "jumped, offset: ", ($binaryStream->getOffset() ?? "null"), "\n";
 						}
 					}
 				}
@@ -345,7 +345,7 @@ class decoder{
 		throw new RuntimeException("int or Double not found");
 	}
 
-	private function getBool(): ?bool{
+	private function getBool() : ?bool{
 		$str = $this->getByteInt();
 		if($str === code::TYPE_NULL){
 			return null;
@@ -365,47 +365,47 @@ class decoder{
 		return $str;*/
 	}
 
-	public function getBinaryStream(): ?BinaryStream{
+	public function getBinaryStream() : ?BinaryStream{
 		return $this->stream;
 	}
 
-	public function feof(): bool{
+	public function feof() : bool{
 		return $this->stream->feof();
 	}
 
-	public function getlen(): int{
+	public function getlen() : int{
 		return $this->len;
 	}
 
-	public function get(int $len): string{
+	public function get(int $len) : string{
 		return $this->stream->get($len);
 	}
 
-	public function getByte(): string{
+	public function getByte() : string{
 		return $this->get(1);
 	}
 
-	public function getByteInt(): int{
+	public function getByteInt() : int{
 		return ord($this->getByte());
 	}
 
-	public function getShort(): int{
+	public function getShort() : int{
 		return $this->stream->getSignedShort();
 	}
 
-	public function getAddress(): int{
+	public function getAddress() : int{
 		return $this->getShort();
 	}
 
-	public function offset_seek(int $jmp): void{
+	public function offset_seek(int $jmp) : void{
 		$this->stream->setOffset($this->getOffset() + $jmp);
 	}
 
-	public function getOffset(): int{
+	public function getOffset() : int{
 		return $this->stream->getOffset();
 	}
 
-	public function setOffset(int $offset): void{
+	public function setOffset(int $offset) : void{
 		$this->stream->setOffset($offset);
 	}
 
@@ -414,7 +414,7 @@ class decoder{
 	 * @param mixed $var
 	 * @return void
 	 */
-	public function setvalue(int $name, $var): void{
+	public function setvalue(int $name, $var) : void{
 		$this->values[$name] = $var;
 	}
 
@@ -441,7 +441,7 @@ class decoder{
 	/**
 	 * @param array<int, mixed> $tmpfuncargs
 	 */
-	private function user_var_dump(array $tmpfuncargs): void{
+	private function user_var_dump(array $tmpfuncargs) : void{
 		foreach($tmpfuncargs as $arg){
 			switch(true){
 				case is_null($arg);
@@ -463,8 +463,8 @@ class decoder{
 					echo 'string('.strlen($arg).') "'.$arg.'"';
 					break;
 				//case is_array($arg);
-					//echo "array(0) {\n}";
-					//break;
+				//echo "array(0) {\n}";
+				//break;
 				default:
 					var_dump($arg);
 					throw new \RuntimeException("dump: Received an unsupported value.");

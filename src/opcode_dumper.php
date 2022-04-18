@@ -195,7 +195,7 @@ class opcode_dumper{
 							break;
 					}
 					for($f = 1; $f <= $return1; $f++){
-						$return .= ' '.str_replace("\x0a","\\n", $str[$i]).':'.bin2hex($str[$i++]).';';
+						$return .= ' '.str_replace("\x0a", "\\n", $str[$i]).':'.bin2hex($str[$i++]).';';
 					}
 					$i--;
 					break;

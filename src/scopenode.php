@@ -30,18 +30,18 @@ class scopenode{
 	/**
 	 * @return int|null
 	 */
-	public function getParent(): ?int{
+	public function getParent() : ?int{
 		return $this->parent;
 	}
 
 	/**
 	 * @return int
 	 */
-	public function getId(): int{
+	public function getId() : int{
 		return $this->id;
 	}
 
-	public function onUse(): void{
+	public function onUse() : void{
 		$this->use++;
 	}
 
