@@ -204,7 +204,7 @@ class decoder{
 					if($this->debug === true){
 						$binaryStream = $this->getBinaryStream();
 						if($binaryStream instanceof BinaryStream){
-							echo "jumped, offset: ", ($binaryStream->getOffset() ?? "null"), "\n";
+							echo "jumped, offset: ", $binaryStream->getOffset(), "\n";
 						}
 					}
 				}

@@ -5,6 +5,16 @@ namespace purser;
 use pocketmine\utils\Binary;
 
 class opcode_dumper{
+	protected const PREFIX_VAR = "output";
+	protected const PREFIX_OUTPUT = "output";
+
+	public const TYPE_FLAG_USED_VAR =   0b000001;
+	public const TYPE_FLAG_BINARYOP =   0b000010;
+	public const TYPE_FLAG_READV =      0b000100;
+	public const TYPE_FLAG_VALUE =      0b001000;
+	public const TYPE_FLAG_WRITEV =     0b010000;
+	public const TYPE_FLAG_SCALAR =     0b100000;
+
 	public static function dumpInt(string $str, int &$i) : string{
 		$return = ' INT:'.bin2hex($str[$i++]).';';
 		$return .= ' size:'.bin2hex($str[$i]).';';
@@ -124,26 +134,31 @@ class opcode_dumper{
 	}
 
 	/** @phpstan-ignore-next-line */
-	public static function hexentities(string $str, array &$list = []) : string{
+	public static function hexentities(string $str, array &$list = [], array &$symbols = [], array &$var_use_list = []) : string{
 		$result = '';
+		$var_used = null;
 		for($i = 0, $iMax = strlen($str); $i < $iMax; $i++){
 			//$return .= PHP_EOL.$i." | ";
 			$return = "";
+			$var_used = null;
 			$start = $i;
+			$opcode = $str[$i];
+			$flag = 0;
 			switch($str[$i]){
 				case code::READV:
 					$return .= ' READV:'.bin2hex($str[$i++]).';';
-					$return .= ' var:'.bin2hex($str[$i++]).';';
-					$return .= ' var:'.bin2hex($str[$i]).';';
+					$return .= self::readVar($str, $i, "var", $var_used, $flag);
+					$flag |= self::TYPE_FLAG_READV;
 					break;
 				case code::WRITEV:
 					$return .= ' WRITEV:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i]).';';
+					$return .= self::readVar($str, $i, "output", $var_used, $flag);
+					$flag |= self::TYPE_FLAG_WRITEV;
 					break;
 				case code::INT:
 					$return .= self::dumpInt($str, $i);
 					$return .= PHP_EOL;
+					$flag |= self::TYPE_FLAG_SCALAR;
 					break;
 				case code::STRING:
 					$return .= ' STRING:'.bin2hex($str[$i++]).';';
@@ -198,11 +213,12 @@ class opcode_dumper{
 						$return .= ' '.str_replace("\x0a", "\\n", $str[$i]).':'.bin2hex($str[$i++]).';';
 					}
 					$i--;
+					$flag |= self::TYPE_FLAG_SCALAR;
 					break;
 				case code::VALUE:
 					$return .= ' VALUE:'.bin2hex($str[$i++]).';';
-					$return .= ' var:'.bin2hex($str[$i++]).';';
-					$return .= ' var:'.bin2hex($str[$i]).';';
+					$return .= self::readVar($str, $i, "var", $var_used, $flag);
+					$flag |= self::TYPE_FLAG_VALUE;
 					break;
 				case code::BOOL:
 					$return .= ' BOOL:'.bin2hex($str[$i++]).';';
@@ -218,147 +234,93 @@ class opcode_dumper{
 						$return .= "false";
 					}
 					$return .= ";".PHP_EOL;
+					$flag |= self::TYPE_FLAG_SCALAR;
 					break;
 				case code::ADD:
-					$return .= ' ADD?:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i]).';';
+					$return .= self::readBinaryop($str, $i, "ADD", $var_used, $flag);
 					break;
 				case code::MUL:
-					$return .= ' MUL?:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i]).';';
+					$return .= self::readBinaryop($str, $i, "MUL", $var_used, $flag);
 					break;
 				case code::DIV:
-					$return .= ' DIV?:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i]).';';
+					$return .= self::readBinaryop($str, $i, "DIV", $var_used, $flag);
 					break;
 				case code::MINUS:
-					$return .= ' MINUS?:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i]).';';
+					$return .= self::readBinaryop($str, $i, "MINUS", $var_used, $flag);
 					break;
 				case code::B_AND:
-					$return .= ' B_AND?:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i]).';';
+					$return .= self::readBinaryop($str, $i, "B_AND", $var_used, $flag);
 					break;
 				case code::B_OR:
-					$return .= ' B_OR?:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i]).';';
+					$return .= self::readBinaryop($str, $i, "B_OR", $var_used, $flag);
 					break;
 				case code::B_XOR:
-					$return .= ' B_XOR?:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i]).';';
+					$return .= self::readBinaryop($str, $i, "B_XOR", $var_used, $flag);
 					break;
 				case code::BOOL_AND:
-					$return .= ' BOOL_AND?:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i]).';';
+					$return .= self::readBinaryop($str, $i, "BOOL_AND", $var_used, $flag);
 					break;
 				case code::BOOL_OR:
-					$return .= ' BOOL_OR?:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i]).';';
+					$return .= self::readBinaryop($str, $i, "BOOL_OR", $var_used, $flag);
 					break;
 				case code::COALESCE:
-					$return .= ' COALESCE?:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i]).';';
+					$return .= self::readBinaryop($str, $i, "COALESCE", $var_used, $flag);
 					break;
 				case code::CONCAT:
-					$return .= ' CONCAT?:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i]).';';
+					$return .= self::readBinaryop($str, $i, "CONCAT", $var_used, $flag);
 					break;
 				case code::EQUAL:
-					$return .= ' EQUAL?:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i]).';';
+					$return .= self::readBinaryop($str, $i, "EQUAL", $var_used, $flag);
 					break;
 				case code::GREATER:
-					$return .= ' GREATER?:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i]).';';
+					$return .= self::readBinaryop($str, $i, "GREATER", $var_used, $flag);
 					break;
 				case code::GREATEROREQUAL:
-					$return .= ' GREATEROREQUAL?:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i]).';';
+					$return .= self::readBinaryop($str, $i, "GREATEROREQUAL", $var_used, $flag);
 					break;
 
 				case code::IDENTICAL:
-					$return .= ' IDENTICAL?:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i]).';';
+					$return .= self::readBinaryop($str, $i, "IDENTICAL", $var_used, $flag);
 					break;
 				case code::L_AND:
-					$return .= ' L_AND?:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i]).';';
+					$return .= self::readBinaryop($str, $i, "L_AND", $var_used, $flag);
 					break;
 				case code::L_OR:
-					$return .= ' L_OR?:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i]).';';
+					$return .= self::readBinaryop($str, $i, "L_OR", $var_used, $flag);
 					break;
 				case code::L_XOR:
-					$return .= ' L_XOR?:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i]).';';
+					$return .= self::readBinaryop($str, $i, "L_XOR", $var_used, $flag);
 					break;
 				case code::MOD:
-					$return .= ' MOD?:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i]).';';
+					$return .= self::readBinaryop($str, $i, "MOD", $var_used, $flag);
 					break;
 				case code::NOTIDENTICAL:
-					$return .= ' NOTIDENTICAL?:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i]).';';
+					$return .= self::readBinaryop($str, $i, "NOTIDENTICAL", $var_used, $flag);
 					break;
 				case code::SHIFTLEFT:
-					$return .= ' SHIFTLEFT?:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i]).';';
+					$return .= self::readBinaryop($str, $i, "SHIFTLEFT", $var_used, $flag);
 					break;
 				case code::POW:
-					$return .= ' POW?:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i]).';';
+					$return .= self::readBinaryop($str, $i, "POW", $var_used, $flag);
 					break;
 				case code::SHIFTRIGHT:
-					$return .= ' SHIFTRIGHT?:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i]).';';
+					$return .= self::readBinaryop($str, $i, "SHIFTRIGHT", $var_used, $flag);
 					break;
 				case code::SMALLER:
-					$return .= ' SMALLER?:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i]).';';
+					$return .= self::readBinaryop($str, $i, "SMALLER", $var_used, $flag);
 					break;
 				case code::SMALLEROREQUAL:
-					$return .= ' SMALLEROREQUAL?:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i]).';';
+					$return .= self::readBinaryop($str, $i, "SMALLEROREQUAL", $var_used, $flag);
 					break;
 				case code::SPACESHIP:
-					$return .= ' SPACESHIP?:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i]).';';
+					$return .= self::readBinaryop($str, $i, "SPACESHIP", $var_used, $flag);
 					break;
 				case code::NOTEQUAL:
-					$return .= ' NOTEQUAL?:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i]).';';
+					$return .= self::readBinaryop($str, $i, "NOTEQUAL", $var_used, $flag);
 					break;
 				case code::ABC:
-					$return .= ' ABC?:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i]).';';
+					$return .= self::readBinaryop($str, $i, "ABC", $var_used, $flag);
+					self::readBinaryop($str, $i, "aaa", $var_used, $flag);
 					break;
 				case code::PRINT:
 					$return .= ' PRINT:'.bin2hex($str[$i]).';';
@@ -395,17 +357,16 @@ class opcode_dumper{
 					break;
 				case code::FUN_SUBMIT://FUN_SUBMIT output
 					$return .= ' FUN_SUBMIT:'.bin2hex($str[$i++]).';';
-					$return .= ' var:'.bin2hex($str[$i++]).';';
-					$return .= ' var:'.bin2hex($str[$i]).';';
+					$return .= self::readVar($str, $i, "var", $var_used, $flag);
 					break;
 				case code::EXIT:
 					$return .= ' EXIT:'.bin2hex($str[$i]).';';
 					break;
 				case code::CAST:
 					$return .= ' CAST:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i++]).';';
-					$return .= ' output:'.bin2hex($str[$i++]).';';
+					$return .= self::readVar($str, $i, "output", $var_used, $flag);
 					$return .= ' id:'.bin2hex($str[$i]).';';
+
 					break;
 				default:
 					$return .= ' :'.bin2hex($str[$i]).';';
@@ -413,8 +374,33 @@ class opcode_dumper{
 
 			$result .= PHP_EOL." | ".$start."-".$i." | ".($i - $start + 1)." | ".$return;
 			$list[$start] = trim(PHP_EOL." | ".$start."-".$i." | ".($i - $start + 1)." | ".$return);
+
+			if($var_used !== null){
+				if(!isset($var_use_list[$var_used])){
+					$var_use_list[$var_used] = 0;
+				}
+				++$var_use_list[$var_used];
+			}
+
+			$symbols[] = [$opcode, $start, $i, ($i - $start + 1), $var_used, $flag];
 		}
 		return $result;
+	}
+
+	public static function readVar(string $str, int &$i, string $prefix, ?int &$var_used, int &$flag) : string{
+		$var_used = Binary::readShort(substr($str, $i, 2));
+		$return = $prefix.' :'.bin2hex($str[$i++]).'; ';
+		$return .= $prefix.' :'.bin2hex($str[$i]).'; ';
+		$flag |= self::TYPE_FLAG_USED_VAR;
+		return $return;
+	}
+
+	public static function readBinaryop(string $str, int &$i, string $prefix, ?int &$var_used, int &$flag) : string{
+		$return = ' '.$prefix.'?:'.bin2hex($str[$i++]).'; ';
+		$return .= self::readVar($str, $i, self::PREFIX_OUTPUT, $var_used, $flag);
+		$flag |= self::TYPE_FLAG_BINARYOP;
+		return $return;
+
 	}
 
 	public static function hexentities1(string $str) : string{

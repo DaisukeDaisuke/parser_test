@@ -417,6 +417,18 @@ var_dump($i);
 var_dump(++$i);
 ';
 
+$code='
+for(;;($i++)){
+echo $i;//$i = 未定義、警告...?
+break;
+}';//$i = always 1
+
+$code='$true = false;
+for(print 1; print 2; print 3, $true = true){
+	print 4;
+	if($true) break;
+}';
+
 //$code='
 //var_dump($i);
 //var_dump(++$i);';
@@ -500,15 +512,19 @@ echo $time." 秒";
 
 //file_put_contents("output.bin", $output);
 $list1 = [];
-var_dump(opcode_dumper::hexentities($output, $list1), opcode_dumper::hexentities1($output));
+$symbols = [];
+$var_use_list = [];
+var_dump(opcode_dumper::hexentities($output, $list1, $symbols, $var_use_list), opcode_dumper::hexentities1($output));
 //var_dump($list1);
 var_dump(strlen($output));
+var_dump($symbols);
+var_dump($var_use_list);
 var_dump("===========");
 
 //ob_start();
 $decoder = new decoder();
 try{
-	$decoder->decode($output, false);
+	$decoder->decode($output, true);
 }catch(ExitException $exception){
 	var_dump("exit code: ".$exception->getMessagecode());
 	$exception->exec();
