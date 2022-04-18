@@ -445,7 +445,7 @@ class main_old2{
 				//$is_var = true;
 
 				//Added outputid from April 18, 2022
-				$var = $this->exec_variable($expr, $outputid ?? $this->count, false, $oldid,false, $name, false);
+				$var = $this->exec_variable($expr, $outputid ?? $this->count, false, $oldid,false, $name);
 				if($oldid === null){
 					//$recursion = false;
 					$this->logger->warning('Undefined variable $'.$name.', Incompatibility warning: Assign null to $'.$name.'.', $expr->getAttribute("startLine"));
