@@ -231,6 +231,7 @@ class decoder{
 				$func = $this->tmpfuncName;
 				if($func === "var_dump"){
 					$this->user_var_dump($this->tmpfuncargs);
+					$this->setvalue($output, null);
 					return;
 				}
 				if(!function_exists($func)){

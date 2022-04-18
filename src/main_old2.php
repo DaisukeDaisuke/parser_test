@@ -116,7 +116,14 @@ class main_old2{
 	public $file = null;
 
 	//config
-	/** @var bool */
+
+	/**
+	 * If "true" is specified, the comparison is performed using the spaceship operator instead of using the comparison operator below.
+	 * >,>=,==,!=,<,<=
+	 * reference
+	 * https://wiki.php.net/rfc/combined-comparison-operator
+	 * @var bool
+	 */
 	public $use_spaceship_operator = true;
 
 	public const ADDRESS_SIZE = 2;
@@ -193,21 +200,21 @@ class main_old2{
 			case For_::class:
 			case While_::class:
 				/** @var For_|While_ $node */
-			$scope = $this->label_count++;
-			$continueScope = $this->label_count++;
+				$scope = $this->label_count++;
+				$continueScope = $this->label_count++;
 
-			$scopeNode = new scopenode($this->currentlyScope, $scope, scopenode::TYPE_FOR_WHILE);
-			$continueScopeNode = new scopenode($this->currentlyContinueScope, $continueScope, scopenode::TYPE_FOR_WHILE);
+				$scopeNode = new scopenode($this->currentlyScope, $scope, scopenode::TYPE_FOR_WHILE);
+				$continueScopeNode = new scopenode($this->currentlyContinueScope, $continueScope, scopenode::TYPE_FOR_WHILE);
 
-			$this->forscope[$scope] = $scopeNode;
-			$this->forscope[$continueScope] = $continueScopeNode;
+				$this->forscope[$scope] = $scopeNode;
+				$this->forscope[$continueScope] = $continueScopeNode;
 
-			$this->currentlyScope = $scope;
-			$this->currentlyContinueScope = $continueScope;
-			$init = "";
-			$loop = "";
-			if($node instanceof For_){
-				foreach($node->init as $value){
+				$this->currentlyScope = $scope;
+				$this->currentlyContinueScope = $continueScope;
+				$init = "";
+				$loop = "";
+				if($node instanceof For_){
+					foreach($node->init as $value){
 						$init .= $this->execExpr($value);
 					}
 				}
@@ -217,9 +224,9 @@ class main_old2{
 				}else{
 					$condExpr = $node->cond;
 				}
-				$condresult = [];
+				$cond = "";
 				foreach($condExpr as $item){
-					$condresult[] = $this->execExpr($item);
+					$cond .= $this->execExpr($item);
 				}
 				$tmpcount = $this->count++;
 
@@ -235,14 +242,11 @@ class main_old2{
 				}
 				$output = $stmts.$loop;
 
-				//$cond = "";
-
-
-				$cond = $this->putjmp($output, true, 7);//7 = putunjmp len
-				foreach(array_reverse($condresult) as $value){
-					$tmpjmp = $this->putjmp($cond, true, 0);//false
-					$cond = $value.$this->putjmpz($tmpcount, "", $tmpjmp, 0).$tmpjmp.$cond;//8//true
+				if($cond !== ""){//無限ループ
+					$cond .= $this->putjmpz($tmpcount, "", $output, 7);
 				}
+
+
 				//$cond = $cond;
 
 				$output = $cond.$output;
@@ -257,9 +261,9 @@ class main_old2{
 				}
 				unset($this->forscope[$scope]);
 				$this->currentlyScope = $scopeNode->getParent();
-			$this->currentlyContinueScope = $continueScopeNode->getParent();
+				$this->currentlyContinueScope = $continueScopeNode->getParent();
 
-			return $init.$unjmp;
+				return $init.$unjmp;
 
 			case Break_::class;
 				/** @var break_ $node */
@@ -659,7 +663,7 @@ class main_old2{
 					return $result.$str;
 				}
 				var_dump($var);
-				throw new \LogicException("UnaryMinus: \$var is not expected type, actual: ".get_debug_type($val));
+				throw new \LogicException("UnaryMinus: \$var is not expected type.");
 			case $expr instanceof Expr:
 				//var_dump(get_class($expr));
 				$recursion = true;

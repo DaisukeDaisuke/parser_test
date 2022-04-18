@@ -111,6 +111,11 @@ string(4) "test"
 				'var_dump(1+intval(1.1));',
 				'int(2)'
 			],
+			[
+				'var_dump(var_dump("test"));',
+				'string(4) "test"
+NULL'
+			],
 		];
 	}
 }

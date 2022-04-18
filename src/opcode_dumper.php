@@ -56,7 +56,13 @@ class opcode_dumper{
 		return $return;
 	}
 
-	public static function readInt(string $str, int &$i, ?int &$size = null) : int{
+	/**
+	 * @param string $str
+	 * @param int $i
+	 * @param int|null $size
+	 * @return float|int|null
+	 */
+	public static function readInt(string $str, int &$i, ?int &$size = null){
 		$code = $str[$i++];
 		if($code !== code::INT){
 			throw new \LogicException("readInt: off:".$i.", val: ".ord($code)." is not int");
@@ -189,7 +195,7 @@ class opcode_dumper{
 							break;
 					}
 					for($f = 1; $f <= $return1; $f++){
-						$return .= ' '.$str[$i].':'.bin2hex($str[$i++]).';';
+						$return .= ' '.str_replace("\x0a","\\n", $str[$i]).':'.bin2hex($str[$i++]).';';
 					}
 					$i--;
 					break;
@@ -370,10 +376,12 @@ class opcode_dumper{
 					break;
 				case code::LABEL:
 					$return .= ' LABEL:'.bin2hex($str[$i++]).' ';
+					/* @phpstan-ignore-next-line */
 					$return .= 'label: 0x'.dechex(self::readInt($str, $i, $size)).";";
 					break;
 				case code::LGOTO:
 					$return .= ' LGOTO:'.bin2hex($str[$i++]).' ';
+					/* @phpstan-ignore-next-line */
 					$return .= 'jmp: 0x'.dechex(self::readInt($str, $i, $size)).";";
 					break;
 				case code::JMPA:

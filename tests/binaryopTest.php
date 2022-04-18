@@ -330,8 +330,28 @@ class binaryopTest extends BaseTest{
 				],
 			],
 			[
-				'',
-				''
+				'var_dump(false||null||0||0.0||"");',
+				self::TYPE_FALSE
+			],
+			[
+				'var_dump(false||null||true||0||0.0||"");',
+				self::TYPE_TRUE
+			],
+			[
+				'var_dump(false||null||0||0.0||""||(print "1\n"));',
+				"1\n".self::TYPE_TRUE
+			],
+			[
+				'var_dump(true&&1&&1.0&&"test"&&strval(1));',
+				self::TYPE_TRUE
+			],
+			[
+				'var_dump(true&&1&&1.0&&strval(0)&&"test");',
+				self::TYPE_FALSE
+			],
+			[
+				'var_dump(true&&(false||true));',
+				self::TYPE_TRUE
 			],
 			[
 				'',

@@ -351,7 +351,60 @@ $code='var_dump((-1 >= 0));';
 //var_dump((-1 >= 0));
 
 $code='var_dump((1 > 0));';
-var_dump((1 > 0));
+//var_dump((1 > 0));
+
+$code='var_dump("test") || true;';
+$code = 'var_dump(var_dump("test"));';
+//var_dump(var_dump("test"));
+
+//$code='var_dump(100>10||10>=100||10 == 100||10 != 10||100<=10||10<=10);';
+//var_dump(100>10||10>=100||10 == 100||10 != 10||100<=10||10<=10);
+
+$code='for(;true,true;){
+	echo "test";
+	break;
+}
+';//echo 0;
+
+$code='
+for(;;($i++)){
+}';//$i = always 1
+
+$code='
+for ($y = -1; $y < 2; $y++) {
+    var_dump("test!");
+	for ($x = -1; $x < 2; $x++) {
+		for ($z = -1; $z < 2; $z++) {
+		    var_dump("for!");
+		    break 3;
+		}
+	}
+	var_dump("Never call");
+}
+var_dump("exit!");';//$i = always 1
+$code='if(true):
+    echo "if\n";    
+endif;
+
+if(false):
+    echo "if true\n";
+else:
+     echo "if false\n";
+endif;
+
+for($i = 0; $i < 1; $i++):
+	echo "for\n";
+endfor;
+
+while(true):
+	echo "while\n";
+	break;
+endwhile;
+
+/*$array = array("foreach");
+foreach($array as $value):
+    echo $value,"\n"; 
+endforeach;*/';
 
 
 //
@@ -401,7 +454,7 @@ echo $time." 秒";
 
 //var_dump($main_old);
 
-//file_put_contents(".\\output.bin", $output);
+//file_put_contents("output.bin", $output);
 $list1 = [];
 var_dump(opcode_dumper::hexentities($output, $list1), opcode_dumper::hexentities1($output));
 //var_dump($list1);
