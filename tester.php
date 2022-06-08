@@ -428,6 +428,41 @@ for(print 1; print 2; print 3, $true = true){
 	print 4;
 	if($true) break;
 }';
+$code='
+$test = true;
+';
+
+$code = '
+if(true){
+        for($i=0; $i<5; $i++){
+                echo $i;
+        }
+}else{
+        for($i=0; $i<5; $i++){
+                echo $i++;
+        }
+}';
+
+$code='$true = false;
+for(print 1; print 2; print 3, $true = true){
+	print 4;
+	if($true) break;
+}';
+
+$code='$a = (true&&true&&true); var_dump($a);';
+
+/*
+ | 0-2 | 3 |  POW?:17;  output:00;  output:03;
+ | 3-5 | 3 |  INT:93; size:01; 3:03;
+ | 6-8 | 3 |  INT:93; size:01; 2:02;
+*/
+$code='3**2;';
+/*
+ | 0-2 | 3 |  MUL?:03;  output:00;  output:03;
+ | 3-5 | 3 |  INT:93; size:01; 3:03;
+ | 6-8 | 3 |  INT:93; size:01; 2:02;
+*/
+$code='3*2;';
 
 //$code='
 //var_dump($i);
@@ -503,7 +538,7 @@ echo $dumper->dump($stmts, "<?php\n".$code);
 $main_old = new main_old2();
 $output = $main_old->onexec($stmts);
 
-var_dump($main_old->block);
+//var_dump($main_old->block);
 
 $time = microtime(true) - $time_start;
 echo $time." 秒";
@@ -517,7 +552,7 @@ $var_use_list = [];
 var_dump(opcode_dumper::hexentities($output, $list1, $symbols, $var_use_list), opcode_dumper::hexentities1($output));
 //var_dump($list1);
 var_dump(strlen($output));
-var_dump($symbols);
+//var_dump($symbols);
 var_dump($var_use_list);
 var_dump("===========");
 

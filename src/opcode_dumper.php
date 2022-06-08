@@ -134,7 +134,7 @@ class opcode_dumper{
 	}
 
 	/** @phpstan-ignore-next-line */
-	public static function hexentities(string $str, array &$list = [], array &$symbols = [], array &$var_use_list = []) : string{
+	public static function hexentities(string $str, array &$list = [], array &$symbols = [], array &$var_unused_list = []) : string{
 		$result = '';
 		$var_used = null;
 		for($i = 0, $iMax = strlen($str); $i < $iMax; $i++){
@@ -148,17 +148,17 @@ class opcode_dumper{
 				case code::READV:
 					$return .= ' READV:'.bin2hex($str[$i++]).';';
 					$return .= self::readVar($str, $i, "var", $var_used, $flag);
-					$flag |= self::TYPE_FLAG_READV;
+					//$flag |= self::TYPE_FLAG_READV;
 					break;
 				case code::WRITEV:
 					$return .= ' WRITEV:'.bin2hex($str[$i++]).';';
 					$return .= self::readVar($str, $i, "output", $var_used, $flag);
-					$flag |= self::TYPE_FLAG_WRITEV;
+					//$flag |= self::TYPE_FLAG_WRITEV;
 					break;
 				case code::INT:
 					$return .= self::dumpInt($str, $i);
 					$return .= PHP_EOL;
-					$flag |= self::TYPE_FLAG_SCALAR;
+					//$flag |= self::TYPE_FLAG_SCALAR;
 					break;
 				case code::STRING:
 					$return .= ' STRING:'.bin2hex($str[$i++]).';';
@@ -213,12 +213,12 @@ class opcode_dumper{
 						$return .= ' '.str_replace("\x0a", "\\n", $str[$i]).':'.bin2hex($str[$i++]).';';
 					}
 					$i--;
-					$flag |= self::TYPE_FLAG_SCALAR;
+					//$flag |= self::TYPE_FLAG_SCALAR;
 					break;
 				case code::VALUE:
 					$return .= ' VALUE:'.bin2hex($str[$i++]).';';
 					$return .= self::readVar($str, $i, "var", $var_used, $flag);
-					$flag |= self::TYPE_FLAG_VALUE;
+					//$flag |= self::TYPE_FLAG_VALUE;
 					break;
 				case code::BOOL:
 					$return .= ' BOOL:'.bin2hex($str[$i++]).';';
@@ -234,7 +234,7 @@ class opcode_dumper{
 						$return .= "false";
 					}
 					$return .= ";".PHP_EOL;
-					$flag |= self::TYPE_FLAG_SCALAR;
+					//$flag |= self::TYPE_FLAG_SCALAR;
 					break;
 				case code::ADD:
 					$return .= self::readBinaryop($str, $i, "ADD", $var_used, $flag);
@@ -375,12 +375,21 @@ class opcode_dumper{
 			$result .= PHP_EOL." | ".$start."-".$i." | ".($i - $start + 1)." | ".$return;
 			$list[$start] = trim(PHP_EOL." | ".$start."-".$i." | ".($i - $start + 1)." | ".$return);
 
-			if($var_used !== null){
-				if(!isset($var_use_list[$var_used])){
-					$var_use_list[$var_used] = 0;
-				}
-				++$var_use_list[$var_used];
-			}
+//			if($var_used !== null){
+//				/*
+//				 * $var_unused_list[$var_used] >= 0: used
+//				 * $var_unused_list[$var_used] === -1: unused
+//				 */
+//				if(!isset($var_unused_list[$var_used])){
+//					$var_unused_list[$var_used] = 0;
+//				}
+//				var_dump($var_used, ((($flag & self::TYPE_FLAG_WRITEV) !== 0)), ((($flag & (self::TYPE_FLAG_USED_VAR)) === 0)||((($flag & (self::TYPE_FLAG_WRITEV)) !== 0))));
+//				if(((($flag & (self::TYPE_FLAG_USED_VAR)) === 0)||((($flag & (self::TYPE_FLAG_WRITEV)) !== 0)))&&$var_unused_list[$var_used] >= 0){
+//					++$var_unused_list[$var_used];
+//				}else{
+//					$var_unused_list[$var_used] = -1;
+//				}
+//			}
 
 			$symbols[] = [$opcode, $start, $i, ($i - $start + 1), $var_used, $flag];
 		}
@@ -389,16 +398,18 @@ class opcode_dumper{
 
 	public static function readVar(string $str, int &$i, string $prefix, ?int &$var_used, int &$flag) : string{
 		$var_used = Binary::readShort(substr($str, $i, 2));
-		$return = $prefix.' :'.bin2hex($str[$i++]).'; ';
-		$return .= $prefix.' :'.bin2hex($str[$i]).'; ';
-		$flag |= self::TYPE_FLAG_USED_VAR;
+		$return = ' '.$prefix.':'.bin2hex($str[$i++]).'; ';
+		$return .= ' '.$prefix.':'.bin2hex($str[$i]).'; ';
+//		if($prefix === "var"){//output
+//			$flag |= self::TYPE_FLAG_USED_VAR;
+//		}
 		return $return;
 	}
 
 	public static function readBinaryop(string $str, int &$i, string $prefix, ?int &$var_used, int &$flag) : string{
 		$return = ' '.$prefix.'?:'.bin2hex($str[$i++]).'; ';
 		$return .= self::readVar($str, $i, self::PREFIX_OUTPUT, $var_used, $flag);
-		$flag |= self::TYPE_FLAG_BINARYOP;
+		//$flag |= self::TYPE_FLAG_BINARYOP;
 		return $return;
 
 	}
