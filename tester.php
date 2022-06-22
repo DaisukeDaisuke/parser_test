@@ -464,6 +464,32 @@ $code='3**2;';
 */
 $code='3*2;';
 
+$code = '
+if(true){
+        for($i=0; $i<5;){
+                echo $i;
+                break;
+        }
+}';
+
+$code = '
+//$i = 0;
+switch($i){
+	case 1:
+	break;
+}';
+
+$code = 'while (true) {
+    echo "test";
+    break;
+}';
+
+$code = 'for ($i = 0; $i < 10; $i++) {
+    echo $i;
+}';
+
+
+
 //$code='
 //var_dump($i);
 //var_dump(++$i);';
