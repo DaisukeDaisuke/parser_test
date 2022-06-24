@@ -556,6 +556,29 @@ $test2+=2;
 echo $test1, ",", $test2;
 ';
 
+$code = '
+$array = [11];
+for ($i = 1; $i <= 10; $i++) {
+	$array[] = $i;
+}
+var_dump($array);
+';
+
+$code = '
+$hoge = 1;
+switch(true){
+  case $hoge === 1:
+    echo 10;
+    break;
+
+    case $hoge === 1:
+    echo 20;
+    break;
+}
+ ';
+
+
+
 //$test = [11,2,3,4,5,6,7,8,9,10];
 //$i = 0;
 //$j = 0;

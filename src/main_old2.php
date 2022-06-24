@@ -566,9 +566,10 @@ class main_old2{
 						//throw new \RuntimeException("\$value->dim === null");
 						$infoArray = $this->array_inference[$is_var ?? $baseid] ?? null;
 						if($infoArray === null){
-							throw new \RuntimeException("array_inference not defined for ".($is_var ?? $baseid));
+							$infoArray = new InfoArray($is_var ?? $baseid);//$test1 = $test2 = [];
+							$this->array_inference[$is_var ?? $baseid] = $infoArray;
 						}
-						$result .=$this->getInt($infoArray->getLastIndex());
+						$result .= $this->getInt($infoArray->getLastIndex());
 					}else{
 						$recursion = false;
 						$tmp = $this->execExpr($dim, $outputid, $targetid, $recursion);
@@ -604,7 +605,6 @@ class main_old2{
 				}else{
 					$this->count++;
 					$before_id = $this->count;
-					//$recursion = false;//
 					$content = $this->execExpr($expr->expr, $is_var ?? $baseid, $targetid, $recursion);
 				}
 
