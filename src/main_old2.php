@@ -585,7 +585,7 @@ class main_old2{
 					}else{
 						$result .= $tmp;
 					}
-					$recursion = false;
+					$recursion = true;
                     return $pre_expr.$result;
                 }
 				$id1 = $this->exec_variable($value, $baseid, false, $is_var);
@@ -957,44 +957,48 @@ class main_old2{
 		return $result1.$opcode.$var1.code::VALUE.$var1.$result;
 	}
 
-	public function writeAssignOpDim(AssignOp $node, string $opcode){
+	public function writeAssignOpDim(AssignOp $node, string $opcode): string{
 		/** @var ArrayDimFetch $varnode */
 		$varnode = $node->var;
+		$expr_none = $node->expr;
 		/** @var Variable $variable */
 		$variable = $varnode->var;
 		$dim = $varnode->dim;
 
 		if($dim === null){
 			//$test[] += 100;
-
 			$id1 = $this->exec_variable($variable, $this->count, false, $is_var, true, $solvedName);
 			if($is_var === null){
 				$this->logger->warning('Undefined variable $'.$solvedName.'. opcode(+= etc): '.bin2hex($opcode).'. (writeAssignOpDim)');// in ?????? on line ?
 				$baseid = $this->count++;
-				$pre_expr = code::ARRAY_CONSTRUCT.$id1;
 				$infoArray = new InfoArray($baseid);
 				$this->array_inference[$baseid] = $infoArray;
-				$this->count++;
 			}
-			return $this->execStmts([new Assign($varnode, $node->expr)]);
+			return code::ARRAY_CONSTRUCT.$id1.$this->execStmts([new Assign($varnode, $node->expr)]);
 		}
 		$tmp = null;
 		$solvedName = null;
 		$var1 = $this->exec_variable($variable, $this->count, false, $tmp, true, $solvedName);
-
 		if($tmp === null){
 			$this->logger->warning('Undefined variable $'.$solvedName.'. opcode(+= etc): '.bin2hex($opcode).'. (writeAssignOpDim)', $node->getStartLine());// in ?????? on line ?
+			$baseid = $this->count++;
+			$infoArray = new InfoArray($baseid);
+			$this->array_inference[$baseid] = $infoArray;
 			$this->count++;
 		}
-		$dim = $varnode->dim;
-		if($tmp === null){
-			$this->logger->warning('Undefined variable $'.$solvedName.'. opcode(+= etc): '.bin2hex($opcode).'. (writeAssignOp)');// in ?????? on line ?
-			$this->count++;
-		}
+		$expr = $this->execStmts([$expr_none], $targetid);
+		$id1 = $targetid ?? $this->count++;
 
-		$dim = $this->execExpr($dim, null, $tmp, $recursion);
-		$result = $result.code::ARRAY_SET.$solvedName;
-			return "";
+		$targetid = null;
+		$dim = $this->execStmts([$dim], $targetid);
+		$id = $targetid ?? $this->count++;
+		$id_var = $this->put_var($id);
+		$id_value = $this->write_variableId($id);
+		$tmpid = $this->write_varId($this->count++);
+
+		$get_array = code::ARRAY_GET.$var1.$id_value;
+		$add = $dim.$opcode.$tmpid.$get_array.code::READV.$this->write_varId($id1);
+		return $expr.$add.code::ARRAY_SET.$var1.$id_var.code::READV.$tmpid;
 	}
 
 	public function exec_variable(Variable $node, int $id, bool $force = false, ?int &$oldid = null, bool $raw = false, ?string &$solvedName = null) : string{//変数処理...

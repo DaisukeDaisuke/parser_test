@@ -545,180 +545,50 @@ for($i = 0; $i < count($test); $i++){
 ';
 
 $code = '
-$test11111111111[] += 100;
-';
-var_dump($test11111);
-
-$test = [100,200,300,400,500,600,700,800,900,1000];
-$test[] -= 100;
-
-var_dump($test);
-
-/*
-
-//quicksort
-$code = '
-$array = [11,2,3,4,5,6,7,8,9,10];
-$pivot = $array[0];
-$less = $greater = [];
-for ($i = 1; $i < count($array); $i++) {
-	if ($array[$i] < $pivot) {
-		$less[] = $array[$i];
-	} else {
-		$greater[] = $array[$i];
-	}
-}
-//$array = array_merge(quicksort($less), [$pivot], quicksort($greater));
-
-var_dump($array);
+$test11111111111 = ["key1" => 1];
+$test11111111111["key"."1"] -= $test11111111111["key"."1"]+1000;
+var_dump($test11111111111);
 ';
 
-$array = [11,2,3,4,5,6,7,8,9,10];
-$pivot = $array[0];
-$less = $greater = [];
-for ($i = 1; $i < count($array); $i++) {
-	if ($array[$i] < $pivot) {
-		$less[] = $array[$i];
-	} else {
-		$greater[] = $array[$i];
-	}
-}
-//$array = array_merge(quicksort($less), [$pivot], quicksort($greater));
-
-var_dump($array);
-
-*/
-
-//
-//$code = '
-//$array = [11];
-//if (1) {
-//		$array[] = $array[0];
-//	}
-//';
-
+$test11111111111 = ["key1" => 1];
+$test11111111111["key"."1"] -= $test11111111111["key"."1"]+1000;
+var_dump($test11111111111);
 
 //$code = '
-//$test1 = $test2 = intval("1000");
-//$test1+=1;
-//$test2+=2;
-//echo $test1, ",", $test2;
-//';
-//
-//$code = '
-//$array = [11];
-//for ($i = 1; $i <= 10; $i++) {
-//	$array[] = $i;
-//}
-//var_dump($array);
-//';
-
-
-//$code = '
-//$hoge = 1;
-//switch(true){
-//  case $hoge === 1:
-//    echo 10;
-//    break;
-//
-//    case $hoge === 1:
-//    echo 20;
-//    break;
-//}
-// ';
-
-
-
-//$test = [11,2,3,4,5,6,7,8,9,10];
-//$i = 0;
-//$j = 0;
-//$temp = 0;
-//for($i = 0; $i < count($test); $i++){
-//	for($j = 0; $j < count($test) - 1; $j++){
-//		if($test[$j] > $test[$j + 1]){
-//			$temp = $test[$j];
-//			$test[$j] = $test[$j + 1];
-//			$test[$j + 1] = $temp;
-//		}
-//	}
-//}
+//$test = [1,2];
+//echo $test[3] = $test[0] + $test[1];
 //var_dump($test);
-//
-//$code = '
-//$test = [11, 1, 2];
-//$test[] = "!!!";
 //';
 
-
-//none: STDIN is unspported in this program.
-//$code = '
-//$n = intval(fgets(STDIN));
-//echo $n % 100;
-//';
-//echo 254 % 101;
-
-// Github copilot test in php
-
-
-
-
-
-
-//$code='
-//var_dump($i);
-//var_dump(++$i);';
+//$test11111111111[] += 100;
+//var_dump($test11111111111);
 //
-//var_dump($i);
-//var_dump(++$i);
-
-//$code='
-//$true = false;
-//for(;;){
-//	$true = true;
-//	if($true) break;
-//}';
-
-//$code='
-//$true = false;
-//echo $true;
-//$true = true;
-//echo $true;
-//';
-
-//124324
-//124324
-//$true = false;
-//for(print 1; print 2; print 3, $true = true){
-//	print 4;
-//	if($true) break;
-//}
-
-
-
-
+//$test = [100,200,300,400,500,600,700,800,900,1000];
+//$test[] -= 100;
 //
-//$a = 101;
-//$b = 101;
-//$s_tmp = ($a <=> $b);
-//echo (($s_tmp === -1)||($s_tmp === 0));
+//var_dump($test);
 
-//$code = 'echo -null;';
-//echo -null;
 
-//echo -"aaaaa";
-//var_dump(0 xor (print "0\n") xor (print "2\n"));
-/*
 
-jmpz //case //2
-print "test" //1
-goto label //break; //1
-jmp 4 //1
 
-jmpz
-print "test"
-jmp 4
 
-*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 echo "\n";
 $time_start = microtime(true);
 
