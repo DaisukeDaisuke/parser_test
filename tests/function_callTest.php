@@ -116,6 +116,18 @@ string(4) "test"
 				'string(4) "test"
 NULL'
 			],
+			[
+				'$test1 = $test2 = intval("1000");
+				echo $test1, ",", $test2;',
+				'1000,1000'
+			],
+			[
+				'$test1 = $test2 = intval("1000");
+				$test1+=1;
+				$test2+=2;
+				echo $test1, ",", $test2;',
+				'1001,1002'
+			],
 		];
 	}
 }

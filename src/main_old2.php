@@ -552,24 +552,33 @@ class main_old2{
 					/** @var Variable $var */
                     $var = $value->var;
                     $dim = $value->dim;
-					if($dim === null){
-						//$test[] = ""
-						//throw new \RuntimeException("\$value->dim === null");
 
-					}
                     $id1 = $this->exec_variable($var, $baseid, false, $is_var, true);
 					if($is_var === null){
 						$pre_expr = code::ARRAY_CONSTRUCT.$id1;
+						$infoArray = $this->array_inference[$baseid] = new InfoArray($baseid);
 					}
 					$result = code::ARRAY_SET.$id1;
-					$recursion = false;
-					$tmp = $this->execExpr($dim, $outputid, $targetid, $recursion);
-					if($recursion){
-						$id2 = $this->count++;
-						$pre_expr .= $tmp;
-						$result .= $this->put_var($targetid ?? $id2);
+
+					if($dim === null){
+						$recursion = false;
+						//$test[] = ""
+						//throw new \RuntimeException("\$value->dim === null");
+						$infoArray = $this->array_inference[$is_var ?? $baseid] ?? null;
+						if($infoArray === null){
+							throw new \RuntimeException("array_inference not defined for ".($is_var ?? $baseid));
+						}
+						$result .=$this->getInt($infoArray->getLastIndex());
 					}else{
-						$result .= $tmp;
+						$recursion = false;
+						$tmp = $this->execExpr($dim, $outputid, $targetid, $recursion);
+						if($recursion){
+							$id2 = $this->count++;
+							$pre_expr .= $tmp;
+							$result .= $this->put_var($targetid ?? $id2);
+						}else{
+							$result .= $tmp;
+						}
 					}
 
 					$recursion = false;
@@ -581,9 +590,12 @@ class main_old2{
 					}else{
 						$result .= $tmp;
 					}
+					$recursion = false;
                     return $pre_expr.$result;
                 }
 				$id1 = $this->exec_variable($value, $baseid, false, $is_var);
+
+				$before_id = null;
 
 				$recursion1 = false;
 				if($expr->expr instanceof BinaryOp){
@@ -591,6 +603,8 @@ class main_old2{
 					$content = $this->execBinaryOp($expr->expr, $is_var ?? $baseid);
 				}else{
 					$this->count++;
+					$before_id = $this->count;
+					//$recursion = false;//
 					$content = $this->execExpr($expr->expr, $is_var ?? $baseid, $targetid, $recursion);
 				}
 
@@ -605,6 +619,11 @@ class main_old2{
 				if($recursion === false&&$recursion1 === false){
 					$content = code::WRITEV.$this->write_varId($is_var ?? $baseid).$content;
 					//$this->count++;
+				}elseif($expr->expr instanceof Assign){
+					if($before_id === null){
+						throw new \LogicException("\$before_id === null");
+					}
+					$content .= code::WRITEV.$this->write_varId($is_var ?? $baseid).code::VALUE.$this->write_varId($before_id);
 				}
 				//$this->count++;
 				//$count = $this->count++;
@@ -709,7 +728,8 @@ class main_old2{
                 $recursion = true;
                 $array_id = $outputid ?? $this->count++;
 
-				$this->array_inference[$array_id] = new InfoArray($array_id);
+				$infoArray = new InfoArray($array_id);
+				$this->array_inference[$array_id] = $infoArray;
 
                 $result =  code::ARRAY_CONSTRUCT.$this->write_varId($array_id);
                 $count = 0;//TODO: object
@@ -735,7 +755,7 @@ class main_old2{
                     $key_recursion = false;
                     if($key !== null){
                         $expr1 = $this->execExpr($key, null, $targetid,$key_recursion);
-                        $basecount1 = $this->count++;
+						$basecount1 = $this->count++;
                         if($key_recursion){
                             $tmp_result .= $tmp_result.$this->put_var($targetid ?? $basecount1);
                             $pre_expr .= $expr1;
@@ -743,7 +763,7 @@ class main_old2{
                             $tmp_result .= $expr1;
                         }
                     }else{
-                        $tmp_result .= $this->getInt($count++);//todo: count
+                        $tmp_result .= $this->getInt($infoArray->getLastIndex());//todo: count
                     }
 
                     $value_recursion = false;
@@ -1564,6 +1584,9 @@ class main_old2{
 	 * @throws \RuntimeException
 	 */
 	public function checkIntSize($value) : int{
+		if(is_string($value)){
+			throw new \RuntimeException('checkIntSize: "'.$value.'" is string.');
+		}
 		if(is_float($value)){
 			return code::TYPE_DOUBLE;
 		}

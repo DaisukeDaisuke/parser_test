@@ -549,20 +549,32 @@ var_dump($array);
 
 
 
-$test = [11,2,3,4,5,6,7,8,9,10];
-$i = 0;
-$j = 0;
-$temp = 0;
-for($i = 0; $i < count($test); $i++){
-	for($j = 0; $j < count($test) - 1; $j++){
-		if($test[$j] > $test[$j + 1]){
-			$temp = $test[$j];
-			$test[$j] = $test[$j + 1];
-			$test[$j + 1] = $temp;
-		}
-	}
-}
-var_dump($test);
+$code = '
+$test1 = $test2 = intval("1000");
+$test1+=1;
+$test2+=2;
+echo $test1, ",", $test2;
+';
+
+//$test = [11,2,3,4,5,6,7,8,9,10];
+//$i = 0;
+//$j = 0;
+//$temp = 0;
+//for($i = 0; $i < count($test); $i++){
+//	for($j = 0; $j < count($test) - 1; $j++){
+//		if($test[$j] > $test[$j + 1]){
+//			$temp = $test[$j];
+//			$test[$j] = $test[$j + 1];
+//			$test[$j + 1] = $temp;
+//		}
+//	}
+//}
+//var_dump($test);
+//
+//$code = '
+//$test = [11, 1, 2];
+//$test[] = "!!!";
+//';
 
 
 //none: STDIN is unspported in this program.
