@@ -280,6 +280,7 @@ class decoder{
 				$this->setvalue($address, $return);
 				return;
 		}
+		var_dump("=====decoder=====");
 		throw new RuntimeException("Unexpected Stmt: off:".$this->getOffset().", op:".bin2hex($opcode)." not found");
 	}
 

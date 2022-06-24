@@ -3,6 +3,8 @@
 namespace purser;
 
 use PhpParser\Node\Expr;
+use PhpParser\Node\Expr\Array_;
+use PhpParser\Node\Expr\ArrayItem;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\AssignOp;
 use PhpParser\Node\Expr\AssignOp\BitwiseAnd as AssignBitwiseAnd;
@@ -85,6 +87,7 @@ use PhpParser\Node\Stmt\While_;
 use PhpParser\Node\VariadicPlaceholder;
 use pocketmine\utils\Binary;
 
+use PhpParser\Node\Expr\ArrayDimFetch;
 
 error_reporting(E_ALL);
 
@@ -168,7 +171,6 @@ class main_old2{
 
 				return $return;
 			case If_::class://...?
-				/** @var If_ $node */
 				//ConstFetch
 				//$return = "";
 				$label = $this->label_count++;
@@ -199,7 +201,6 @@ class main_old2{
 				return $this->execExpr($node->expr);
 			case For_::class:
 			case While_::class:
-				/** @var For_|While_ $node */
 				$scope = $this->label_count++;
 				$continueScope = $this->label_count++;
 
@@ -537,7 +538,7 @@ class main_old2{
 				return $undefined.$copy.code::MINUS.$var.code::READV.$var.code::INT.$this->putRawInt(1);
 			case $expr instanceof Assign:
 				//$id = $this->execExpr($expr->var);
-				/** @var Variable $value */
+				/** @var Variable|ArrayDimFetch $value */
 				$value = $expr->var;
 				//$baseid = $this->count++;
 				$oldid1 = $this->count;
@@ -545,6 +546,40 @@ class main_old2{
 
 				$baseid = $this->count;
 				//$this->count++;
+                if($value instanceof ArrayDimFetch){
+					$pre_expr = "";
+					/** @var Variable $var */
+                    $var = $value->var;
+                    $dim = $value->dim;
+					if($dim === null){
+						throw new \RuntimeException("\$value->dim === null");
+					}
+                    $id1 = $this->exec_variable($var, $baseid, false, $is_var, true);
+					if($is_var === null){
+						$pre_expr = code::ARRAY_CONSTRUCT.$id1;
+					}
+					$result = code::ARRAY_SET.$id1;
+					$recursion = false;
+					$tmp = $this->execExpr($dim, $outputid, $targetid, $recursion);
+					if($recursion){
+						$id2 = $this->count++;
+						$pre_expr .= $tmp;
+						$result .= $this->put_var($targetid ?? $id2);
+					}else{
+						$result .= $tmp;
+					}
+
+					$recursion = false;
+					$tmp = $this->execExpr($expr->expr, null, $targetid, $recursion);
+					if($recursion){
+						$id3 = $this->count++;
+						$pre_expr .= $tmp;
+						$result .= $this->put_var($targetid ?? $id3);
+					}else{
+						$result .= $tmp;
+					}
+                    return $pre_expr.$result;
+                }
 				$id1 = $this->exec_variable($value, $baseid, false, $is_var);
 
 				$recursion1 = false;
@@ -664,6 +699,132 @@ class main_old2{
 				}
 				var_dump($var);
 				throw new \LogicException("UnaryMinus: \$var is not expected type.");
+            case $expr instanceof Array_:
+				//Assign
+                //$array = new type_array($outputid ?? $this->count++);
+				$pre_expr = "";
+                $recursion = true;
+                $array_id = $outputid ?? $this->count++;
+                $result =  code::ARRAY_CONSTRUCT.$this->write_varId($array_id);
+                $count = 0;//TODO: object
+                foreach ($expr->items as $item) {
+                    if(!$item instanceof ArrayItem){
+                        $this->logger->warning("internal error: \$item is not ArrayItem object.");
+                        continue;
+                    }
+
+                   //$array->setKey($item->key, $item->value);
+                    //code id key scalar
+                    $tmp_result = code::ARRAY_SET.$this->write_varId($array_id);
+                    $key = $item->key;
+                    $value = $item->value;
+                    $byRef = $item->byRef;
+                    $unpack = $item->unpack;
+
+                   // $pre_expr = "";
+
+                    //my note: "test" = 0x1. "test1" = 0x2
+                    //my note: array_search = ["test1" => 1, "test2" => 2]
+
+                    $key_recursion = false;
+                    if($key !== null){
+                        $expr1 = $this->execExpr($key, null, $targetid,$key_recursion);
+                        $basecount1 = $this->count++;
+                        if($key_recursion){
+                            $tmp_result .= $tmp_result.$this->put_var($targetid ?? $basecount1);
+                            $pre_expr .= $expr1;
+						}else{
+                            $tmp_result .= $expr1;
+                        }
+                    }else{
+                        $tmp_result .= $this->getInt($count++);//todo: count
+                    }
+
+                    $value_recursion = false;
+                    $expr2 = $this->execExpr($value, null, $targetid,$value_recursion);
+                    $basecount2 = $this->count++;
+                    if($value_recursion){
+                        $tmp_result .= $this->put_var($targetid ?? $basecount2);
+                        $pre_expr .= $expr2;
+                    }else{
+                        $tmp_result .= $expr2;
+                    }
+
+
+                    //var_dump(opcode_dumper::hexentities1($tmp_result));
+                    $result .= $tmp_result;
+
+//
+
+//                    $expr1 = "";
+//                    if($key !== null){
+//                        $expr1 = $this->execExpr($key, null, $targetid,$key_recursion);
+//                        $basecount1 = $this->count++;
+//                    }
+//                    $expr = $this->execStmts($value);
+//                    $basecount2 = $this->count++;
+                    ///my note: B3 Id key type var
+                    //my none: rand
+//                    if($key_recursion){
+//
+//                    }
+//
+//                    $result = $expr1.$expr.code::ARRAY_SET.$this->put_var($basecount1).$this->put_var($basecount2);
+//                    var_dump(opcode_dumper::hexentities($result));
+
+
+
+
+                }
+				//var_dump(opcode_dumper::hexentities1($pre_expr.$result));
+                return $pre_expr.$result;
+                case $expr instanceof ArrayDimFetch:
+
+					/** @var Variable $var */
+					$var = $expr->var;
+					$dim = $expr->dim;
+					if($dim === null){
+						throw new \RuntimeException("\$dim is null.");
+					}
+					$recursion = true;
+					$oldid = null;
+					$recursion1 = false;
+					$output_ = $this->count;
+					$oldid = false;
+					$pre_expr = "";
+
+					$array_id = $outputid ?? $this->count;//tmp id
+
+					$id = $this->exec_variable($var, $array_id,false, $oldid, true,$name);
+					if($oldid === null){
+						//変数未定義
+						$pre_expr = $this->write_var($array_id, 0);
+						$this->logger->warning('Undefined variable $'.$name.' (ArrayDimFetch)', $expr->getAttribute("startLine"));
+						$this->count++;
+					}
+					$result = code::WRITEV.$this->write_varId($array_id).code::ARRAY_GET.$id;
+
+					$pxpr1 = $this->execExpr($dim, null, $targetid, $recursion1);
+					if($recursion1){
+						$result .= $this->put_var($targetid ?? $this->count++);
+						$pre_expr .= $pxpr1;
+					}else{
+						$result .= $pxpr1;
+					}
+
+                    //$test["key"];
+//                    $var = $expr->var;
+//                    $dim = $expr->dim;
+//                    $baseid = $this->count;
+//                    $var = $this->exec_variable($expr, $outputid ?? $this->count, false, $oldid,false, $name);
+//                    $key_expr = $this->execExpr($dim, null);
+//                    $recursion1 = false;
+//                    $this->count++;
+//                    $content = code::ARRAY_SET.$var;
+
+                    //return $content;
+                    //break;
+					return $pre_expr.$result;
 			case $expr instanceof Expr:
 				//var_dump(get_class($expr));
 				$recursion = true;

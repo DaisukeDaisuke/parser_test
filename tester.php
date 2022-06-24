@@ -488,6 +488,45 @@ $code = 'for ($i = 0; $i < 10; $i++) {
     echo $i;
 }';
 
+// Github copilot test in php
+$code = '
+$a = 1;
+$b = 2;
+$c = 3;
+$d = 4;
+$e = 5;
+$f = 6;
+    
+$a = $b + $c;
+$b = $c + $d;
+$c = $d + $e;
+$d = $e + $f;
+$e = $f + $a;
+$f = $a + $b;
+var_dump($a, $b, $c, $d, $e, $f);
+';
+
+$code = '
+$test = [11];
+$test["!!!"] = "???";
+var_dump($test["key"]);
+$test = [];
+';
+
+
+
+//none: STDIN is unspported in this program.
+//$code = '
+//$n = intval(fgets(STDIN));
+//echo $n % 100;
+//';
+//echo 254 % 101;
+
+// Github copilot test in php
+
+
+
+
 
 
 //$code='
@@ -580,7 +619,7 @@ var_dump(opcode_dumper::hexentities($output, $list1, $symbols, $var_use_list), o
 var_dump(strlen($output));
 //var_dump($symbols);
 var_dump($var_use_list);
-var_dump("===========");
+var_dump("======decoder=====");
 
 //ob_start();
 $decoder = new decoder();

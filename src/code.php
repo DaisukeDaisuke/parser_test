@@ -93,4 +93,8 @@ class code{
 	public const FUN_SEND_ARGS = "\xB1";//FUN_SEND_ARGS scalar
 	public const FUN_SUBMIT = "\xB2";//FUN_SUBMIT output
 	//public const FUN_RECEIVE_RETURN = "\xB2";//FUN_RECEIVE_RETURN output
+
+    public const ARRAY_CONSTRUCT = "\xB3";
+	public const ARRAY_SET = "\xB4";
+	public const ARRAY_GET = "\xB5";//INDIRECT
 }
