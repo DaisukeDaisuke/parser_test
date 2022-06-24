@@ -3,6 +3,7 @@
 namespace purser;
 
 use pocketmine\utils\Binary;
+use function PHPStan\dumpType;
 
 class opcode_dumper{
 	protected const PREFIX_VAR = "output";
@@ -193,6 +194,7 @@ class opcode_dumper{
 				//$return .= PHP_EOL.$i." | ";
 				$return = "";
 				$var_used = null;
+				/** @var int $start */
 				$start = $i;
 				$opcode = $str[$i];
 				$flag = 0;
@@ -489,16 +491,13 @@ class opcode_dumper{
 			echo "\n=====opcode_dumper crashed!=====\n";
 			var_dump(self::hexentities1($str));
 
-			var_dump(self::hexentities1(substr($str, $start, 10)));
+			if(isset($start)){
+				var_dump(self::hexentities1(substr($str, $start, 10)));
+			}else{
+				var_dump("");
+			}
 			var_dump(self::hexentities1(substr($str, $i-10, 10)));
 			var_dump(self::hexentities1(substr($str, $i, 20)));
-
-			/**
-			:b4; :00; :01;
-			:91; :00; :2c;
-			:95; :00; :0e; :a1;
-			 *
-			 */
 
 			echo "\n=====opcode_dumper crashed!=====\n";
 			throw $exception;

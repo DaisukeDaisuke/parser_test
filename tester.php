@@ -655,11 +655,15 @@ var_dump("======decoder=====");
 //ob_start();
 $decoder = new decoder();
 try{
+	$time_start = microtime(true);
 	$decoder->decode($output, true);
+	$time = microtime(true) - $time_start;
 }catch(ExitException $exception){
 	var_dump("exit code: ".$exception->getMessagecode());
 	$exception->exec();
 }
+
+//echo $time." 秒";
 
 //$log = ob_get_clean();
 //var_dump($log);
