@@ -545,14 +545,26 @@ for($i = 0; $i < count($test); $i++){
 ';
 
 $code = '
-$test11111111111 = ["key1" => 1];
-$test11111111111["key"."1"] -= $test11111111111["key"."1"]+1000;
-var_dump($test11111111111);
+$test1 = [0];
+$test = $test1[0]++;
+var_dump($test1,$test);
 ';
+$test1 = [0,0,1,0,0];
+$test = $test1[1+2]++;
+var_dump($test1,$test);
 
-$test11111111111 = ["key1" => 1];
-$test11111111111["key"."1"] -= $test11111111111["key"."1"]+1000;
-var_dump($test11111111111);
+//$test1 = [0,0,1,0,0];
+//$test1[1+2] -= $test1[1+1];
+//var_dump($test1);
+
+//$test1 = ["key1" => 1];
+//$test1["key"."1"] = $test1["key"."1"]-$test1["key"."1"]+1000;
+//var_dump($test1);
+
+//$test1 = ["key1" => 1];
+//$test1["key"."1"] -= $test1["key"."1"]+1000;
+//var_dump($test1);
+
 
 //$code = '
 //$test = [1,2];
@@ -560,8 +572,8 @@ var_dump($test11111111111);
 //var_dump($test);
 //';
 
-//$test11111111111[] += 100;
-//var_dump($test11111111111);
+//$test1[] += 100;
+//var_dump($test1);
 //
 //$test = [100,200,300,400,500,600,700,800,900,1000];
 //$test[] -= 100;

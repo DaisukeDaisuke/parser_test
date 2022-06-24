@@ -500,8 +500,12 @@ class main_old2{
 				return $undefined.code::MINUS.$var.code::READV.$var.code::INT.$this->putRawInt(1).$copy;
 			case $expr instanceof PostInc://$i++;
 				$recursion = true;//!!!!!!!!!
-				/** @var Variable $var */
+				/** @var Variable|ArrayDimFetch $var */
 				$var = $expr->var;
+				if($var instanceof ArrayDimFetch){
+					$result = $this->writeAssignOpDim(new AssignPlus($var, new LNumber(1)),code::ADD, true);
+					return $result;
+				}
 				$oldid = null;
 				$name = null;
 				$var = $this->exec_variable($var, $this->count, false, $oldid, true, $name);
@@ -957,7 +961,7 @@ class main_old2{
 		return $result1.$opcode.$var1.code::VALUE.$var1.$result;
 	}
 
-	public function writeAssignOpDim(AssignOp $node, string $opcode): string{
+	public function writeAssignOpDim(AssignOp $node, string $opcode, bool $post = false, bool $pre = false): string{
 		/** @var ArrayDimFetch $varnode */
 		$varnode = $node->var;
 		$expr_none = $node->expr;
@@ -995,10 +999,18 @@ class main_old2{
 		$id_var = $this->put_var($id);
 		$id_value = $this->write_variableId($id);
 		$tmpid = $this->write_varId($this->count++);
+		$post_mode = code::READV;
 
 		$get_array = code::ARRAY_GET.$var1.$id_value;
+
+		if($post){
+			$post_mode = code::VALUE;
+			//code::WRITEV.$get_array
+			//opcode_dumper::hexentities($this->execExpr($varnode));
+		}
+
 		$add = $dim.$opcode.$tmpid.$get_array.code::READV.$this->write_varId($id1);
-		return $expr.$add.code::ARRAY_SET.$var1.$id_var.code::READV.$tmpid;
+		return $expr.$add.code::ARRAY_SET.$var1.$id_var.$post_mode.$tmpid;
 	}
 
 	public function exec_variable(Variable $node, int $id, bool $force = false, ?int &$oldid = null, bool $raw = false, ?string &$solvedName = null) : string{//変数処理...
