@@ -1,17 +1,13 @@
 <?php
-//quicksort
-function quicksort($array) {
-	if (count($array) <= 1) {
-		return $array;
+//php test in copilot
+$test = [11,2,3,4,5,6,100];
+$test2 = [11,2,3,4,5,6,100];
+
+for($i = 0; $i < count($test); $i++){
+	if($test[$i] == $test2[$i]){
+		echo "true";
 	}
-	$pivot = $array[0];
-	$less = $greater = [];
-	for ($i = 1; $i < count($array); $i++) {
-		if ($array[$i] < $pivot) {
-			$less[] = $array[$i];
-		} else {
-			$greater[] = $array[$i];
-		}
+	else{
+		echo "false";
 	}
-	return array_merge(quicksort($less), [$pivot], quicksort($greater));
 }

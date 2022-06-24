@@ -460,6 +460,11 @@ class opcode_dumper{
 //							$return .= ' key: VALUE '.dechex($key).';';;
 //						}
 						break;
+					case code::ARRAY_APPEND:
+						$return .= ' ARRAY_APPEND:'.bin2hex($str[$i++]).';';
+						self::readVar($str, $i, "output", $var_used, $flag);
+						$return .= ' #'.$var_used.';';
+						break;
 					default:
 						$return .= ' :'.bin2hex($str[$i]).';';
 				}

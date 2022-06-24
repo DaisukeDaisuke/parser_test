@@ -293,7 +293,14 @@ class decoder{
 				}
 				$this->values[$address][$key_scalar] = $value_scalar;
 				return;
-
+			case code::ARRAY_APPEND:
+				$address = $this->getAddress();
+				$value_scalar = $this->decodeScalar();
+				if(!is_array($this->values[$address])){
+					throw new \RuntimeException("ARRAY_APPEND: array \"#".$address."\": not array.");
+				}
+				$this->values[$address][] = $value_scalar;
+				return;
 		}
 		var_dump("=====decoder=====");
 		throw new RuntimeException("Unexpected Stmt: off:".$this->getOffset().", op:".bin2hex($opcode)." not found");

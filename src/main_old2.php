@@ -473,7 +473,7 @@ class main_old2{
 					$recursion = false;
 					return $this->write_var($this->count++, 1);//isset $a ?? 1
 				}
-				//$targetid = $oldid;// ?? $this->count;
+				//$targetid = $oldid;// ??f $this->count;
 				$copy = code::WRITEV.$this->write_varId($this->count).code::VALUE.$var;
 				return $undefined.code::ADD.$var.code::READV.$var.code::INT.$this->putRawInt(1).$copy;
 			case $expr instanceof PreDec://--$i;
@@ -556,21 +556,15 @@ class main_old2{
                     $id1 = $this->exec_variable($var, $baseid, false, $is_var, true);
 					if($is_var === null){
 						$pre_expr = code::ARRAY_CONSTRUCT.$id1;
-						$infoArray = $this->array_inference[$baseid] = new InfoArray($baseid);
+						$infoArray = new InfoArray($baseid);
+						$this->array_inference[$baseid] = $infoArray;
 					}
-					$result = code::ARRAY_SET.$id1;
+					$result = "";
 
 					if($dim === null){
-						$recursion = false;
-						//$test[] = ""
-						//throw new \RuntimeException("\$value->dim === null");
-						$infoArray = $this->array_inference[$is_var ?? $baseid] ?? null;
-						if($infoArray === null){
-							$infoArray = new InfoArray($is_var ?? $baseid);//$test1 = $test2 = [];
-							$this->array_inference[$is_var ?? $baseid] = $infoArray;
-						}
-						$result .= $this->getInt($infoArray->getLastIndex());
+						$result = code::ARRAY_APPEND.$id1;
 					}else{
+						$result .= code::ARRAY_SET.$id1;
 						$recursion = false;
 						$tmp = $this->execExpr($dim, $outputid, $targetid, $recursion);
 						if($recursion){
@@ -938,15 +932,19 @@ class main_old2{
 
 	public function writeAssignOp(AssignOp $node, string $opcode) : string{
 		$recursion = false;
+		/** @var Variable|ArrayDimFetch $varnode */
+		$varnode = $node->var;
+		if($varnode instanceof ArrayDimFetch){
+			return $this->writeAssignOpDim($node, $opcode);
+		}
 		$tmp = null;
 		$result = $this->execExpr($node->expr, null, $tmp, $recursion);
 		$basecount = $this->count++;
 
-		/** @var Variable $varnode */
-		$varnode = $node->var;
 		$tmp = null;
 		$solvedName = null;
 		$var1 = $this->exec_variable($varnode, $this->count, false, $tmp, true, $solvedName);
+
 		$result1 = "";
 		if($tmp === null){
 			$result1 = $this->write_var($this->count, 0).$result;
@@ -957,6 +955,46 @@ class main_old2{
 			return $result1.$result.$opcode.$var1.code::VALUE.$var1.$this->put_var($basecount);
 		}
 		return $result1.$opcode.$var1.code::VALUE.$var1.$result;
+	}
+
+	public function writeAssignOpDim(AssignOp $node, string $opcode){
+		/** @var ArrayDimFetch $varnode */
+		$varnode = $node->var;
+		/** @var Variable $variable */
+		$variable = $varnode->var;
+		$dim = $varnode->dim;
+
+		if($dim === null){
+			//$test[] += 100;
+
+			$id1 = $this->exec_variable($variable, $this->count, false, $is_var, true, $solvedName);
+			if($is_var === null){
+				$this->logger->warning('Undefined variable $'.$solvedName.'. opcode(+= etc): '.bin2hex($opcode).'. (writeAssignOpDim)');// in ?????? on line ?
+				$baseid = $this->count++;
+				$pre_expr = code::ARRAY_CONSTRUCT.$id1;
+				$infoArray = new InfoArray($baseid);
+				$this->array_inference[$baseid] = $infoArray;
+				$this->count++;
+			}
+			return $this->execStmts([new Assign($varnode, $node->expr)]);
+		}
+		$tmp = null;
+		$solvedName = null;
+		$var1 = $this->exec_variable($variable, $this->count, false, $tmp, true, $solvedName);
+
+		if($tmp === null){
+			$this->logger->warning('Undefined variable $'.$solvedName.'. opcode(+= etc): '.bin2hex($opcode).'. (writeAssignOpDim)', $node->getStartLine());// in ?????? on line ?
+			$this->count++;
+		}
+		$dim = $varnode->dim;
+		if($tmp === null){
+			$this->logger->warning('Undefined variable $'.$solvedName.'. opcode(+= etc): '.bin2hex($opcode).'. (writeAssignOp)');// in ?????? on line ?
+			$this->count++;
+		}
+
+		$dim = $this->execExpr($dim, null, $tmp, $recursion);
+		$result = $result.code::ARRAY_SET.$solvedName;
+			return "";
 	}
 
 	public function exec_variable(Variable $node, int $id, bool $force = false, ?int &$oldid = null, bool $raw = false, ?string &$solvedName = null) : string{//変数処理...
@@ -1071,6 +1109,10 @@ class main_old2{
 				case code::ABC:
 				case code::FUN_SUBMIT:
 				case code::VALUE:
+				case code::ARRAY_CONSTRUCT:
+				case code::ARRAY_APPEND:
+				case code::ARRAY_SET:
+				case code::ARRAY_GET:
 					$i += 3;
 					break;
 				case code::BOOL:

@@ -97,4 +97,5 @@ class code{
     public const ARRAY_CONSTRUCT = "\xB3";
 	public const ARRAY_SET = "\xB4";
 	public const ARRAY_GET = "\xB5";//INDIRECT
+	public const ARRAY_APPEND = "\xB6";
 }

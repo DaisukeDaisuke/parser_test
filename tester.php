@@ -530,6 +530,32 @@ for($i = 0; $i < count($test); $i++){
 var_dump($test);
 ';
 
+$code = '
+$test = [11,2,3,4,5,6,100];
+$test2 = [11,2,3,4,5,6,100];
+
+for($i = 0; $i < count($test); $i++){
+	if($test[$i] == $test2[$i]){
+		echo "true";
+	}
+	else{
+		echo "false";
+	}
+}
+';
+
+$code = '
+$test11111111111[] += 100;
+';
+var_dump($test11111);
+
+$test = [100,200,300,400,500,600,700,800,900,1000];
+$test[] -= 100;
+
+var_dump($test);
+
+/*
+
 //quicksort
 $code = '
 $array = [11,2,3,4,5,6,7,8,9,10];
@@ -542,40 +568,64 @@ for ($i = 1; $i < count($array); $i++) {
 		$greater[] = $array[$i];
 	}
 }
-$array = array_merge(quicksort($less), [$pivot], quicksort($greater));
+//$array = array_merge(quicksort($less), [$pivot], quicksort($greater));
 
 var_dump($array);
 ';
 
-
-
-$code = '
-$test1 = $test2 = intval("1000");
-$test1+=1;
-$test2+=2;
-echo $test1, ",", $test2;
-';
-
-$code = '
-$array = [11];
-for ($i = 1; $i <= 10; $i++) {
-	$array[] = $i;
+$array = [11,2,3,4,5,6,7,8,9,10];
+$pivot = $array[0];
+$less = $greater = [];
+for ($i = 1; $i < count($array); $i++) {
+	if ($array[$i] < $pivot) {
+		$less[] = $array[$i];
+	} else {
+		$greater[] = $array[$i];
+	}
 }
+//$array = array_merge(quicksort($less), [$pivot], quicksort($greater));
+
 var_dump($array);
-';
 
-$code = '
-$hoge = 1;
-switch(true){
-  case $hoge === 1:
-    echo 10;
-    break;
+*/
 
-    case $hoge === 1:
-    echo 20;
-    break;
-}
- ';
+//
+//$code = '
+//$array = [11];
+//if (1) {
+//		$array[] = $array[0];
+//	}
+//';
+
+
+//$code = '
+//$test1 = $test2 = intval("1000");
+//$test1+=1;
+//$test2+=2;
+//echo $test1, ",", $test2;
+//';
+//
+//$code = '
+//$array = [11];
+//for ($i = 1; $i <= 10; $i++) {
+//	$array[] = $i;
+//}
+//var_dump($array);
+//';
+
+
+//$code = '
+//$hoge = 1;
+//switch(true){
+//  case $hoge === 1:
+//    echo 10;
+//    break;
+//
+//    case $hoge === 1:
+//    echo 20;
+//    break;
+//}
+// ';
 
 
 
