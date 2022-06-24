@@ -530,6 +530,25 @@ for($i = 0; $i < count($test); $i++){
 var_dump($test);
 ';
 
+//quicksort
+$code = '
+$array = [11,2,3,4,5,6,7,8,9,10];
+$pivot = $array[0];
+$less = $greater = [];
+for ($i = 1; $i < count($array); $i++) {
+	if ($array[$i] < $pivot) {
+		$less[] = $array[$i];
+	} else {
+		$greater[] = $array[$i];
+	}
+}
+$array = array_merge(quicksort($less), [$pivot], quicksort($greater));
+
+var_dump($array);
+';
+
+
+
 $test = [11,2,3,4,5,6,7,8,9,10];
 $i = 0;
 $j = 0;

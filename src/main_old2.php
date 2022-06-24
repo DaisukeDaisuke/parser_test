@@ -117,7 +117,8 @@ class main_old2{
 	public $currentlyContinueScope = null;
 	/** @var ?string $file */
 	public $file = null;
-
+	/** @var array<int, InfoArray> */
+	public $array_inference = [];
 	//config
 
 	/**
@@ -552,7 +553,9 @@ class main_old2{
                     $var = $value->var;
                     $dim = $value->dim;
 					if($dim === null){
-						throw new \RuntimeException("\$value->dim === null");
+						//$test[] = ""
+						//throw new \RuntimeException("\$value->dim === null");
+
 					}
                     $id1 = $this->exec_variable($var, $baseid, false, $is_var, true);
 					if($is_var === null){
@@ -705,6 +708,9 @@ class main_old2{
 				$pre_expr = "";
                 $recursion = true;
                 $array_id = $outputid ?? $this->count++;
+
+				$this->array_inference[$array_id] = new InfoArray($array_id);
+
                 $result =  code::ARRAY_CONSTRUCT.$this->write_varId($array_id);
                 $count = 0;//TODO: object
                 foreach ($expr->items as $item) {
