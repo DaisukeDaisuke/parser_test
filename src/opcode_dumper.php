@@ -105,9 +105,9 @@ class opcode_dumper{
 
 	public static function readREADV(string $str, int &$i) : string{
 		$code = $str[$i++];
-//		if($code1 !== code::READV){
-//			throw new \LogicException("readInt: off:".$i.", val: ".ord($code1)." is not readv");
-//		}
+		if($code !== code::READV){
+			throw new \LogicException("readInt: off:".$i.", val: ".ord($code)." is not readv");
+		}
 		//dechex(ord($code1))
 		$code1 = $str[$i++];
 
@@ -122,7 +122,8 @@ class opcode_dumper{
 		return $result;
 	}
 
-	public static function readScalar(string $str, int &$i, mixed &$scalar = null) : string{
+	public static function readScalar(string $str, int &$i, mixed &$scalar = null, int &$flag = 0) : string{
+		$flag = 0;
 		$code1 = $str[$i];
 		if($code1 === code::INT){
             $scalar = self::readInt($str, $i);
@@ -133,8 +134,15 @@ class opcode_dumper{
             return "string: ".$scalar;
         }
         if($code1 === code::READV){
+			$flag |= self::TYPE_FLAG_READV;
             return self::readREADV($str, $i);
         }
+		if($code1 === code::VALUE){
+			$flag |= self::TYPE_FLAG_VALUE;
+			$flag = 0;
+			$i++;
+			return self::readVar($str, $i, "VALUE", $scalar, $flag);
+		}
         throw new \LogicException("opcode_dumper::readScalar: off: ".$i." val:".dechex(ord($code1))." is not scalar.");
     }
 
@@ -421,20 +429,34 @@ class opcode_dumper{
 						$return .= ' ARRAY_SET:'.bin2hex($str[$i++]).';';
 						self::readVar($str, $i, "output", $var_used, $flag);
 						$return .= ' #'.$var_used.';';;
-						++$i;
-						self::readScalar($str, $i, $key);
-						++$i;
-						$return .= ' key: '.$key.';';;
-						self::readScalar($str, $i, $value);
-						$return .= ' value: '.$value.';';
+//						++$i;
+//						self::readScalar($str, $i, $key, $is_value);
+//						if($is_value){
+//							$return .= ' key: VALUE '.$key.';';;
+//						}else{
+//							$return .= ' key: '.$key.';';;
+//						}
+//						$is_value = false;
+//						self::readScalar($str, $i, $value, $is_value);
+//						if($is_value){
+//							$return .= ' VALUE: '.$value.';';
+//						}else{
+//							$return .= ' scalar: '.$value.';';
+//						}
+
 						break;
 						case code::ARRAY_GET:
 						$return .= ' ARRAY_GET:'.bin2hex($str[$i++]).';';
 						self::readVar($str, $i, "output", $var_used, $flag);
-						$return .= ' #'.$var_used.';';;
-						++$i;
-						self::readScalar($str, $i, $key);
-						$return .= ' key: '.$key.';';
+						$return .= ' #'.$var_used.';';
+//						++$i;
+//							$flag = 0;
+//						self::readScalar($str, $i, $key, $flag);
+//						if(($flag & self::TYPE_FLAG_READV) !== 0){
+//							$return .= ' key: READV '.dechex($key).';';;
+//						}elseif(($flag & self::TYPE_FLAG_VALUE) !== 0){
+//							$return .= ' key: VALUE '.dechex($key).';';;
+//						}
 						break;
 					default:
 						$return .= ' :'.bin2hex($str[$i]).';';
@@ -462,7 +484,23 @@ class opcode_dumper{
 				$symbols[] = [$opcode, $start, $i, ($i - $start + 1), $var_used, $flag];
 			}
 		}catch(\Throwable $exception){
-			var_dump($result, self::hexentities1($str));
+			echo "\n=====opcode_dumper crashed!=====\n";
+			var_dump($result);
+			echo "\n=====opcode_dumper crashed!=====\n";
+			var_dump(self::hexentities1($str));
+
+			var_dump(self::hexentities1(substr($str, $start, 10)));
+			var_dump(self::hexentities1(substr($str, $i-10, 10)));
+			var_dump(self::hexentities1(substr($str, $i, 20)));
+
+			/**
+			:b4; :00; :01;
+			:91; :00; :2c;
+			:95; :00; :0e; :a1;
+			 *
+			 */
+
+			echo "\n=====opcode_dumper crashed!=====\n";
 			throw $exception;
 		}
 		return $result;

@@ -127,7 +127,7 @@ class main_old2{
 	 * https://wiki.php.net/rfc/combined-comparison-operator
 	 * @var bool
 	 */
-	public $use_spaceship_operator = true;
+	public $use_spaceship_operator = false;
 
 	public const ADDRESS_SIZE = 2;
 	public const PUT_STR_LEN = self::ADDRESS_SIZE + 1;
@@ -793,6 +793,16 @@ class main_old2{
 					$oldid = false;
 					$pre_expr = "";
 
+					$result1 = "";
+
+					$pxpr1 = $this->execExpr($dim, null, $targetid, $recursion1);
+					if($recursion1){
+						$result1 .= $this->put_var($targetid ?? $this->count++);
+						$pre_expr .= $pxpr1;
+					}else{
+						$result1 .= $pxpr1;
+					}
+
 					$array_id = $outputid ?? $this->count;//tmp id
 
 					$id = $this->exec_variable($var, $array_id,false, $oldid, true,$name);
@@ -804,13 +814,7 @@ class main_old2{
 					}
 					$result = code::WRITEV.$this->write_varId($array_id).code::ARRAY_GET.$id;
 
-					$pxpr1 = $this->execExpr($dim, null, $targetid, $recursion1);
-					if($recursion1){
-						$result .= $this->put_var($targetid ?? $this->count++);
-						$pre_expr .= $pxpr1;
-					}else{
-						$result .= $pxpr1;
-					}
+
 
                     //$test["key"];
 //                    $var = $expr->var;
@@ -824,7 +828,7 @@ class main_old2{
 
                     //return $content;
                     //break;
-					return $pre_expr.$result;
+					return $pre_expr.$result.$result1;
 			case $expr instanceof Expr:
 				//var_dump(get_class($expr));
 				$recursion = true;

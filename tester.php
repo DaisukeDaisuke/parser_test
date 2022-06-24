@@ -509,10 +509,41 @@ var_dump($a, $b, $c, $d, $e, $f);
 $code = '
 $test = [11];
 $test["!!!"] = "???";
-var_dump($test["key"]);
+var_dump($test["!!!"]);
 $test = [];
 ';
+//バブルソート
+$code = '
+$test = [11,2,3,4,5,6,7,8,9,10];
+$i = 0;
+$j = 0;
+$temp = 0;
+for($i = 0; $i < count($test); $i++){
+	for($j = 0; $j < count($test) - 1; $j++){
+		if($test[$j] > $test[$j + 1]){
+			$temp = $test[$j];
+			$test[$j] = $test[$j + 1];
+			$test[$j + 1] = $temp;
+		}
+	}
+}
+var_dump($test);
+';
 
+$test = [11,2,3,4,5,6,7,8,9,10];
+$i = 0;
+$j = 0;
+$temp = 0;
+for($i = 0; $i < count($test); $i++){
+	for($j = 0; $j < count($test) - 1; $j++){
+		if($test[$j] > $test[$j + 1]){
+			$temp = $test[$j];
+			$test[$j] = $test[$j + 1];
+			$test[$j + 1] = $temp;
+		}
+	}
+}
+var_dump($test);
 
 
 //none: STDIN is unspported in this program.

@@ -13,7 +13,7 @@ class decoder{
 	public $stream;
 	/** @var int $len */
 	public $len;
-	/** @var mixed[] $values */
+	/** @var mixed[]|mixed[][] $values */
 	public $values = [];
 	/** @var ?string $tmpfuncName */
 	public $tmpfuncName = null;
@@ -23,6 +23,8 @@ class decoder{
 	public $dump;
 	/** @var bool $debug */
 	public $debug;
+	/** @var array[] $arrays */
+	public $arrays = [];
 
 	public function __construct(){
 		//none
@@ -279,6 +281,19 @@ class decoder{
 				}
 				$this->setvalue($address, $return);
 				return;
+			case code::ARRAY_CONSTRUCT:
+				$this->values[$this->getAddress()] = [];
+				return;
+			case code::ARRAY_SET:
+				$address = $this->getAddress();
+				$key_scalar = $this->decodeScalar();
+				$value_scalar = $this->decodeScalar();
+				if(!is_array($this->values[$address])){
+					throw new \RuntimeException("ARRAY_SET: array \"#".$address."\": not array.");
+				}
+				$this->values[$address][$key_scalar] = $value_scalar;
+				return;
+
 		}
 		var_dump("=====decoder=====");
 		throw new RuntimeException("Unexpected Stmt: off:".$this->getOffset().", op:".bin2hex($opcode)." not found");
@@ -316,6 +331,22 @@ class decoder{
 			$this->setvalue($output, $var);
 			return $var;
 			//return null;
+		}
+		if($opcode === code::ARRAY_GET){
+			$address = $this->getAddress();
+			$scalar = $this->decodeScalar();
+			if(!isset($this->values[$address][$scalar])){
+				if(!isset($this->values[$address])){
+					throw new \RuntimeException("ARRAY_GET: array ".$address." not defined");
+				}else{
+					throw new \RuntimeException("ARRAY_GET: array \"#".$address."\": key \"".$scalar."\" not found.");
+				}
+			}
+			if(!is_array($this->values[$address])){
+				throw new \RuntimeException("ARRAY_GET: array \"#".$address."\": not array.");
+			}
+			return $this->values[$address][$scalar];
+
 		}
 
 		$binaryStream = $this->getBinaryStream();
@@ -445,27 +476,33 @@ class decoder{
 	private function user_var_dump(array $tmpfuncargs) : void{
 		foreach($tmpfuncargs as $arg){
 			switch(true){
-				case is_null($arg);
+				case is_null($arg):
 					echo "NULL";
 					break;
-				case $arg === true;
+				case $arg === true:
 					echo "bool(true)";
 					break;
-				case $arg === false;
+				case $arg === false:
 					echo "bool(false)";
 					break;
-				case is_int($arg);
+				case is_int($arg):
 					echo "int(".((string) $arg).")";
 					break;
-				case is_float($arg);
+				case is_float($arg):
 					echo "float(".((string) $arg).")";
 					break;
-				case is_string($arg);
+				case is_string($arg):
 					echo 'string('.strlen($arg).') "'.$arg.'"';
 					break;
-				//case is_array($arg);
-				//echo "array(0) {\n}";
-				//break;
+				case is_array($arg):
+//					echo "array(0) {\n";
+//					foreach($arg as $key => $item){
+//						echo "[".$key."]=>\n";
+//						$this->user_var_dump($item);
+//					}
+					var_dump($arg);
+
+					break;
 				default:
 					var_dump($arg);
 					throw new \RuntimeException("dump: Received an unsupported value.");
