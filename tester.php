@@ -553,6 +553,22 @@ $test1 = [0,0,1,0,0];
 $test = $test1[1+2]++;
 var_dump($test1,$test);
 
+$code = '
+$test1 = [0,0,1,0,0];
+$test10 = $test1[1+2] -= $test1[1+1];
+var_dump($test1,$test10);
+';
+
+$code = '
+$test20 = 0;
+$test10 = $test20 += 10;
+var_dump($test20,$test10);
+';
+
+$test20 = 0;
+$test10 = $test20 += 10;
+var_dump($test20,$test10);
+
 //$test1 = [0,0,1,0,0];
 //$test1[1+2] -= $test1[1+1];
 //var_dump($test1);

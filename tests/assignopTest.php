@@ -184,6 +184,21 @@ class assignopTest extends TestCase{
 				echo $a,",",$b;',
 				'0,0',
 			],
+			[
+				'$test20 = 0;
+				$test10 = $test20 += 10;
+				var_dump($test20,$test10);',
+				'int(10)
+int(10)',
+			],
+			[
+				'$test20 = 0;
+				$test10 = $test20 += 10;
+				$test10 += 10;
+				var_dump($test20,$test10);',
+				'int(10)
+int(20)'
+			],
 		];
 	}
 }

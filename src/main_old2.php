@@ -622,6 +622,8 @@ class main_old2{
 						throw new \LogicException("\$before_id === null");
 					}
 					$content .= code::WRITEV.$this->write_varId($is_var ?? $baseid).code::VALUE.$this->write_varId($before_id);
+				}elseif($expr->expr instanceof AssignOp){
+					$content .= code::WRITEV.$this->write_varId($is_var ?? $baseid).code::VALUE.$this->write_varId($baseid);
 				}
 				//$this->count++;
 				//$count = $this->count++;
@@ -968,17 +970,18 @@ class main_old2{
 		/** @var Variable $variable */
 		$variable = $varnode->var;
 		$dim = $varnode->dim;
+		$expr2_count = $this->count++;
 
 		if($dim === null){
 			//$test[] += 100;
-			$id1 = $this->exec_variable($variable, $this->count, false, $is_var, true, $solvedName);
+			$variable = $this->exec_variable($variable, $this->count, false, $is_var, true, $solvedName);
 			if($is_var === null){
 				$this->logger->warning('Undefined variable $'.$solvedName.'. opcode(+= etc): '.bin2hex($opcode).'. (writeAssignOpDim)');// in ?????? on line ?
 				$baseid = $this->count++;
 				$infoArray = new InfoArray($baseid);
 				$this->array_inference[$baseid] = $infoArray;
 			}
-			return code::ARRAY_CONSTRUCT.$id1.$this->execStmts([new Assign($varnode, $node->expr)]);
+			return code::ARRAY_CONSTRUCT.$variable.$this->execStmts([new Assign($varnode, $node->expr)]);
 		}
 		$tmp = null;
 		$solvedName = null;
@@ -1002,12 +1005,6 @@ class main_old2{
 		$post_mode = code::READV;
 
 		$get_array = code::ARRAY_GET.$var1.$id_value;
-
-		if($post){
-			$post_mode = code::VALUE;
-			//code::WRITEV.$get_array
-			//opcode_dumper::hexentities($this->execExpr($varnode));
-		}
 
 		$add = $dim.$opcode.$tmpid.$get_array.code::READV.$this->write_varId($id1);
 		return $expr.$add.code::ARRAY_SET.$var1.$id_var.$post_mode.$tmpid;
