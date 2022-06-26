@@ -1,1 +1,1 @@
-.\vendor\bin\phpstan.bat
+.\vendor\bin\phpstan.bat %*
