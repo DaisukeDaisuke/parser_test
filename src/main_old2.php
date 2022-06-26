@@ -596,6 +596,8 @@ class main_old2{
 
 				$before_id = null;
 
+				//var_dump($this->count);
+
 				$recursion1 = false;
 				if($expr->expr instanceof BinaryOp){
 					$recursion1 = true;
@@ -605,7 +607,12 @@ class main_old2{
 					$before_id = $this->count;
 					$content = $this->execExpr($expr->expr, $is_var ?? $baseid, $targetid, $recursion);
 				}
-
+				/*
+				 * elseif($expr->expr instanceof AssignOp){
+					//$this->count++;
+					$content = $this->execExpr($expr->expr, $is_var ?? $baseid, $targetid, $recursion);
+					//$before_id = $this->count;
+				}*/
 
 				/*$content1 = "";
 				if($is_var !== null){
@@ -622,9 +629,10 @@ class main_old2{
 						throw new \LogicException("\$before_id === null");
 					}
 					$content .= code::WRITEV.$this->write_varId($is_var ?? $baseid).code::VALUE.$this->write_varId($before_id);
-				}elseif($expr->expr instanceof AssignOp){
-					$content .= code::WRITEV.$this->write_varId($is_var ?? $baseid).code::VALUE.$this->write_varId($baseid);
 				}
+//				}elseif($expr->expr instanceof AssignOp){
+//					$content .= code::WRITEV.$this->write_varId($is_var ?? $baseid).code::VALUE.$this->write_varId($before_id);
+//				}
 				//$this->count++;
 				//$count = $this->count++;
 				//var_dump(opcode_dumper::hexentities($content));//割り当て... copy //.code::WRITEV.$this->put_Scalar($count).$this->put_var($this->count))
@@ -1639,9 +1647,6 @@ class main_old2{
 	 * @throws \RuntimeException
 	 */
 	public function checkIntSize($value) : int{
-		if(is_string($value)){
-			throw new \RuntimeException('checkIntSize: "'.$value.'" is string.');
-		}
 		if(is_float($value)){
 			return code::TYPE_DOUBLE;
 		}

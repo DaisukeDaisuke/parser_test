@@ -333,10 +333,27 @@ ADD?:02; output:00; output:03; INT:93; size:01; 100:64; INT:93; size:02; :c8; :0
 
 
 
+$test20 = 0;
+$test10 = $test20 += 10;
+var_dump($test20,$test10);
 
 
+ | 0-2 | 3 |  WRITEV:92; output:00;  output:01; //$test20
+ | 3-5 | 3 |  INT:93; size:01; 0:00;
 
+ | 12-14 | 3 |  ADD?:02;  output:00;  output:01; //$test20
+ | 15-17 | 3 |  VALUE:95; var:00;  var:01;
+ | 18-20 | 3 |  INT:93; size:01; 10:0a;
 
+//missing: $test10 = $test20;
+
+ | 21-21 | 1 |  FUN_INIT:b0;
+ | 22-33 | 12 |  STRING:94; INT:93; size:01; 8:08; v:76; a:61; r:72; _:5f; d:64; u:75; m:6d; p:70;
+ | 34-34 | 1 |  FUN_SEND_ARGS:b1;
+ | 35-37 | 3 |  VALUE:95; var:00;  var:01; //$test20
+ | 38-38 | 1 |  FUN_SEND_ARGS:b1;
+ | 39-41 | 3 |  VALUE:95; var:00;  var:03; //$test10
+ | 42-44 | 3 |  FUN_SUBMIT:b2; var:00;  var:05; "
 
 
 

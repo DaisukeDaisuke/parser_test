@@ -561,6 +561,7 @@ var_dump($test1,$test10);
 
 $code = '
 $test20 = 0;
+$test30 = 0;
 $test10 = $test20 += 10;
 var_dump($test20,$test10);
 ';

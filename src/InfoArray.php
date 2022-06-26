@@ -28,6 +28,7 @@ class InfoArray{
 	//TYPE_UNKNOWN: Inference failure/error
 	protected const TYPE_UNKNOWN = 	0b0000010000000000;
 
+	/** @var int */
 	protected $internal_id;
 	/**	@var array<int|float|string|bool, int> */
 	protected $keys = [];
