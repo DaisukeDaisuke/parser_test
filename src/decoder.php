@@ -234,12 +234,11 @@ class decoder{
 					$this->setvalue($output, null);
 					return;
 				}
-				if(!function_exists($func)){
+				if(!is_callable($func)){
 					throw new \RuntimeException("function ".$func." not found.");
 				}
 				//var_dump($func, $this->tmpfuncargs);
 				try{
-					/** @phpstan-ignore-next-line */
 					$result = ($func)(...$this->tmpfuncargs);
 					$this->setvalue($output, $result);
 				}catch(\Throwable $e){
