@@ -407,6 +407,72 @@ class for_Test extends TestCase{
 				echo "3";',
 				'013',
 			],
+			[
+				'for(;true,true,$a="2";){
+					echo 1;
+					break;
+				}
+				echo 0, $a;',
+				'102',
+			],
+			[
+				'for(;true,true,"a";){
+					echo 1;
+					break;
+				}
+				echo 0;',
+				'10'
+			],
+			[
+				'for(;true,false,"a";){
+					echo 1;
+					break;
+				}
+				echo 0;',
+				'10'
+			],
+			[
+				'for(;$test = false;){
+					echo 1;
+					break;
+				}
+				echo 0;',
+				'0'
+			],
+			[
+				'for(;$test = "0";){
+					echo 1;
+					break;
+				}
+				echo 0;',
+				'0'
+			],
+			[
+				'for(;$test = true;){
+					echo 1;
+					break;
+				}
+				echo 0;',
+				'10'
+			],
+			[
+				'$test = true;
+				for(;$test;){
+					echo 1;
+					break;
+				}
+				echo 0;',
+				'10'
+			],
+			[
+				'$test = false;
+				for(;$test;){
+					echo 1;
+					break;
+				}
+				echo 0;',
+				'0'
+			],
 		];
 	}
 }

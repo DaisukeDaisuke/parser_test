@@ -183,7 +183,7 @@ class main_old2{
 				if(isset($node->elseifs[0])){
 					//$return6 = "";
 					foreach($node->elseifs as $elseif){
-						$elseifs .= $this->execExpr($elseif->cond).$this->putjmpz($this->count++, $this->execStmts($elseif->stmts).$this->putGotoLabel($label));
+						$elseifs .= $this->execStmts([$elseif->cond]).$this->putjmpz($this->count++, $this->execStmts($elseif->stmts).$this->putGotoLabel($label));
 					}
 
 				}
@@ -226,9 +226,20 @@ class main_old2{
 				}else{
 					$condExpr = $node->cond;
 				}
+
+				$listCond = null;
+				if(isset($condExpr[0])){
+					$lastCondKey = count($condExpr)-1;
+					$listCond = $condExpr[$lastCondKey];
+					unset($condExpr[$lastCondKey]);
+				}
+
 				$cond = "";
 				foreach($condExpr as $item){
 					$cond .= $this->execExpr($item);
+				}
+				if($listCond !== null){
+					$cond .= $this->execStmts([$listCond]);
 				}
 				$tmpcount = $this->count++;
 
@@ -425,20 +436,18 @@ class main_old2{
 				$recursion = true;
 				return $this->execBinaryOp($expr);
 			case $expr instanceof ConstFetch:
-				$recursion = true;
 				$value = strtoupper($expr->name->parts[0]);
 				//$return = $this->put_Scalar();
 				if($value === "FALSE"){
-					return $this->write_var($outputid ?? $this->count, false);
+					return $this->getBool(false);
 				}
-
 				if($value === "TRUE"){
-					return $this->write_var($outputid ?? $this->count, true);
+					return $this->getBool(true);
 				}
 				if($value === "NULL"){
-					return $this->write_var($outputid ?? $this->count, null);
+					return $this->getBool(null);
 				}
-
+				$recursion = true;
 				return $expr->name->parts[0];//read const id(global...?)
 			case $expr instanceof Scalar:
 				return $this->execScalar($expr);

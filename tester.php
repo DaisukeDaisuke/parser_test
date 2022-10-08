@@ -1,4 +1,7 @@
 <?php
+echo PHP_VERSION."\n";
+
+
 include __DIR__."/vendor/autoload.php";
 
 error_reporting(E_ALL);
@@ -549,9 +552,9 @@ $test1 = [0];
 $test = $test1[0]++;
 var_dump($test1,$test);
 ';
-$test1 = [0,0,1,0,0];
-$test = $test1[1+2]++;
-var_dump($test1,$test);
+//$test1 = [0,0,1,0,0];
+//$test = $test1[1+2]++;
+//var_dump($test1,$test);
 
 $code = '
 $test1 = [0,0,1,0,0];
@@ -566,9 +569,50 @@ $test10 = $test20 += 10;
 var_dump($test20,$test10);
 ';
 
-$test20 = 0;
-$test10 = $test20 += 10;
-var_dump($test20,$test10);
+//$code = 'print "hello " && print "world";';
+//var_dump("==============",print "hello " && print "world","==============",);
+
+
+
+//$test20 = 0;
+//$test10 = $test20 += 10;
+//var_dump($test20,$test10);
+
+$code = '
+$test = true;
+for(;$test;){
+	echo 1;
+	break;
+}
+echo 0;';
+//
+$test = false;
+for(;$test;){
+	echo 1;
+	break;
+}
+echo 0;
+
+//$code = '
+//for(;1,print "a",$a=false;){
+//	echo 1;
+//	break;
+//}
+//echo 0, $a;';
+
+//$code='
+//$a = true;
+//if(false){
+//
+//}elseif(intval("a")){
+//	echo "a";
+//}';
+
+//$code = '
+//for(;;){
+//	break;
+//}
+//echo 0, $a;';
 
 //$test1 = [0,0,1,0,0];
 //$test1[1+2] -= $test1[1+1];
