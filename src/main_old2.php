@@ -359,6 +359,10 @@ class main_old2{
 				$previous_jmpz = "";
 				$previous_default = false;
 				$jmp_offset = 0;
+				/**
+				 * phpstan
+				 * @var array{?string, ?int, string, bool} $item
+				 */
 				foreach(array_reverse($array) as $key => $item){
 					if($item[3] === true||$item[1] === null){
 						//$defaultpos = strlen($result);//end
