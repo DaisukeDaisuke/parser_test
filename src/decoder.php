@@ -199,7 +199,8 @@ class decoder{
 			case code::JMPZ://JMPZ READV === 0 INT size offset ...
 				$target = $this->decodeScalar();
 				$jmp = $this->decodeScalar();
-				if($target == 0){
+				//https://3v4l.org/v3D7L
+				if(((bool) $target) === false){
 					$this->offset_seek($jmp);
 					if($this->debug === true){
 						$binaryStream = $this->getBinaryStream();

@@ -579,20 +579,19 @@ var_dump($test20,$test10);
 //var_dump($test20,$test10);
 
 $code = '
-$test = true;
-for(;$test;){
+for(;true,false,"a";){
 	echo 1;
 	break;
 }
 echo 0;';
 //
-$test = false;
-for(;$test;){
+for(;true,false,"a";){
 	echo 1;
 	break;
 }
 echo 0;
 
+//var_dump(((bool) "a") === false);
 //$code = '
 //for(;1,print "a",$a=false;){
 //	echo 1;
