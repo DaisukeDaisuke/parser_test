@@ -45,7 +45,7 @@ abstract class BaseTest extends TestCase{
 				return;
 			}
 			var_dump($exception->getMessage());
-			throw new $exception;
+			throw $exception;
 		}
 
 		if($compilerfinalerror !== null){

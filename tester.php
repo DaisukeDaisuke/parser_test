@@ -640,8 +640,15 @@ echo 0;
 //
 //var_dump($test);
 
-
-
+$code = '
+echo (bool) intval($d),"\n";
+';
+/*
+:a8;
+:00; :21; addr
+:04; type
+:91; :00; :1f; :a0; :91; :00; :21;
+ */
 
 
 

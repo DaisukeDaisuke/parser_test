@@ -419,7 +419,30 @@ class opcode_dumper{
 					case code::CAST:
 						$return .= ' CAST:'.bin2hex($str[$i++]).';';
 						$return .= self::readVar($str, $i, "output", $var_used, $flag);
-						$return .= ' id:'.bin2hex($str[$i]).';';
+
+						$type = ord($str[++$i]);
+						$type1 = "unknown";
+						switch($type){
+							case code::TYPE_BOOL:
+								$type1 = "bool";
+								break;
+							case code::TYPE_INT:
+								$type1 = "int";
+								break;
+							case code::TYPE_DOUBLE:
+								$type1 = "float";
+								break;
+							case code::TYPE_OBJECT:
+								$type1 = "object";
+								break;
+							case code::TYPE_STRING:
+								$type1 = "string";
+								break;
+							case code::TYPE_UNSET:
+								$type1 = null;
+								break;
+						}
+						$return .= ' type:'.$type."(".$type1.');';
 
 						break;
 					case code::ARRAY_CONSTRUCT:

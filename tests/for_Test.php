@@ -33,7 +33,7 @@ class for_Test extends TestCase{
 				self::assertEquals($exception->getMessage(), $compilerfinalerror);
 				return;
 			}
-			throw new $exception;
+			throw $exception;
 		}
 
 		if($compilerfinalerror !== null){

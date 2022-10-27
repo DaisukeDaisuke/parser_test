@@ -241,11 +241,12 @@ class decoder{
 				//var_dump($func, $this->tmpfuncargs);
 				try{
 					$result = ($func)(...$this->tmpfuncargs);
-					$this->setvalue($output, $result);
 				}catch(\Throwable $e){
-					echo "FUN_SUBMIT: final: catch Throwable.";//
-					throw new $e;//
+					echo "FUN_SUBMIT: final: Throwable caught while invoking \"$func\" function\n";//
+					var_dump($this->tmpfuncargs);
+					throw $e;
 				}
+				$this->setvalue($output, $result);
 				$this->tmpfuncName = null;
 				$this->tmpfuncargs = [];
 				return;
