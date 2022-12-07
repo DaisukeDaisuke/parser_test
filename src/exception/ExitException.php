@@ -1,6 +1,6 @@
 <?php
 
-namespace purser;
+namespace purser\exception;
 
 class ExitException extends \RuntimeException{
 	/** @var int|string $messagecode */

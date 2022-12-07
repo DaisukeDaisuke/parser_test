@@ -5,6 +5,7 @@ namespace purser;
 use pocketmine\utils\Binary;
 use pocketmine\utils\BinaryStream;
 use RuntimeException;
+use purser\exception\ExitException;
 
 error_reporting(E_ALL);
 
@@ -53,6 +54,10 @@ class decoder{
 			//binaryOP
 			if($opcode === code::NOP){
 				//echo "「nop: ".$this->getOffset()."」";
+				continue;
+			}
+			if($opcode === code::LABEL){//nop 5
+				$this->stream->setOffset($this->getOffset() + 4);
 				continue;
 			}
 			if($opcode >= code::ADD&&$opcode <= code::ABC){

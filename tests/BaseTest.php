@@ -3,10 +3,10 @@
 use PhpParser\ParserFactory;
 use PHPUnit\Framework\TestCase;
 use purser\decoder;
-use purser\ExitException;
+use purser\exception\ExitException;
 use purser\Logger;
 use purser\main_old2;
-use purser\phpFinalException;
+use purser\exception\phpFinalException;
 
 abstract class BaseTest extends TestCase{
 	public const TYPE_TRUE = "bool(true)";

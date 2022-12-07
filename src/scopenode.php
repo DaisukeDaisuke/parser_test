@@ -6,6 +6,8 @@ class scopenode{
 	//クラス化
 	public const TYPE_FOR_WHILE = 0;
 	public const TYPE_SWITCH = 1;
+	public const TYPE_LABEL = 2;
+	public const TYPE_GOTO = 3;
 
 	/** @var ?int $parent */
 	public $parent = null;

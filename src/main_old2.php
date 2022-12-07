@@ -86,8 +86,10 @@ use PhpParser\Node\Stmt\Switch_;
 use PhpParser\Node\Stmt\While_;
 use PhpParser\Node\VariadicPlaceholder;
 use pocketmine\utils\Binary;
-
 use PhpParser\Node\Expr\ArrayDimFetch;
+use purser\exception\phpFinalException;
+use PhpParser\Node\Stmt\Label;
+use PhpParser\Node\Stmt\Goto_;
 
 error_reporting(E_ALL);
 
@@ -120,6 +122,9 @@ class main_old2{
 	/** @var array<int, InfoArray> */
 	public $array_inference = [];
 	//config
+
+	/** @var array<string, scopenode> */
+	public $labelIndex = [];
 
 	/**
 	 * If "true" is specified, the comparison is performed using the spaceship operator instead of using the comparison operator below.
@@ -420,6 +425,25 @@ class main_old2{
 			/*case Case_::class:
 
 				break;*/
+			case Label::class:
+				$name = $node->name->name;
+				$scopeNode_ = $this->labelIndex[$name] ?? null;
+				if($scopeNode_ !== null){
+					if($scopeNode_->getType() === scopenode::TYPE_LABEL){
+						throw new phpFinalException("Label '".$name."' already defined");
+					}
+					$scopeNode_->onUse();
+					return $this->putLabel($scopeNode_->getId());
+				}
+				$this->labelIndex[$name] = new scopenode(null, $this->label_count++, scopenode::TYPE_LABEL);
+				return $this->putLabel($this->labelIndex[$name]->getId());
+			case Goto_::class:
+				$scopeNode_ = $this->labelIndex[$node->name->name] ?? null;
+				if($scopeNode_ === null){
+					$scopeNode_ = new scopenode(null, $this->label_count++, scopenode::TYPE_GOTO);
+					$this->labelIndex[$node->name->name] = $scopeNode_;
+				}
+				return $this->putGotoLabel($scopeNode_->getId());
 		}
 		return "";//code::nop
 	}
@@ -462,6 +486,7 @@ class main_old2{
 				//Added outputid from April 18, 2022
 				$var = $this->exec_variable($expr, $outputid ?? $this->count, false, $oldid,false, $name);
 				if($oldid === null){
+					//$recursion = true;
 					//$recursion = false;
 					$this->logger->warning('Undefined variable $'.$name.', Incompatibility warning: Assign null to $'.$name.'.', $expr->getAttribute("startLine"));
 					return $this->write_var(($outputid ?? $this->count++), null);
@@ -1053,11 +1078,14 @@ class main_old2{
 		return code::VALUE.$this->write_varId($node);//code::VALUE
 	}
 
-	public function solveLabel(string $exec, int $label) : string{
+	public function solveLabel(string $exec, ?int $label) : string{
 		//return $exec;
 		$array = [];
-		$len = strlen($exec);
+		$labels = [];
+		//var_dump(hexentities($exec));
+
 		for($i = 0, $iMax = strlen($exec); $i < $iMax;){
+			//var_dump(hexentities($exec[$i]));
 			switch($exec[$i]){
 				case code::INT:
 					$i++;
@@ -1156,11 +1184,19 @@ class main_old2{
 				case code::JMP:
 				case code::JMPZ:
 				case code::SJMP://
-				case code::LABEL:
 				case code::JMPA:
 				case code::FUN_INIT:
 				case code::FUN_SEND_ARGS:
 					$i++;
+					break;
+				case code::LABEL:
+					$tmpid = Binary::readShort($exec[$i + 3].$exec[$i + 4]);
+					$i += 5;
+					if($label !== null&&$tmpid !== $label){
+						break;
+					}
+					//$exec = substr_replace($exec, str_repeat(code::NOP, 5), $i, 5);
+					$labels[$tmpid] = $i;
 					break;
 				case code::LGOTO://LGOTO INT SIZE 1
 					$start = $i;
@@ -1169,21 +1205,24 @@ class main_old2{
 					$tmpid = Binary::readShort($exec[$i + 3].$exec[$i + 4]);
 					//var_dump($tmpsize);
 					$i += 5;
-					if($tmpid !== $label){
+					if($label !== null&&$tmpid !== $label){
 						break;
 					}
-					$array[] = [$start, 5, $i++];
+					$array[] = [$start, 5, $i, strlen($exec), $tmpid];
 					/*if($label === $return1){
 
 					}*/
 					break;
 				default:
+					//echo "!!null ", $i;
 					$i++;
 			}
 		}
-		$len = strlen($exec);
 		foreach(array_reverse($array) as $value){
-			[$start, $len1, $end] = $value; //$skip_replace
+			[$start, $len1, $end, $len, $tmpid] = $value; //$skip_replace
+			if(isset($labels[$tmpid])){
+				$len = $labels[$tmpid];
+			}
 			$new = code::JMP.code::INT.chr(code::TYPE_SHORT).Binary::writeShort($len - ($end + 0));//$this->getInt($len - ($end + 0));
 
 			//var_dump(opcode_dumper::hexentities($exec));
@@ -1202,7 +1241,8 @@ class main_old2{
 	 * @return string
 	 */
 	public function onexec(array $nodes) : string{
-		return $this->execStmts($nodes, $tmp, true);
+		$output = $this->execStmts($nodes, $tmp, true);
+		return $this->solveLabel($output, null);
 	}
 
 	/**
@@ -1755,7 +1795,7 @@ class main_old2{
 
 
 	public function putLabel(int $label) : string{
-		return code::LABEL.$this->getInt($label);
+		return code::LABEL.code::INT.chr(code::TYPE_SHORT).Binary::writeShort($label);
 	}
 
 	public function getLogger() : Logger{

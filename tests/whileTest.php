@@ -1,12 +1,5 @@
 <?php
 
-use PhpParser\ParserFactory;
-use PHPUnit\Framework\TestCase;
-use purser\decoder;
-use purser\ExitException;
-use purser\main_old2;
-use purser\phpFinalException;
-
 include_once __DIR__.DIRECTORY_SEPARATOR."BaseTest.php";
 
 class whileTest extends BaseTest{

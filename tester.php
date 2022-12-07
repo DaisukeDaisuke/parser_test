@@ -8,9 +8,8 @@ error_reporting(E_ALL);
 
 use PhpParser\NodeDumper;
 use PhpParser\ParserFactory;
-use PhpParser\PrettyPrinter\Standard;
 use purser\decoder;
-use purser\ExitException;
+use purser\exception\ExitException;
 use purser\main_old2;
 use purser\opcode_dumper;
 
@@ -640,31 +639,39 @@ echo 0;
 //
 //var_dump($test);
 
+//$code = '
+//$fromY = 0;
+//$toY = 5;
+//if(((int)$fromY) !== ((int)$toY)){
+//	echo "test";
+//}
+//echo "test";
+//';
+
+
+
 $code = '
-echo (bool) intval($d),"\n";
+goto test;
+test1:
+echo $value;
+goto end;
+test:
+$value = "test!";
+goto test1;
+end:
 ';
-/*
-:a8;
-:00; :21; addr
-:04; type
-:91; :00; :1f; :a0; :91; :00; :21;
- */
+echo "\n";
 
+goto test;
+test1:
+echo $value;
+goto end;
+test:
+$value = "test!";
+goto test1;
+end:
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+$code = 'var_dump($i);';
 
 
 
@@ -686,7 +693,7 @@ echo $dumper->dump($stmts, "<?php\n".$code);
 
 $main_old = new main_old2();
 $output = $main_old->onexec($stmts);
-
+//var_dump(opcode_dumper::hexentities($output));
 //var_dump($main_old->block);
 
 $time = microtime(true) - $time_start;

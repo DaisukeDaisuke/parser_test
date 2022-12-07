@@ -1,6 +1,6 @@
 <?php
 
-namespace purser;
+namespace purser\exception;
 
 use Throwable;
 
