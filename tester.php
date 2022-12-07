@@ -660,16 +660,6 @@ $value = "test!";
 goto test1;
 end:
 ';
-echo "\n";
-
-goto test;
-test1:
-echo $value;
-goto end;
-test:
-$value = "test!";
-goto test1;
-end:
 
 $code = 'var_dump($i);';
 
