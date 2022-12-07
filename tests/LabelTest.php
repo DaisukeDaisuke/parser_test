@@ -47,20 +47,15 @@ class LabelTest extends BaseTest{
 				echo $value;
 				goto end;
 				test:
-				$value = 0;
-				goto test1;
-				end:',
-				'0',
-			],[
-				'goto test;
-				test1:
-				echo $value;
-				goto end;
-				test:
 				$value = "test!";
 				goto test1;
 				end:',
 				'test!',
+				null,
+				null,
+				[
+					'php compiler warning: Undefined variable $value, Incompatibility warning: Assign null to $value.'
+				]
 			],
 
 		];
