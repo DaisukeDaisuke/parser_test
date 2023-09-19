@@ -475,6 +475,10 @@ class main_old2{
 				if($value === "NULL"){
 					return $this->getBool(null);
 				}
+				if (defined($expr->name->parts[0])) {
+					 $const = constant($expr->name->parts[0]);
+					 return $this->put_Scalar($const);
+				}
 				$recursion = true;
 				return $expr->name->parts[0];//read const id(global...?)
 			case $expr instanceof Scalar:
