@@ -702,10 +702,14 @@ class main_old2{
 			case $expr instanceof FuncCall:
 				$recursion = true;//
 				$name = $expr->name;
-				if(!$name instanceof Name){
+				if(!$name instanceof Name&&!$name instanceof Variable){
 					return "";
 				}
-				$result1 = code::FUN_INIT.$this->put_Scalar($name->parts[0]);
+				if($name instanceof Name){
+					$result1 = code::FUN_INIT . $this->put_Scalar($name->parts[0]);
+				}else if($name instanceof Variable){
+					$result1 = code::FUN_INIT . $this->exec_variable($name, $this->count);
+				}
 				$result2 = "";
 				foreach($expr->args as $arg){
 					if(!$arg instanceof VariadicPlaceholder){

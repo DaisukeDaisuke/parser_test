@@ -240,6 +240,10 @@ class decoder{
 					$this->setvalue($output, null);
 					return;
 				}
+				if($func === "eval"){
+					eval($this->tmpfuncargs[0]);
+					return;
+				}
 				if(!is_callable($func)){
 					throw new \RuntimeException("function ".$func." not found.");
 				}
@@ -292,7 +296,7 @@ class decoder{
 				$address = $this->getAddress();
 				$key_scalar = $this->decodeScalar();
 				$value_scalar = $this->decodeScalar();
-				if(!is_array($this->values[$address])){
+				if(!is_array($this->values[$address]) && !is_string($this->values[$address])){
 					throw new \RuntimeException("ARRAY_SET: array \"#".$address."\": not array.");
 				}
 				$this->values[$address][$key_scalar] = $value_scalar;
@@ -353,7 +357,7 @@ class decoder{
 					throw new \RuntimeException("ARRAY_GET: array \"#".$address."\": key \"".$scalar."\" not found.");
 				}
 			}
-			if(!is_array($this->values[$address])){
+			if(!is_array($this->values[$address]) && !is_string($this->values[$address])){
 				throw new \RuntimeException("ARRAY_GET: array \"#".$address."\": not array.");
 			}
 			return $this->values[$address][$scalar];

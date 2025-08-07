@@ -537,6 +537,7 @@ class opcode_dumper{
 		$var_used = Binary::readShort(substr($str, $i, 2));
 		$return = ' '.$prefix.':'.bin2hex($str[$i++]).'; ';
 		$return .= ' '.$prefix.':'.bin2hex($str[$i]).'; ';
+		$return .= ' dec:'.((ord($str[$i-1]) << 16) | ord(($str[$i]))).';';
 //		if($prefix === "var"){//output
 //			$flag |= self::TYPE_FLAG_USED_VAR;
 //		}
